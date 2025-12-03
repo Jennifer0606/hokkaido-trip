@@ -77,17 +77,18 @@
                     <h3 class="text-2xl font-bold accent-color mb-3 border-b pb-2">🎯 獨家行程亮點</h3>
                     <ul class="space-y-2 text-gray-700 font-medium">
                         <!-- 🐧/🧊/🛵/♨️ 圖示顏色也跟著主強調色走 -->
-                        <li class="flex items-start"><span class="mr-2 text-xl accent-color">🐧</span> Day 2 拜訪**旭山動物園**，近距離觀賞企鵝雪地散步。</li>
-                        <li class="flex items-start"><span class="mr-2 text-xl accent-color">🧊</span> Day 3 挑戰鄂霍次克海 **紋別破冰船** 震撼體驗。</li>
-                        <li class="flex items-start"><span class="mr-2 text-xl accent-color">🛵</span> 包含雪上摩托車、雪盆等**刺激雪上活動**。</li>
-                        <li class="flex items-start"><span class="mr-2 text-xl accent-color">♨️</span> 住宿一晚**層雲峽溫泉飯店**，享受北國溫泉之夜。</li>
+                        <li class="flex items-start"><span class="mr-2 text-xl accent-color">🐧</span> Day 2 拜訪<span class="font-bold text-[#00A8A0] bg-[#E0FFFF] px-1 rounded-sm">旭山動物園</span>，近距離觀賞企鵝雪地散步。</li>
+                        <li class="flex items-start"><span class="mr-2 text-xl accent-color">🧊</span> Day 3 挑戰鄂霍次克海 <span class="font-bold text-[#00A8A0] bg-[#E0FFFF] px-1 rounded-sm">紋別破冰船</span> 震撼體驗。</li>
+                        <li class="flex items-start"><span class="mr-2 text-xl accent-color">🛵</span> 包含雪上摩托車、雪盆等<span class="font-bold text-[#00A8A0] bg-[#E0FFFF] px-1 rounded-sm">刺激雪上活動</span>。</li>
+                        <li class="flex items-start"><span class="mr-2 text-xl accent-color">♨️</span> 住宿一晚<span class="font-bold text-[#00A8A0] bg-[#E0FFFF] px-1 rounded-sm">層雲峽溫泉飯店</span>，享受北國溫泉之夜。</li>
                     </ul>
                 </div>
 
                 <div>
                     <h3 class="text-2xl font-bold accent-color mb-3 border-b pb-2">✈️ 航班/集合資訊</h3>
-                    <p class="text-gray-700">去程：**虎航 IT 234** (06:20 - 10:55) ｜ 托運 20kg</p>
-                    <p class="text-gray-700">回程：**華航 CI 131** (14:40 - 18:15) ｜ 托運 2x23kg</p>
+                    <!-- 💡 根據您的要求，已移除航廈資訊的括號，但保留時間的括號。 -->
+                    <p class="text-gray-700">去程：<span class="font-bold text-[#00A8A0] bg-[#E0FFFF] px-1 rounded-sm">虎航 IT 234</span> (06:20 - 10:55) 第一航廈 ｜ 托運 20kg</p>
+                    <p class="text-gray-700">回程：<span class="font-bold text-[#00A8A0] bg-[#E0FFFF] px-1 rounded-sm">華航 CI 131</span> (14:40 - 18:15) 航廈待定 ｜ 托運 2x23kg</p>
                     <p class="text-red-600 font-semibold mt-4">⚠️ 團體巴士集合 (Day 2 & Day 3)：</p>
                     <p class="text-gray-700 pl-4">JR 札幌車站北口 07:40 準時集合。</p>
                 </div>
@@ -229,6 +230,16 @@
         // 2. 渲染單日內容 (新增地圖容器)
         function renderDayContent(day) {
 
+            // NEW FUNCTION: Replace **text** with styled span for visual appeal
+            const highlightText = (text) => {
+                // Regular expression to find text enclosed in double asterisks
+                // Replaces **text** with a styled span using the accent color for emphasis and a light background for visual flair.
+                // Text: [#00A8A0] (Accent Color), Background: [#E0FFFF] (Light Icy Blue)
+                return text.replace(/\*\*(.*?)\*\*/g, (match, p1) => {
+                    return `<span class="font-bold text-[#00A8A0] bg-[#E0FFFF] px-1 rounded-sm">${p1}</span>`;
+                });
+            };
+
             // Helper function to convert time string "HH:MM" to minutes
             const timeToMinutes = (timeStr) => {
                 const [hours, minutes] = timeStr.split(':').map(Number);
@@ -286,7 +297,8 @@
                                         ${item.time}
                                     </p>
                                     <p class="text-gray-800 text-base font-medium leading-normal">
-                                        ${item.description}
+                                        <!-- 💡 使用 highlightText 函數處理 **粗體文字** -->
+                                        ${highlightText(item.description)}
                                     </p>
                                 </div>
 
@@ -294,13 +306,12 @@
                                 ${item.query ? `
                                     <button
                                         class="p-2 ml-4 bg-sky-500 text-white rounded-full hover:bg-sky-600 transition duration-150 shadow-md flex-shrink-0"
-                                        title="在地圖上開啟 ${item.description.replace(/<[^>]*>/g, '')}"
+                                        title="在地圖上開啟 ${item.description.replace(/<[^>]*>/g, '').replace(/\*\*/g, '')}"
                                         onclick="openInGoogleMaps('${item.query.replace(/'/g, "\\'")}')"
                                     >
-                                        <!-- 簡潔線條樣式的地圖圖示 SVG -->
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z" />
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <!-- 💡 已將圖示替換回標準實心定位點 (Solid Pin with Dot) -->
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
                                         </svg>
                                     </button>
                                 ` : ''}
