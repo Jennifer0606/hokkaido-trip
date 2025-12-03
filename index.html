@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>北海道破冰船六日行程</title>
+    <title>北海道六日遊</title>
     <!-- 引入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- 設定字體與樣式 -->
@@ -20,6 +20,7 @@
         .accent-color {
             color: #E63946; /* 鮮明紅作為重點色 */
         }
+        
         .day-tab {
             padding: 12px 20px;
             cursor: pointer;
@@ -49,7 +50,6 @@
             background-color: #F8F9FA;
             border-left: 3px solid #748DA6;
         }
-        /* .content-image 樣式已移除 */
     </style>
 </head>
 <body class="p-0">
@@ -58,12 +58,12 @@
         
         <!-- 頂部標題與視覺區塊 -->
         <header class="header-bg p-8 sm:p-12 text-white text-center rounded-b-xl">
-            <p class="text-xl font-light mb-2 tracking-widest">2026 冬季限定 | 六天五夜之旅</p>
+            <p class="xl font-light mb-2 tracking-widest">2026 冬季限定 | 六天五夜之旅</p>
             <h1 class="text-5xl sm:text-6xl font-black mb-4 tracking-wider">
                 ✈️ 北海道冬日經典六日遊
             </h1>
             <h2 class="text-2xl font-medium opacity-90">
-                破冰船．雪上活動．小樽浪漫散策
+                破冰船．雪上活動．小樽散策
             </h2>
         </header>
 
@@ -73,8 +73,8 @@
                 <div>
                     <h3 class="text-2xl font-bold accent-color mb-3 border-b pb-2">🎯 獨家行程亮點</h3>
                     <ul class="space-y-2 text-gray-700 font-medium">
-                        <li class="flex items-start"><span class="mr-2 text-xl accent-color">🧊</span> Day 3 挑戰鄂霍次克海 **紋別破冰船** 震撼體驗。</li>
                         <li class="flex items-start"><span class="mr-2 text-xl accent-color">🐧</span> Day 2 拜訪**旭山動物園**，近距離觀賞企鵝雪地散步。</li>
+                        <li class="flex items-start"><span class="mr-2 text-xl accent-color">🧊</span> Day 3 挑戰鄂霍次克海 **紋別破冰船** 震撼體驗。</li>
                         <li class="flex items-start"><span class="mr-2 text-xl accent-color">🛵</span> 包含雪上摩托車、雪盆等**刺激雪上活動**。</li>
                         <li class="flex items-start"><span class="mr-2 text-xl accent-color">♨️</span> 住宿一晚**層雲峽溫泉飯店**，享受北國溫泉之夜。</li>
                     </ul>
@@ -116,9 +116,9 @@
                 subtitle: "【初識札幌】從機場直奔市區，展開悠閒的冬季漫步。",
                 image: { url: "https://placehold.co/600x400/394A6D/FFFFFF?text=Day+1%0A札幌夜景", caption: "狸小路與電視塔" },
                 details: [
-                    "新千歲機場入境後，搭乘交通工具前往札幌市區。",
-                    "下午：參觀**大通公園**及經典地標**札幌電視塔**。",
-                    "晚上：在美食與購物天堂**狸小路商店街**自由活動，享受日式晚餐。"
+                    { time: "11:30", description: "新千歲機場入境後，搭乘交通工具前往札幌市區。" },
+                    { time: "15:00", description: "參觀**大通公園**及經典地標**札幌電視塔**。" },
+                    { time: "18:30", description: "在美食與購物天堂**狸小路商店街**自由活動，享受日式晚餐。" }
                 ],
                 meals: "機場自理 / 狸小路自理",
                 lodging: "札幌市區飯店",
@@ -130,9 +130,10 @@
                 warning: "⚠️ 團體巴士行程：07:40 JR札幌北口集合",
                 image: { url: "https://placehold.co/600x400/E63946/FFFFFF?text=Day+2%0A旭山企鵝+玩雪", caption: "旭山動物園與雪上摩托車" },
                 details: [
-                    "**旭山動物園**：欣賞冬季限定的企鵝散步。",
-                    "**刺激雪上活動**：體驗雪上摩托車、雪盆、橡皮艇等。",
-                    "傍晚：專車前往**層雲峽溫泉區**，享受飯店內豪華晚餐及溫泉。"
+                    { time: "08:00", description: "搭乘專屬巴士前往**旭山動物園**，觀賞冬季限定的企鵝散步。" },
+                    { time: "12:00", description: "午餐時間 (焗烤螃蟹海鮮陶板燒御膳)。" },
+                    { time: "14:00", description: "前往雪上樂園，體驗雪上摩托車、雪盆、橡皮艇等**刺激雪上活動**。" },
+                    { time: "18:00", description: "專車前往**層雲峽溫泉區**，享受飯店內豪華晚餐及溫泉。" }
                 ],
                 meals: "焗烤螃蟹海鮮陶板燒御膳 / 溫泉飯店豪華晚餐",
                 lodging: "**層雲峽周邊溫泉飯店**",
@@ -144,10 +145,11 @@
                 warning: "⚠️ 團體巴士行程：約 18:00-19:00 返抵 JR 札幌車站解散",
                 image: { url: "https://placehold.co/600x400/2E4057/FFFFFF?text=Day+3%0A紋別破冰船", caption: "鄂霍次克海的震撼" },
                 details: [
-                    "參觀**銀河流星瀑布** (冬季景觀)。",
-                    "重頭戲：搭乘**紋別破冰船** (GARINKO 號) 體驗破冰。",
-                    "文化體驗：參觀**旭川男山酒造**，了解清酒釀製過程。",
-                    "返回札幌市區飯店辦理入住。"
+                    { time: "08:30", description: "參觀**銀河流星瀑布** (冬季景觀)。" },
+                    { time: "10:30", description: "重頭戲：抵達紋別，搭乘**破冰船** (GARINKO 號) 體驗破冰。" },
+                    { time: "12:30", description: "豪華蟹腳干貝端爐燒套餐午餐。" },
+                    { time: "14:30", description: "文化體驗：參觀**旭川男山酒造**，了解清酒釀製過程。" },
+                    { time: "18:00", description: "返回札幌市區飯店辦理入住，晚餐自理。" }
                 ],
                 meals: "豪華蟹腳干貝端爐燒套餐 / 札幌市區自理",
                 lodging: "札幌市區飯店",
@@ -158,10 +160,12 @@
                 subtitle: "【自由散策】搭乘 JR 前往，盡情享受小樽的浪漫氛圍。",
                 image: { url: "https://placehold.co/600x400/E63946/FFFFFF?text=Day+4%0A小樽運河", caption: "懷舊的浪漫港都" },
                 details: [
-                    "**小樽運河**：沿著運河邊散步，拍攝經典倉庫群。",
-                    "參觀**北一硝子館**與**音樂盒博物館**，感受懷舊氣息。",
-                    "別忘了在 **LeTAO 總店**享受下午茶。",
-                    "傍晚可選擇搭乘纜車上**天狗山**，欣賞小樽港灣夜景。"
+                    { time: "10:00", description: "從札幌搭乘 JR 前往小樽。" },
+                    { time: "11:00", description: "**小樽運河**：沿著運河邊散步，拍攝經典倉庫群。" },
+                    { time: "12:30", description: "午餐：小樽壽司或自理。" },
+                    { time: "14:00", description: "參觀**北一硝子館**與**音樂盒博物館**，感受懷舊氣息。" },
+                    { time: "16:00", description: "別忘了在 **LeTAO 總店**享受下午茶。" },
+                    { time: "18:30", description: "晚餐：返回札幌後，建議前往札幌拉麵共和國 (自理)。" }
                 ],
                 meals: "小樽壽司或自理 / 札幌拉麵共和國 (自理)",
                 lodging: "札幌市區飯店",
@@ -172,10 +176,10 @@
                 subtitle: "【美食天堂】一整天獻給北海道的美味與購物。",
                 image: { url: "https://placehold.co/600x400/2E4057/FFFFFF?text=Day+5%0A海鮮市場", caption: "大啖新鮮海味" },
                 details: [
-                    "上午：參拜**北海道神宮**。",
-                    "中午：前往**札幌場外市場**，享用超新鮮海鮮丼。",
-                    "下午：在**狸小路商店街**或**大通公園**周邊進行補貨購物。",
-                    "晚餐：建議享受經典的**三大蟹吃到飽** (帝王蟹、松葉蟹、毛蟹)。"
+                    { time: "09:30", description: "上午：參拜**北海道神宮**。" },
+                    { time: "11:00", description: "前往**札幌場外市場**，享用超新鮮海鮮丼 (自理)。" },
+                    { time: "14:00", description: "下午：在**狸小路商店街**或**大通公園**周邊進行補貨購物。" },
+                    { time: "19:00", description: "晚餐：建議享受經典的**三大蟹吃到飽** (帝王蟹、松葉蟹、毛蟹) (自理)。" }
                 ],
                 meals: "場外市場海鮮丼 (自理) / 三大蟹吃到飽 (自理)",
                 lodging: "札幌市區飯店",
@@ -186,9 +190,10 @@
                 subtitle: "【完美句點】輕鬆血拚後，帶著滿滿回憶踏上歸途。",
                 image: { url: "https://placehold.co/600x400/E63946/FFFFFF?text=OUTLET購物", caption: "最後衝刺" },
                 details: [
-                    "退房後，前往**三井OUTLET購物中心**或 Rera Outlet。",
-                    "在 OUTLET 內享用午餐。",
-                    "前往新千歲機場，搭乘華航 CI 131 班機返回台北。"
+                    { time: "10:00", description: "退房後，前往**三井OUTLET購物中心**或 Rera Outlet。" },
+                    { time: "12:00", description: "在 OUTLET 內享用午餐。" },
+                    { time: "13:30", description: "集合前往新千歲機場。" },
+                    { time: "14:40", description: "搭乘華航 CI 131 班機返回台北。" }
                 ],
                 meals: "OUTLET 簡餐 (自理) / 機上簡餐",
                 lodging: "溫暖的家",
@@ -213,19 +218,37 @@
 
         // 2. 渲染單日內容
         function renderDayContent(day) {
-            // 圖片區塊已根據您的要求移除
+            
+            // 💡 調整行程細節渲染方式，移除了步驟編號
+            const detailsHtml = `
+                <h4 class="text-xl font-bold text-[#2E4057] mb-4 border-l-4 border-[#748DA6] pl-2">行程細節：</h4>
+                <div class="space-y-4">
+                    ${day.details.map((item) => `
+                        <div class="bg-white p-4 rounded-xl shadow border border-gray-200 transition duration-300 hover:shadow-lg">
+                            <p class="text-sm font-bold text-gray-500 mb-1 flex items-center">
+                                <!-- 時鐘 SVG 圖示 -->
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-[#748DA6]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                ${item.time}
+                            </p>
+                            <p class="text-gray-800 text-base font-medium leading-normal">
+                                ${item.description}
+                            </p>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
             return `
                 <div class="day-content p-6 sm:p-8 bg-white rounded-xl shadow-lg border border-gray-100">
                     <h3 class="text-4xl font-black accent-color mb-3 border-b-2 pb-1">${day.title}</h3>
                     
                     ${day.warning ? `<p class="text-red-600 font-semibold mb-4 text-lg">${day.warning}</p>` : ''}
                     
-                    <p class="text-gray-700 mb-4 font-medium text-xl leading-relaxed">${day.subtitle}</p>
+                    <p class="text-gray-700 mb-6 font-medium text-xl leading-relaxed">${day.subtitle}</p>
                     
-                    <h4 class="text-xl font-bold text-[#2E4057] mb-2 border-l-4 border-[#748DA6] pl-2">行程細節：</h4>
-                    <ul class="list-disc list-outside ml-6 text-gray-700 text-base space-y-2">
-                        ${day.details.map(detail => `<li>${detail}</li>`).join('')}
-                    </ul>
+                    ${detailsHtml} <!-- 插入新的區塊行程細節 -->
 
                     <div class="meal-summary p-4 mt-8 rounded-lg text-base font-semibold grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <div><span class="text-[#2E4057]">🍽️ 午/晚餐：</span> ${day.meals}</div>
