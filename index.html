@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>北海道破冰船六日遊行程</title>
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 設定字體為 Inter (可讀性高) -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* 淺藍灰背景，帶有冬季感 */
+        }
+        .snow-card {
+            box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s;
+        }
+        .snow-card:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8">
+
+    <div id="app" class="max-w-4xl mx-auto bg-white rounded-xl shadow-2xl overflow-hidden">
+        
+        <!-- 頂部標題與視覺區塊 -->
+        <div class="bg-[#1e3a8a] p-6 text-white text-center">
+            <h1 class="text-3xl font-extrabold mb-1 tracking-wider">
+                ✈️ 北海道破冰船、雪上摩托車、小樽六日遊
+            </h1>
+            <p class="text-sm font-light opacity-80">您的冬季夢幻行程草稿 (2026/02/20 出發)</p>
+        </div>
+
+        <!-- 特色說明區塊 -->
+        <div class="p-6 border-b border-gray-100">
+            <h2 class="text-xl font-bold text-[#1e3a8a] mb-3 border-b-2 border-[#1e3a8a] inline-block pb-1">🌟 行程特色</h2>
+            <ul class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-gray-700">
+                <li class="flex items-start"><span class="text-red-500 mr-2">✅</span>**季節限定**：破冰船、旭山企鵝、雪上摩托車一次滿足！</li>
+                <li class="flex items-start"><span class="text-red-500 mr-2">✅</span>**交通便利**：Day 2-3 團體巴士，免去長途拉車煩惱。</li>
+                <li class="flex items-start"><span class="text-red-500 mr-2">✅</span>**浪漫經典**：充足時間漫步小樽運河，體驗日式風情。</li>
+                <li class="flex items-start"><span class="text-red-500 mr-2">✅</span>**舒適住宿**：包含一晚**層雲峽溫泉飯店**，解除疲勞。</li>
+            </ul>
+        </div>
+
+        <!-- 航班資訊 -->
+        <div class="p-6 border-b border-gray-100">
+            <h2 class="text-xl font-bold text-[#1e3a8a] mb-3 border-b-2 border-[#1e3a8a] inline-block pb-1">✈️ 參考航班與行李</h2>
+            <div class="space-y-4">
+                <!-- 去程 -->
+                <div class="bg-gray-50 p-4 rounded-lg flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                    <div class="mb-2 sm:mb-0">
+                        <p class="font-semibold text-lg text-gray-800">去程：虎航 IT 234</p>
+                        <p class="text-sm text-gray-500">台北(桃園) → 札幌(新千歲)</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-bold text-red-500">06:20 - 10:55</p>
+                        <p class="text-sm text-gray-500">托運 20kg / 手提 10kg</p>
+                    </div>
+                </div>
+                <!-- 回程 -->
+                <div class="bg-gray-50 p-4 rounded-lg flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                    <div class="mb-2 sm:mb-0">
+                        <p class="font-semibold text-lg text-gray-800">回程：華航 CI 131</p>
+                        <p class="text-sm text-gray-500">札幌(新千歲) → 台北(桃園)</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-bold text-green-600">14:40 - 18:15</p>
+                        <p class="text-sm text-gray-500">托運 2x23kg / 手提 7kg</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 每日行程區塊 -->
+        <div id="itinerary-details" class="p-6 space-y-4">
+            <h2 class="text-xl font-bold text-[#1e3a8a] mb-4 border-b-2 border-[#1e3a8a] inline-block pb-1">📅 每日行程概要</h2>
+        </div>
+    </div>
+
+    <!-- JavaScript 邏輯：渲染行程細節並提供展開/收合功能 -->
+    <script>
+        const itineraryData = [
+            {
+                day: 1,
+                title: "啟程：抵達札幌、購鞋與城市探索",
+                icon: "✈️",
+                meals: {
+                    B: "機上簡餐",
+                    L: "新千歲機場拉麵或自理",
+                    D: "方便逛街，敬請自理"
+                },
+                lodging: "札幌市區飯店",
+                details: [
+                    "台北(桃園) → 札幌(新千歲) (預計 10:55 抵達)。",
+                    "**新千歲機場 (NTT)**：在機場內享用午餐 (推薦：新千歲機場拉麵道場) 或逛逛**哆啦A夢空中樂園**。",
+                    "搭乘 JR 前往札幌市區飯店，辦理入住/寄放行李。",
+                    "下午：**札幌市區經典散策**：參觀**札幌時計台**、**北海道舊本廳舍** (外觀)。",
+                    "**【重要採買】購買雪地行走鞋**：利用下午或傍晚時間，在狸小路或車站周邊的 **ABC Mart**、**大型戶外用品店**採購防滑雪靴。",
+                    "傍晚：**大通公園**周邊散步，欣賞札幌電視塔。",
+                    "晚上：**狸小路商店街**自由活動，享受日式晚餐及購物。"
+                ],
+                color: "bg-blue-100/70"
+            },
+            {
+                day: 2,
+                title: "團體行程：企鵝散步與雪上活動 (前往溫泉鄉)",
+                icon: "🐧",
+                meals: {
+                    B: "飯店朝食",
+                    L: "焗烤螃蟹海鮮陶板燒御膳",
+                    D: "溫泉飯店內豪華晚餐"
+                },
+                lodging: "層雲峽周邊溫泉飯店",
+                details: [
+                    "07:40 JR札幌車站北口集合，08:00 出發。",
+                    "**旭山動物園** (約100分鐘)：觀賞著名的企鵝散步遊行。",
+                    "午餐後：**刺激雪上活動** (約60分鐘)：體驗雪上摩托車、雪上橡皮艇、雪盆。",
+                    "傍晚：專車拉車前往層雲峽溫泉區，入住飯店享受溫泉和豐盛晚餐。"
+                ],
+                color: "bg-red-100/70"
+            },
+            {
+                day: 3,
+                title: "團體行程：破冰船與返回札幌",
+                icon: "🚢",
+                meals: {
+                    B: "飯店朝食",
+                    L: "豪華蟹腳干貝端爐燒套餐",
+                    D: "方便逛街，敬請自理"
+                },
+                lodging: "札幌市區飯店",
+                details: [
+                    "飯店出發：前往**銀河流星瀑布** (冬季景觀)。",
+                    "鄂霍次克海：搭乘**紋別破冰船** GARINKO II/III 號 (視船班彈性調整)。",
+                    "文化體驗：**旭川男山酒造** (參觀資料館)。",
+                    "歸途：專車返回 **JR札幌車站**解散 (約 18:00-19:00 抵達)。",
+                    "解散後自行前往飯店辦理入住。"
+                ],
+                color: "bg-yellow-100/70"
+            },
+            {
+                day: 4,
+                title: "自由活動：浪漫小樽運河一日遊",
+                icon: "🔔",
+                meals: {
+                    B: "飯店朝食",
+                    L: "小樽壽司套餐或自理",
+                    D: "札幌拉麵共和國 (自理)"
+                },
+                lodging: "札幌市區飯店",
+                details: [
+                    "搭乘 JR 快速列車前往小樽 (約 40 分鐘)。",
+                    "**小樽運河**：漫步散策，拍攝復古倉庫群。",
+                    "**北一硝子館**、**音樂盒博物館**：購買精緻工藝品。",
+                    "**LeTAO 總店**：享受美味甜點下午茶。",
+                    "自由選擇：搭乘纜車上**天狗山**，欣賞小樽港灣夜景後返回札幌。"
+                ],
+                color: "bg-pink-100/70"
+            },
+            {
+                day: 5,
+                title: "自由活動：札幌城市與美食購物日",
+                icon: "🛍️",
+                meals: {
+                    B: "飯店朝食",
+                    L: "場外市場海鮮丼 (自理)",
+                    D: "三大蟹吃到飽 (自理)"
+                },
+                lodging: "札幌市區飯店",
+                details: [
+                    "上午：參觀**北海道神宮**，祈福許願。",
+                    "午餐：**札幌場外市場**，享用現捕的帝王蟹/新鮮海鮮丼。",
+                    "下午：**狸小路商店街**或**大通公園**自由購物。",
+                    "晚餐：建議前往**札幌啤酒園**或市區餐廳享用**三大蟹吃到飽**或**成吉思汗烤肉**。"
+                ],
+                color: "bg-green-100/70"
+            },
+            {
+                day: 6,
+                title: "賦歸：OUTLET採買與新千歲機場巡禮",
+                icon: "🏠",
+                meals: {
+                    B: "飯店朝食",
+                    L: "新千歲機場午餐 (拉麵道場/自理)",
+                    D: "機上簡餐"
+                },
+                lodging: "溫暖的家",
+                details: [
+                    "退房後：前往免稅店 (如有安排)。",
+                    "上午：**三井OUTLET購物中心**或 Rera Outlet 進行最後採購。",
+                    "中午：提早前往新千歲機場 (CTS)，在機場內享用午餐 (推薦：新千歲機場拉麵道場)。",
+                    "下午：**【機場巡禮】**利用時間逛逛機場特色，如 **Royce' 巧克力世界**、**哆啦A夢空中樂園**等，進行最後的伴手禮採買。",
+                    "辦理登機手續。",
+                    "札幌(新千歲) → 台北(桃園)，結束愉快的北海道之旅。"
+                ],
+                color: "bg-indigo-100/70"
+            }
+        ];
+
+        const container = document.getElementById('itinerary-details');
+
+        itineraryData.forEach(dayData => {
+            const dayCard = document.createElement('div');
+            dayCard.className = `snow-card ${dayData.color} p-4 rounded-xl cursor-pointer border border-gray-200`;
+            dayCard.setAttribute('onclick', `toggleDetails(${dayData.day})`);
+
+            // 卡片標題
+            dayCard.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-bold text-gray-800 flex items-center">
+                        <span class="mr-2 text-2xl">${dayData.icon}</span> Day ${dayData.day} - ${dayData.title}
+                    </h3>
+                    <svg id="arrow-${dayData.day}" class="w-6 h-6 text-gray-600 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </div>
+
+                <!-- 簡要餐食與住宿資訊 (始終可見) -->
+                <div class="mt-2 text-sm text-gray-600 grid grid-cols-2 gap-x-4">
+                    <p><span class="font-semibold text-gray-700">午餐:</span> ${dayData.meals.L}</p>
+                    <p><span class="font-semibold text-gray-700">晚餐:</span> ${dayData.meals.D}</p>
+                    <p class="col-span-2 mt-1"><span class="font-semibold text-gray-700">住宿:</span> ${dayData.lodging}</p>
+                </div>
+                
+                <!-- 詳細行程內容 (預設隱藏) -->
+                <div id="details-${dayData.day}" class="mt-4 hidden pt-3 border-t border-gray-300">
+                    <h4 class="font-semibold text-gray-800 mb-2">詳細活動：</h4>
+                    <ul class="list-disc list-inside space-y-1 text-gray-700 text-sm">
+                        ${dayData.details.map(detail => `<li>${detail}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+            container.appendChild(dayCard);
+        });
+
+        // 展開/收合詳細行程的 JS 函數
+        function toggleDetails(day) {
+            const detailsElement = document.getElementById(`details-${day}`);
+            const arrowElement = document.getElementById(`arrow-${day}`);
+            
+            if (detailsElement.classList.contains('hidden')) {
+                detailsElement.classList.remove('hidden');
+                detailsElement.classList.add('animate-fadeIn');
+                arrowElement.classList.add('rotate-180');
+            } else {
+                detailsElement.classList.add('hidden');
+                detailsElement.classList.remove('animate-fadeIn');
+                arrowElement.classList.remove('rotate-180');
+            }
+        }
+    </script>
+</body>
+</html>
