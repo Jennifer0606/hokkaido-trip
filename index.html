@@ -54,8 +54,9 @@
 </head>
 <body class="p-0">
 
-    <div id="app" class="max-w-6xl mx-auto bg-white shadow-2xl overflow-hidden">
-        
+    <!-- 移除了 `#app` 上的 `overflow-hidden` 屬性，以確保 `sticky` 定位正常運作 -->
+    <div id="app" class="max-w-6xl mx-auto bg-white shadow-2xl">
+
         <!-- 頂部標題與視覺區塊 -->
         <header class="header-bg p-8 sm:p-12 text-white text-center rounded-b-xl">
             <p class="xl font-light mb-2 tracking-widest">2026 冬季限定 | 六天五夜之旅</p>
@@ -79,7 +80,7 @@
                         <li class="flex items-start"><span class="mr-2 text-xl accent-color">♨️</span> 住宿一晚**層雲峽溫泉飯店**，享受北國溫泉之夜。</li>
                     </ul>
                 </div>
-                
+
                 <div>
                     <h3 class="text-2xl font-bold accent-color mb-3 border-b pb-2">✈️ 航班/集合資訊</h3>
                     <p class="text-gray-700">去程：**虎航 IT 234** (06:20 - 10:55) ｜ 托運 20kg</p>
@@ -90,8 +91,8 @@
             </div>
         </div>
 
-        <!-- 橫向切換選單 (Tabs) -->
-        <div class="bg-white px-6 sm:px-10 border-b border-gray-300">
+        <!-- 橫向切換選單 (Tabs) - 保持 sticky top-0 -->
+        <div class="sticky top-0 z-10 bg-white px-6 sm:px-10 border-b border-gray-300">
             <div id="day-tabs" class="flex overflow-x-auto whitespace-nowrap">
                 <!-- Tabs will be rendered here by JS -->
             </div>
@@ -218,7 +219,7 @@
 
         // 2. 渲染單日內容
         function renderDayContent(day) {
-            
+
             // Helper function to convert time string "HH:MM" to minutes
             const timeToMinutes = (timeStr) => {
                 const [hours, minutes] = timeStr.split(':').map(Number);
