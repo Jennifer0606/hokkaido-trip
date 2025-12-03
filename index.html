@@ -220,7 +220,28 @@
             
             if (!jpyInput || !twdOutput) return;
 
-            const jpyAmount = parseFloat(jpyInput.value);
+            // --- 新增：限制整數部分最多六位數輸入 ---
+            let inputValue = jpyInput.value;
+
+            // 1. 處理負數：type="number" 允許輸入負號，但我們強制為正數
+            if (inputValue.startsWith('-')) {
+                jpyInput.value = inputValue.slice(1);
+                inputValue = jpyInput.value;
+            }
+
+            // 2. 限制整數部分長度為 6
+            const parts = inputValue.split('.');
+            let integerPart = parts[0];
+
+            if (integerPart.length > 6) {
+                // 截斷多餘的數字
+                integerPart = integerPart.substring(0, 6);
+                // 重新組裝值 (保留小數點，如果有的話)
+                jpyInput.value = parts.length > 1 ? `${integerPart}.${parts[1]}` : integerPart;
+            }
+            // --- 限制結束 ---
+
+            const jpyAmount = parseFloat(jpyInput.value); 
 
             // 使用全域變數 currentExchangeRate
             if (currentExchangeRate <= 0) {
@@ -241,25 +262,28 @@
             twdOutput.className = twdOutput.className.replace(/text-red-600|bg-red-50|border-red-300|text-gray-700|bg-gray-100|border-gray-300/g, 'text-emerald-800 bg-emerald-100 border-emerald-300');
         }
 
-        // 初始化匯率狀態顯示
+        /**
+         * 初始化匯率狀態顯示
+         * 樣式調整：移除區塊感，改為右下方的小字體
+         */
         function initializeExchangeRateStatus() {
             const statusDisplay = document.getElementById('current-rate-status');
             if (statusDisplay) { 
                 statusDisplay.innerHTML = `
-                    <div class="flex items-center justify-center space-x-2 text-gray-500">
-                        <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div class="text-xs text-gray-500 flex items-center justify-end space-x-1">
+                        <svg class="h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <p>載入中... 準備查詢即時匯率</p>
+                        <span>載入中... 準備查詢匯率</span>
                     </div>
                 `;
-                statusDisplay.className = 'mb-4 p-3 text-center text-sm font-semibold rounded-lg bg-gray-100 text-gray-700';
+                // 設置基本樣式，讓它位於下方，並只靠 JS 更改內部文字樣式
+                statusDisplay.className = 'mt-4 pt-2 border-t border-gray-100 flex justify-end';
             }
         }
 
         /**
-         * 🏆 匯率查詢新邏輯：改用專門的匯率 API (exchangerate.host)
-         * 這樣可以確保獲得結構化 JSON 數據，提高穩定性。
+         * 匯率查詢新邏輯
          */
         async function fetchExchangeRate() {
             const statusDisplay = document.getElementById('current-rate-status');
@@ -268,17 +292,17 @@
             // 使用專門的匯率 API，查詢 JPY 兌 TWD 的匯率
             const rateApiUrl = 'https://api.exchangerate.host/latest?base=JPY&symbols=TWD';
 
-            // 1. 顯示正在查詢的狀態
+            // 1. 顯示正在查詢的狀態 (小字、黑字)
             statusDisplay.innerHTML = `
-                <div class="flex items-center justify-center space-x-2 text-sky-700">
-                    <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div class="text-xs text-gray-700 flex items-center justify-end space-x-1 animate-pulse">
+                    <svg class="animate-spin h-3 w-3 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    <p>正在查詢即時匯率 (JPY/TWD) ... (來自專門 API)</p>
+                    <span>正在查詢即時匯率 (JPY/TWD)</span>
                 </div>
             `;
-            statusDisplay.className = statusDisplay.className.replace(/bg-\w+-100|bg-\w+-50|text-\w+-700|text-red-700|bg-red-50/g, 'bg-sky-50 text-sky-700');
+            statusDisplay.className = 'mt-4 pt-2 border-t border-gray-100 flex justify-end'; // 保持基礎樣式
             
             const maxRetries = 5;
             let delay = 1000;
@@ -306,12 +330,14 @@
                             currentExchangeRate = parsedRate; 
                             convertCurrency(); 
                             
-                            // 顯示成功狀態
+                            // 顯示成功狀態 (小字，突出匯率)
                             statusDisplay.innerHTML = `
-                                <p class="text-xl font-extrabold">1 JPY = ${currentExchangeRate.toFixed(4)} TWD</p>
-                                <p class="text-xs font-normal mt-0.5">數據來源: ExchangeRate.host</p>
+                                <div class="text-right">
+                                    <p class="text-lg font-bold text-emerald-700 leading-tight">1 JPY = ${currentExchangeRate.toFixed(4)} TWD</p>
+                                    <p class="text-xs font-normal text-gray-500 mt-0.5">數據來源: ExchangeRate.host</p>
+                                </div>
                             `;
-                            statusDisplay.className = statusDisplay.className.replace(/bg-\w+-50|text-\w+-700/g, 'bg-emerald-50 text-emerald-800');
+                            statusDisplay.className = 'mt-4 pt-2 border-t border-gray-100 flex justify-end'; // 保持基礎樣式
                             return; 
                         } else {
                             // 數據有效但數值不正確，跳出迴圈使用 Fallback Rate
@@ -334,15 +360,17 @@
                 }
             }
             
-            // --- 重試迴圈結束，處理 Fallback ---
+            // --- 重試迴圈結束，處理 Fallback (小字，黑字，錯誤使用紅字) ---
             currentExchangeRate = FALLBACK_RATE;
             convertCurrency(); 
 
             statusDisplay.innerHTML = `
-                <p class="text-xs font-normal text-red-500">即時匯率查詢失敗 (API 錯誤或無法連線)。</p>
-                <p class="text-xl font-extrabold text-red-700">目前使用預設匯率：1 JPY ≈ ${FALLBACK_RATE.toFixed(4)} TWD</p>
+                <div class="text-right text-red-600">
+                    <p class="text-xs font-normal">即時匯率查詢失敗 (API 錯誤或無法連線)</p>
+                    <p class="text-xs font-bold leading-tight">目前使用預設匯率：1 JPY ≈ ${FALLBACK_RATE.toFixed(4)} TWD</p>
+                </div>
             `;
-            statusDisplay.className = statusDisplay.className.replace(/bg-\w+-50|text-\w+-700/g, 'bg-red-50 text-red-700');
+            statusDisplay.className = 'mt-4 pt-2 border-t border-gray-100 flex justify-end';
         }
 
         window.openInGoogleMaps = function(query) {
@@ -396,11 +424,12 @@
         }
 
         /**
-         * 渲染匯率轉換器區塊 (僅在詳細行程日曆中使用)
+         * 渲染匯率轉換器區塊
          */
         function renderExchangeRateBlock() {
             return `
-                <div id="exchange-rate-block" class="bg-white border border-gray-300 rounded-xl py-8 px-6 shadow-lg mb-12">
+                <!-- 🎯 外層容器保持 max-w-md 限制寬度並置中 -->
+                <div id="exchange-rate-block" class="max-w-md mx-auto bg-white border border-gray-300 rounded-xl py-8 px-6 shadow-lg mb-12">
                     <h3 class="text-2xl font-bold accent-color mb-4 border-b pb-2 flex justify-between items-center">
                         <span>💵 匯率試算</span>
                         <!-- 重新整理 Icon -->
@@ -415,32 +444,39 @@
                         </button>
                     </h3>
                     
-                    <div id="current-rate-status" class="mb-4 p-3 text-center text-sm font-semibold rounded-lg">
-                        <!-- 初始內容將由 JS 設定 -->
-                    </div>
-
-                    <div class="space-y-4">
-                        <div class="flex items-center space-x-3">
-                            <label for="jpy-input" class="text-lg font-medium text-gray-700 w-1/4 flex-shrink-0">🇯🇵 JPY</label>
+                    <!-- 匯率輸入/輸出區塊：強制使用 grid-cols-2 讓手機也並排 -->
+                    <div class="grid grid-cols-2 gap-2">
+                        <!-- JPY Input Block -->
+                        <div class="space-y-2">
+                            <!-- 已新增 max="999999" (瀏覽器提示) 和 oninput JS 邏輯 (強制限制) -->
                             <input 
                                 type="number" 
                                 id="jpy-input" 
                                 oninput="convertCurrency()" 
-                                placeholder="輸入日幣金額 (例如 10000)" 
-                                class="w-full p-3 border border-gray-300 rounded-lg text-lg shadow-sm focus:ring-sky-500 focus:border-sky-500"
+                                placeholder="日幣 (JPY)" 
+                                class="w-full py-2 px-3 border border-gray-300 rounded-lg text-base shadow-sm focus:ring-sky-500 focus:border-sky-500"
                                 min="0"
+                                max="999999" 
                             >
                         </div>
-                        <div class="flex items-center space-x-3">
-                            <label class="text-lg font-medium text-gray-700 w-1/4 flex-shrink-0">🇹🇼 TWD</label>
+
+                        <!-- TWD Output Block -->
+                        <div class="space-y-2">
                             <div 
                                 id="twd-output" 
-                                class="flex-grow p-3 border border-gray-300 rounded-lg bg-gray-100 text-lg font-bold text-gray-700 text-right shadow-inner"
+                                class="flex items-center justify-end py-2 px-3 border border-gray-300 rounded-lg bg-gray-100 text-base font-bold text-gray-700 text-right shadow-inner h-full"
                             >
                                 0 TWD
                             </div>
                         </div>
                     </div>
+                    <!-- 匯率輸入/輸出區塊結束 -->
+
+                    <!-- 狀態訊息區塊 (已移動到下方，並設定右對齊的基礎樣式) -->
+                    <div id="current-rate-status" class="mt-4 pt-2 border-t border-gray-100 flex justify-end">
+                        <!-- 初始內容將由 JS 設定 -->
+                    </div>
+
                 </div>
             `;
         }
