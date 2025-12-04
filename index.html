@@ -410,13 +410,7 @@
             
             // 1. 顯示初始載入狀態
             weatherDisplay.innerHTML = `
-                <div class="flex items-start text-sm text-gray-500 mb-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 flex-shrink-0 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    正在嘗試取得您的即時位置並查詢天氣...
-                </div>
+
                 <div id="weather-result">
                     <!-- fetchWeather 將在下方插入載入和結果 -->
                 </div>
@@ -516,7 +510,6 @@
             return `
                 <div class="text-right text-red-700 flex items-center justify-end space-x-2">
                     <div class="text-xs font-normal">
-                        <p class="font-bold leading-tight">呼叫太頻繁！需等待 ${minutes} 分鐘。</p>
                         <p>目前使用上次匯率：1 JPY ≈ ${rate} TWD</p>
                     </div>
                     <!-- 重新整理 Icon (DISABLED) -->
