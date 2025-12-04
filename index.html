@@ -112,11 +112,14 @@
         </footer>
     </div>
 
-    <script>
+    <!-- 🎯 修正：新增 type="module" 屬性，確保 'const' 等現代 JavaScript 語法能被正確解析。 -->
+    <script type="module">
         // --- API & 環境設定 ---
-        const API_KEY = ""; // 保持空值，環境會自動提供
+        // 🎯 注意：如果您將此檔案部署到外部網站（非 Canvas），請在這裡填入您的 Gemini API Key
+        const API_KEY = "AIzaSyCUAqeZHGu8dildmhdmOd_nTmoHa15EggU"; 
         const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent";
         const MAX_RETRIES = 5;
+        const WEATHER_DISPLAY_ID = "weather-display-home"; // 全域 ID
 
         // --- 匯率相關全域變數與設定 ---
         const FALLBACK_RATE = 0.22; 
@@ -126,13 +129,13 @@
         let activeMainTab = 'home'; 
         let activeDayId = 'day-1'; 
 
-        // --- 行程資料 (新增 location 欄位用於天氣查詢) ---
+        // --- 行程資料 (location 欄位只用於行程規劃，主頁天氣查詢固定為札幌) ---
         const itineraryData = [
             {
                 id: 1,
                 title: "02/20：札幌啟程 ✈️",
                 subtitle: "【初識札幌】從機場直奔市區，展開悠閒的冬季漫步。",
-                location: "札幌, 日本", // 🎯 新增地點
+                location: "札幌, 日本", 
                 details: [
                     { time: "04:00", description: "桃園機場Terminal 1報到", query: "桃園機場" },
                     { time: "11:30", description: "新千歲機場入境後，搭乘交通工具前往札幌市區。", query: "新千歲機場" },
@@ -147,7 +150,7 @@
                 title: "02/21：企鵝．雪上活動．溫泉 🐧",
                 subtitle: "【冰雪樂園】整日精彩活動，以溫泉解除疲勞。",
                 warning: "⚠️ 團體巴士行程：07:40 JR札幌北口集合",
-                location: "旭川, 日本", // 🎯 新增地點
+                location: "旭川, 日本", 
                 details: [
                     { time: "08:00", description: "搭乘專屬巴士前往**旭山動物園**，觀賞冬季限定的企鵝散步。", query: "旭山動物園" },
                     { time: "12:00", description: "午餐時間 (焗烤螃蟹海鮮陶板燒御膳)。", query: "旭川午餐地點" },
@@ -162,7 +165,7 @@
                 title: "02/22：紋別破冰船．酒造巡禮 🚢",
                 subtitle: "【海之震撼】欣賞鄂霍次克海的流冰奇景。",
                 warning: "⚠️ 團體巴士行程：約 18:00-19:00 返抵 JR 札幌車站解散",
-                location: "紋別, 日本", // 🎯 新增地點
+                location: "紋別, 日本", 
                 details: [
                     { time: "08:30", description: "參觀**銀河流星瀑布** (冬季景觀)。", query: "銀河流星瀑布" },
                     { time: "10:30", description: "重頭戲：抵達紋別，搭乘**破冰船** (GARINKO 號) 體驗破冰。", query: "紋別 GARINKO 號 破冰船" },
@@ -177,7 +180,7 @@
                 id: 4,
                 title: "02/23：小樽運河．音樂盒堂 🔔",
                 subtitle: "【自由散策】搭乘 JR 前往，盡情享受小樽的浪漫氛圍。",
-                location: "小樽, 日本", // 🎯 新增地點
+                location: "小樽, 日本", 
                 details: [
                     { time: "10:00", description: "從札幌搭乘 JR 前往小樽。", query: "小樽 JR 站" },
                     { time: "11:00", description: "**小樽運河**：沿著運河邊散步，拍攝經典倉庫群。", query: "小樽運河" },
@@ -193,7 +196,7 @@
                 id: 5,
                 title: "02/24：海鮮購物．三大蟹宴 🛍️",
                 subtitle: "【美食天堂】一整天獻給北海道的美味與購物。",
-                location: "札幌, 日本", // 🎯 新增地點
+                location: "札幌, 日本", 
                 details: [
                     { time: "09:30", description: "上午：參拜**北海道神宮**。", query: "北海道神宮" },
                     { time: "11:00", description: "前往**札幌場外市場**，享用超新鮮海鮮丼 (自理)。", query: "札幌場外市場" },
@@ -207,7 +210,7 @@
                 id: 6,
                 title: "02/25：最終採買．返家 🏠",
                 subtitle: "【完美句點】輕鬆血拚後，帶著滿滿回憶踏上歸途。",
-                location: "新千歲機場, 日本", // 🎯 新增地點
+                location: "新千歲機場, 日本", 
                 details: [
                     { time: "10:00", description: "退房後，前往**三井OUTLET購物中心**或 Rera Outlet。", query: "札幌三井OUTLET購物中心" },
                     { time: "12:00", description: "在 OUTLET 內享用午餐。", query: "OUTLET 餐廳" },
@@ -248,33 +251,58 @@
             }
         }
         
-        // --- 天氣查詢邏輯 ---
-        async function fetchWeatherForLocation(location, dayId) {
-            const weatherDisplayId = `weather-display-${dayId}`;
+        /**
+         * 通用天氣查詢邏輯
+         * @param {string} userQuery - 傳給 LLM 的查詢字串 (e.g., "Current weather in Taipei")
+         * @param {string} fallbackLocationName - 當定位失敗時，顯示在 UI 上的地點名稱 (e.g., "台北")
+         * @param {string} weatherDisplayId - 渲染結果的 DOM ID
+         */
+        async function fetchWeather(userQuery, fallbackLocationName, weatherDisplayId) {
             const weatherDisplay = document.getElementById(weatherDisplayId);
             
             if (!weatherDisplay) return;
 
+            // 🎯 新增 API Key 檢查，解決外部部署失敗問題
+            if (API_KEY.trim() === "") {
+                weatherDisplay.innerHTML = `
+                    <div class="flex items-start text-sm text-red-600 font-bold p-3 bg-red-50 rounded-lg border border-red-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <p>
+                            天氣查詢失敗：請在程式碼中 \`const API_KEY\` 處填入**有效的 Gemini API Key**。
+                        </p>
+                    </div>
+                `;
+                return;
+            }
+
+
             // 1. 顯示載入狀態
-            weatherDisplay.innerHTML = `
+            const loadingHtml = `
                 <div class="flex items-center text-sm text-gray-500 animate-pulse">
                     <svg class="animate-spin h-4 w-4 mr-2 text-sky-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    正在查詢 ${location.split(',')[0].trim()} 的即時天氣...
+                    正在查詢 ${fallbackLocationName} 的即時天氣...
                 </div>
             `;
+            const currentContent = weatherDisplay.innerHTML;
+            // 如果當前內容包含定位錯誤訊息，則保留該訊息，只更新載入狀態
+            if (currentContent.includes('因系統環境限制')) {
+                weatherDisplay.innerHTML = currentContent.split('</div>')[0] + '</div>' + loadingHtml;
+            } else {
+                 weatherDisplay.innerHTML = loadingHtml;
+            }
+            
 
             // 2. 構建 API 請求
-            // 查詢目前的溫度、天氣狀況、預計高低溫
-            const userQuery = `What is the current temperature, condition (e.g., cloudy, snowy), and expected high/low temperature for ${location}? Summarize in one sentence in Traditional Chinese.`;
-            
             const payload = {
                 contents: [{ parts: [{ text: userQuery }] }],
                 tools: [{ "google_search": {} }], // 啟用 Google Search 進行即時資訊查詢
                 systemInstruction: {
-                    parts: [{ text: "You are a concise weather reporter. Your response must be a single, short sentence in Traditional Chinese, summarizing the temperature, high/low, and weather condition for the requested location based on the provided search results. If the data is unavailable, state it clearly." }]
+                    parts: [{ text: "You are a concise weather reporter. Your response must be a single, short sentence in Traditional Chinese, summarizing the temperature, high/low, and weather condition for the requested location based on the provided search results. If the data is unavailable, state it clearly. Do not use markdown formatting in the output." }]
                 },
             };
 
@@ -286,17 +314,21 @@
                 });
 
                 if (!response.ok) {
+                    // 🎯 處理 403/400 等錯誤碼，明確提示金鑰或 CORS 問題
+                    if (response.status === 403 || response.status === 400) {
+                         throw new Error(`API Key 或 CORS 錯誤 (狀態碼: ${response.status})。請檢查您的 API Key。`);
+                    }
                     throw new Error(`API call failed with status: ${response.status}`);
                 }
 
                 const result = await response.json();
-                const generatedText = result.candidates?.[0]?.content?.parts?.[0]?.text || "天氣資訊查詢失敗，請嘗試重新整理。";
+                const generatedText = result.candidates?.[0]?.content?.parts?.[0]?.text || `無法取得 ${fallbackLocationName} 的天氣資訊，請嘗試重新整理。`;
 
-                // 3. 顯示成功結果
-                weatherDisplay.innerHTML = `
-                    <div class="flex items-start">
+                // 3. 顯示成功結果 (保留定位錯誤訊息，只替換查詢狀態)
+                weatherDisplay.innerHTML = currentContent.split('</div>')[0] + '</div>' + `
+                    <div class="flex items-start mt-2">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 mt-0.5 text-sky-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.975 4 4 0 10-7.432-1.761l-1.63 1.63a.1.1 0 01-.108.025l-2.923-1.125A3 3 0 003 15z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.975 4 4 0 10-7.432-1.761l-1.63 1.63a.1.1 0 01-.108.025l-2.923-1.125A3 3 0 003 15z" />
                         </svg>
                         <p class="text-sm text-gray-800 font-medium">${generatedText}</p>
                     </div>
@@ -304,19 +336,56 @@
                 
             } catch (error) {
                 console.error("Error fetching weather:", error);
-                // 4. 顯示失敗結果
-                weatherDisplay.innerHTML = `
-                    <div class="flex items-start text-sm text-red-600">
+                
+                // 4. 顯示失敗結果 (保留定位錯誤訊息，只替換查詢狀態)
+                const errorMessage = error.message.includes('API Key') ? error.message : '連線失敗，可能是網路或 CORS 錯誤。';
+
+                weatherDisplay.innerHTML = currentContent.split('</div>')[0] + '</div>' + `
+                    <div class="flex items-start text-sm text-red-600 mt-2">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <p>天氣查詢連線失敗，請稍後再試。</p>
+                        <p>天氣查詢失敗：${errorMessage}</p>
                     </div>
                 `;
             }
         }
-        // --- 天氣查詢邏輯結束 ---
-        
+        // --- 通用天氣查詢邏輯結束 ---
+
+        /**
+         * 取得使用者當前位置並查詢天氣 (已修改為直接預設查詢「台北」以避免權限錯誤)
+         */
+        function getDynamicWeather() {
+            const weatherDisplay = document.getElementById(WEATHER_DISPLAY_ID);
+            const fallbackCity = "台北";
+            
+            // 由於環境限制，我們直接跳過 Geolocation 嘗試，使用預設城市。
+
+            const userQuery = `What is the current temperature, condition (e.g., cloudy, snowy), and expected high/low temperature for ${fallbackCity}? Summarize in one sentence in Traditional Chinese.`;
+
+            // 1. 顯示回退原因和正在查詢的狀態
+            weatherDisplay.innerHTML = `
+                <div class="flex items-start text-sm text-yellow-600 mb-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.398 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <p>
+                        因系統環境限制，無法取得您的即時位置 (已回退至查詢 <span class="font-bold">${fallbackCity}</span> 天氣)。
+                    </p>
+                </div>
+                <div class="flex items-center text-sm text-gray-500 animate-pulse mt-2">
+                    <svg class="animate-spin h-4 w-4 mr-2 text-sky-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    正在查詢 ${fallbackCity} 的即時天氣...
+                </div>
+            `;
+            
+            // 2. 直接呼叫天氣查詢
+            fetchWeather(userQuery, fallbackCity, WEATHER_DISPLAY_ID);
+        }
+
         // --- 匯率查詢/換算邏輯 ---
         
         window.convertCurrency = function() {
@@ -387,7 +456,7 @@
         }
 
         /**
-         * 匯率查詢邏輯 (模擬 API 呼叫，但格式符合您的環境需求)
+         * 匯率查詢邏輯 (使用外部 API)
          */
         async function fetchExchangeRate() {
             const statusDisplay = document.getElementById('current-rate-status');
@@ -406,8 +475,8 @@
             `;
             statusDisplay.className = 'mt-2 pt-1 border-t border-gray-100 flex justify-end'; // 查詢時顯示分隔線
             
-            // --- 模擬 API 呼叫邏輯開始 (應替換為實際的 Google Search API 邏輯) ---
-            const rateApiUrl = 'https://api.exchangerate.host/latest?base=JPY&symbols=TWD'; // 實際環境會使用 Google Search
+            // --- API 呼叫邏輯 ---
+            const rateApiUrl = 'https://api.exchangerate.host/latest?base=JPY&symbols=TWD'; 
             
             let success = false;
             let parsedRate = null;
@@ -422,12 +491,20 @@
                         if (parsedRate && parsedRate > 0) {
                             success = true;
                         }
+                    } else {
+                        // 處理 API 成功回應但數據無效的情況
+                        console.error("Exchange Rate API returned success=false or missing rate data.");
                     }
-                } 
+                } else {
+                    // 🎯 處理 HTTP 錯誤 (例如 404, 500)
+                    console.error(`Exchange Rate API failed with status: ${response.status}`);
+                    // 檢查是否為 CORS 相關的常見狀態碼，如果無法判斷，後續將以網路錯誤處理
+                }
             } catch (error) {
-                // 忽略錯誤，進入 fallback
+                // 🎯 處理網路錯誤 (例如 CORS 錯誤、網路連線問題)
+                console.error("Error fetching exchange rate (Network/CORS):", error);
             }
-            // --- 模擬 API 呼叫邏輯結束 ---
+            // --- API 呼叫邏輯結束 ---
 
             if (success) {
                 currentExchangeRate = parsedRate; 
@@ -453,14 +530,14 @@
                     </div>
                 `;
             } else {
-                // --- 處理 Fallback (小字，紅字，並加入重新整理按鈕) ---
+                // --- 處理 Fallback (網路失敗或 CORS 錯誤時) ---
                 currentExchangeRate = FALLBACK_RATE;
                 convertCurrency(); 
 
                 statusDisplay.innerHTML = `
                     <div class="text-right text-red-600 flex items-center justify-end space-x-2">
                         <div class="text-xs font-normal">
-                            <p>即時匯率查詢失敗 (API 錯誤)。</p>
+                            <p>即時匯率查詢失敗 (網路/CORS 錯誤)。</p>
                             <p class="font-bold leading-tight">目前使用預設匯率：1 JPY ≈ ${FALLBACK_RATE.toFixed(4)} TWD</p>
                         </div>
                         <!-- 重新整理 Icon -->
@@ -488,6 +565,35 @@
             }
         }
         // --- 匯率查詢/換算邏輯結束 ---
+
+        /**
+         * 渲染主頁天氣預報區塊 
+         */
+        function renderCurrentWeatherBlock() {
+            
+            return `
+                <div class="p-4 bg-sky-50 rounded-xl border border-sky-200 mb-6 shadow-sm">
+                    <h3 class="text-xl font-bold text-sky-700 mb-2 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        當前所在地即時天氣
+                    </h3>
+                    <div id="${WEATHER_DISPLAY_ID}" class="mt-2">
+                        <!-- 初始載入狀態將由 getDynamicWeather() 設定 -->
+                        <div class="text-sm text-gray-500 flex items-center">
+                            <svg class="animate-spin h-4 w-4 mr-2 text-sky-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            正在檢查定位權限並準備查詢天氣...
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
 
         /**
          * 渲染匯率轉換器區塊 - 移除卡片樣式
@@ -539,6 +645,12 @@
          */
         function renderHomeContent() {
             
+            const highlightText = (text) => {
+                return text.replace(/\*\*(.*?)\*\*/g, (match, p1) => {
+                    return `<span class="font-bold text-[#00A8A0] bg-[#E0FFFF] px-1 rounded-sm">${p1}</span>`;
+                });
+            };
+
             const highlightsContent = `
                 <div>
                     <h3 class="text-2xl font-bold accent-color mb-3 border-b pb-2">🎯 行程亮點</h3>
@@ -559,6 +671,9 @@
 
             return `
                 <div class="day-content p-8 sm:p-10 bg-white rounded-xl shadow-lg border border-gray-100 space-y-8">
+                    
+                    ${renderCurrentWeatherBlock()} <!-- 🎯 新增動態天氣區塊在最上方 -->
+                    
                     <!-- 1. 航班/集合資訊 -->
                     <div>
                         <h3 class="text-2xl font-bold accent-color mb-3 border-b pb-2">✈️ 航班/集合資訊</h3>
@@ -568,7 +683,7 @@
                         </div>
                     </div>
                     
-                    ${renderExchangeRateBlock()} <!-- 新增在主頁，無卡片外框 -->
+                    ${renderExchangeRateBlock()} <!-- 匯率試算器 -->
 
                     <!-- 2. 行程亮點 -->
                     ${highlightsContent}
@@ -577,7 +692,7 @@
         }
 
         /**
-         * 渲染單日內容 (包含天氣區塊)
+         * 渲染單日內容 (移除天氣區塊)
          */
         function renderDayContent(day) {
             
@@ -591,24 +706,7 @@
                 const [hours, minutes] = timeStr.split(':').map(Number);
                 return hours * 60 + minutes;
             };
-
-            // 🎯 天氣預報區塊
-            const weatherSection = `
-                <div class="p-4 bg-sky-50 rounded-lg border border-sky-200 mb-6">
-                    <h4 class="text-lg font-bold text-sky-700 mb-2 flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.111v2.98h4.5V3.11m-2.25 18.27v-2.98m-4.5 2.98v-2.98m9 0v-2.98M12 21.381A9.75 9.75 0 0021.75 12 9.75 9.75 0 0012 2.25 9.75 9.75 0 002.25 12 9.75 9.75 0 0012 21.381zM9.75 14.25v2.98h4.5v-2.98m-4.5-5.96h4.5v-2.98h-4.5v2.98z" />
-                        </svg>
-                        今日天氣預報 (${day.location.split(',')[0].trim()})
-                    </h4>
-                    <div id="weather-display-day-${day.id}">
-                        <!-- 天氣內容將由 fetchWeatherForLocation 載入 -->
-                        <div class="text-sm text-gray-500">點擊「詳細行程」標籤後即可查詢...</div>
-                    </div>
-                </div>
-            `;
-
-
+            
             const detailsHtml = `
                 <h4 class="text-xl font-bold text-[#2E4057] mb-4 border-l-4 border-[#748DA6] pl-2">行程細節：</h4>
                 <div class="space-y-4">
@@ -692,8 +790,6 @@
                     
                     <p class="text-gray-700 mb-6 font-medium text-xl leading-relaxed">${day.subtitle}</p>
                     
-                    ${weatherSection} <!-- 🎯 插入天氣區塊 -->
-
                     ${detailsHtml} <!-- 插入行程細節 -->
 
                     <div class="meal-summary p-4 mt-8 rounded-lg text-base font-semibold grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -774,9 +870,11 @@
                 dayTabsContainer.style.display = 'none'; // 隱藏 Day Tabs
                 contentContainer.innerHTML = renderHomeContent();
                 
-                // 🎯 在切換到主頁時，執行初始化並嘗試獲取最新匯率
+                // 🎯 執行主頁獨有的初始化功能
                 initializeExchangeRateStatus();
                 fetchExchangeRate();
+                // 🎯 查詢當前所在地天氣 (已改為預設查詢台北)
+                getDynamicWeather(); 
 
             } else if (viewId === 'itinerary-group') {
                 // 詳細行程頁：頂部留白 (pt) 設為 0，只保留底部留白 (pb)
@@ -807,12 +905,8 @@
             const dayNumber = parseInt(dayId.split('-')[1]);
             const dayData = itineraryData.find(d => d.id === dayNumber);
             if (dayData) {
-                // 渲染單日內容 (已不含匯率試算器)
+                // 渲染單日內容 (已不含天氣試算器)
                 contentContainer.innerHTML = renderDayContent(dayData);
-                
-                // 🎯 新增：獲取該日行程的天氣資訊
-                const location = dayData.location;
-                fetchWeatherForLocation(location, dayId); // Pass location and dayId
             }
         }
 
