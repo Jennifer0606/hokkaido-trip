@@ -99,7 +99,7 @@
         </div>
 
         <!-- 內容區 - 動態切換顯示主頁或每日行程 -->
-        <div id="dynamic-content" class="content-area bg-gray-50 py-8 sm:py-12 px-4 sm:px-6">
+        <div id="dynamic-content" class="content-area bg-gray-50 px-4 sm:px-6">
             <!-- Content will be rendered here by JS -->
             <div class="text-center text-gray-500 py-16">
                 載入中... 請稍候或確認您已點擊 Preview 按鈕。
@@ -113,8 +113,12 @@
     </div>
 
     <script>
+        // --- API & 環境設定 ---
+        const API_KEY = ""; // 保持空值，環境會自動提供
+        const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent";
+        const MAX_RETRIES = 5;
+
         // --- 匯率相關全域變數與設定 ---
-        // 預設匯率 (0.22 TWD for 1 JPY)
         const FALLBACK_RATE = 0.22; 
         let currentExchangeRate = FALLBACK_RATE; 
 
@@ -122,12 +126,13 @@
         let activeMainTab = 'home'; 
         let activeDayId = 'day-1'; 
 
-        // --- 行程資料 (保持不變) ---
+        // --- 行程資料 (新增 location 欄位用於天氣查詢) ---
         const itineraryData = [
             {
                 id: 1,
                 title: "02/20：札幌啟程 ✈️",
                 subtitle: "【初識札幌】從機場直奔市區，展開悠閒的冬季漫步。",
+                location: "札幌, 日本", // 🎯 新增地點
                 details: [
                     { time: "04:00", description: "桃園機場Terminal 1報到", query: "桃園機場" },
                     { time: "11:30", description: "新千歲機場入境後，搭乘交通工具前往札幌市區。", query: "新千歲機場" },
@@ -142,6 +147,7 @@
                 title: "02/21：企鵝．雪上活動．溫泉 🐧",
                 subtitle: "【冰雪樂園】整日精彩活動，以溫泉解除疲勞。",
                 warning: "⚠️ 團體巴士行程：07:40 JR札幌北口集合",
+                location: "旭川, 日本", // 🎯 新增地點
                 details: [
                     { time: "08:00", description: "搭乘專屬巴士前往**旭山動物園**，觀賞冬季限定的企鵝散步。", query: "旭山動物園" },
                     { time: "12:00", description: "午餐時間 (焗烤螃蟹海鮮陶板燒御膳)。", query: "旭川午餐地點" },
@@ -156,6 +162,7 @@
                 title: "02/22：紋別破冰船．酒造巡禮 🚢",
                 subtitle: "【海之震撼】欣賞鄂霍次克海的流冰奇景。",
                 warning: "⚠️ 團體巴士行程：約 18:00-19:00 返抵 JR 札幌車站解散",
+                location: "紋別, 日本", // 🎯 新增地點
                 details: [
                     { time: "08:30", description: "參觀**銀河流星瀑布** (冬季景觀)。", query: "銀河流星瀑布" },
                     { time: "10:30", description: "重頭戲：抵達紋別，搭乘**破冰船** (GARINKO 號) 體驗破冰。", query: "紋別 GARINKO 號 破冰船" },
@@ -170,6 +177,7 @@
                 id: 4,
                 title: "02/23：小樽運河．音樂盒堂 🔔",
                 subtitle: "【自由散策】搭乘 JR 前往，盡情享受小樽的浪漫氛圍。",
+                location: "小樽, 日本", // 🎯 新增地點
                 details: [
                     { time: "10:00", description: "從札幌搭乘 JR 前往小樽。", query: "小樽 JR 站" },
                     { time: "11:00", description: "**小樽運河**：沿著運河邊散步，拍攝經典倉庫群。", query: "小樽運河" },
@@ -185,6 +193,7 @@
                 id: 5,
                 title: "02/24：海鮮購物．三大蟹宴 🛍️",
                 subtitle: "【美食天堂】一整天獻給北海道的美味與購物。",
+                location: "札幌, 日本", // 🎯 新增地點
                 details: [
                     { time: "09:30", description: "上午：參拜**北海道神宮**。", query: "北海道神宮" },
                     { time: "11:00", description: "前往**札幌場外市場**，享用超新鮮海鮮丼 (自理)。", query: "札幌場外市場" },
@@ -198,6 +207,7 @@
                 id: 6,
                 title: "02/25：最終採買．返家 🏠",
                 subtitle: "【完美句點】輕鬆血拚後，帶著滿滿回憶踏上歸途。",
+                location: "新千歲機場, 日本", // 🎯 新增地點
                 details: [
                     { time: "10:00", description: "退房後，前往**三井OUTLET購物中心**或 Rera Outlet。", query: "札幌三井OUTLET購物中心" },
                     { time: "12:00", description: "在 OUTLET 內享用午餐。", query: "OUTLET 餐廳" },
@@ -213,17 +223,112 @@
         const dayTabsContainer = document.getElementById('day-tabs');
         const contentContainer = document.getElementById('dynamic-content');
         
+        // --- 通用工具函式 (含指數退避) ---
+        async function fetchWithRetry(url, options) {
+            let delay = 1000;
+            for (let i = 0; i < MAX_RETRIES; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (response.status === 429 || response.status >= 500) {
+                        if (i < MAX_RETRIES - 1) {
+                            await new Promise(resolve => setTimeout(resolve, delay));
+                            delay *= 2;
+                            continue;
+                        }
+                    }
+                    return response;
+                } catch (error) {
+                    if (i < MAX_RETRIES - 1) {
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        delay *= 2;
+                        continue;
+                    }
+                    throw error; 
+                }
+            }
+        }
+        
+        // --- 天氣查詢邏輯 ---
+        async function fetchWeatherForLocation(location, dayId) {
+            const weatherDisplayId = `weather-display-${dayId}`;
+            const weatherDisplay = document.getElementById(weatherDisplayId);
+            
+            if (!weatherDisplay) return;
+
+            // 1. 顯示載入狀態
+            weatherDisplay.innerHTML = `
+                <div class="flex items-center text-sm text-gray-500 animate-pulse">
+                    <svg class="animate-spin h-4 w-4 mr-2 text-sky-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    正在查詢 ${location.split(',')[0].trim()} 的即時天氣...
+                </div>
+            `;
+
+            // 2. 構建 API 請求
+            // 查詢目前的溫度、天氣狀況、預計高低溫
+            const userQuery = `What is the current temperature, condition (e.g., cloudy, snowy), and expected high/low temperature for ${location}? Summarize in one sentence in Traditional Chinese.`;
+            
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                tools: [{ "google_search": {} }], // 啟用 Google Search 進行即時資訊查詢
+                systemInstruction: {
+                    parts: [{ text: "You are a concise weather reporter. Your response must be a single, short sentence in Traditional Chinese, summarizing the temperature, high/low, and weather condition for the requested location based on the provided search results. If the data is unavailable, state it clearly." }]
+                },
+            };
+
+            try {
+                const response = await fetchWithRetry(`${API_URL}?key=${API_KEY}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API call failed with status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                const generatedText = result.candidates?.[0]?.content?.parts?.[0]?.text || "天氣資訊查詢失敗，請嘗試重新整理。";
+
+                // 3. 顯示成功結果
+                weatherDisplay.innerHTML = `
+                    <div class="flex items-start">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 mt-0.5 text-sky-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.975 4 4 0 10-7.432-1.761l-1.63 1.63a.1.1 0 01-.108.025l-2.923-1.125A3 3 0 003 15z" />
+                        </svg>
+                        <p class="text-sm text-gray-800 font-medium">${generatedText}</p>
+                    </div>
+                `;
+                
+            } catch (error) {
+                console.error("Error fetching weather:", error);
+                // 4. 顯示失敗結果
+                weatherDisplay.innerHTML = `
+                    <div class="flex items-start text-sm text-red-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <p>天氣查詢連線失敗，請稍後再試。</p>
+                    </div>
+                `;
+            }
+        }
+        // --- 天氣查詢邏輯結束 ---
+        
         // --- 匯率查詢/換算邏輯 ---
+        
         window.convertCurrency = function() {
             const jpyInput = document.getElementById('jpy-input');
             const twdOutput = document.getElementById('twd-output');
             
             if (!jpyInput || !twdOutput) return;
 
-            // --- 新增：限制整數部分最多六位數輸入 ---
+            // --- 限制整數部分最多六位數輸入 ---
             let inputValue = jpyInput.value;
 
-            // 1. 處理負數：type="number" 允許輸入負號，但我們強制為正數
+            // 1. 處理負數
             if (inputValue.startsWith('-')) {
                 jpyInput.value = inputValue.slice(1);
                 inputValue = jpyInput.value;
@@ -234,9 +339,7 @@
             let integerPart = parts[0];
 
             if (integerPart.length > 6) {
-                // 截斷多餘的數字
                 integerPart = integerPart.substring(0, 6);
-                // 重新組裝值 (保留小數點，如果有的話)
                 jpyInput.value = parts.length > 1 ? `${integerPart}.${parts[1]}` : integerPart;
             }
             // --- 限制結束 ---
@@ -264,113 +367,116 @@
 
         /**
          * 初始化匯率狀態顯示
-         * 樣式調整：移除區塊感，改為右下方的小字體
          */
         function initializeExchangeRateStatus() {
             const statusDisplay = document.getElementById('current-rate-status');
             if (statusDisplay) { 
+                // 這是初始狀態，在 fetchExchangeRate 中會被替換
                 statusDisplay.innerHTML = `
                     <div class="text-xs text-gray-500 flex items-center justify-end space-x-1">
                         <svg class="h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         <span>載入中... 準備查詢匯率</span>
+                        <span class="w-5 h-5"></span> <!-- 佔位符 for refresh button -->
                     </div>
                 `;
-                // 設置基本樣式，讓它位於下方，並只靠 JS 更改內部文字樣式
-                statusDisplay.className = 'mt-4 pt-2 border-t border-gray-100 flex justify-end';
+                // 設置基礎樣式 (移除頂部分隔線)
+                statusDisplay.className = 'mt-2 pt-1 flex justify-end';
             }
         }
 
         /**
-         * 匯率查詢新邏輯
+         * 匯率查詢邏輯 (模擬 API 呼叫，但格式符合您的環境需求)
          */
         async function fetchExchangeRate() {
             const statusDisplay = document.getElementById('current-rate-status');
             if (!statusDisplay) return;
 
-            // 使用專門的匯率 API，查詢 JPY 兌 TWD 的匯率
-            const rateApiUrl = 'https://api.exchangerate.host/latest?base=JPY&symbols=TWD';
-
-            // 1. 顯示正在查詢的狀態 (小字、黑字)
+            // 1. 顯示正在查詢的狀態
             statusDisplay.innerHTML = `
                 <div class="text-xs text-gray-700 flex items-center justify-end space-x-1 animate-pulse">
                     <svg class="animate-spin h-3 w-3 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    <span>正在查詢即時匯率 (JPY/TWD)</span>
+                    <span>正在查詢即時匯率</span>
+                    <span class="w-5 h-5"></span> <!-- 佔位符 -->
                 </div>
             `;
-            statusDisplay.className = 'mt-4 pt-2 border-t border-gray-100 flex justify-end'; // 保持基礎樣式
+            statusDisplay.className = 'mt-2 pt-1 border-t border-gray-100 flex justify-end'; // 查詢時顯示分隔線
             
-            const maxRetries = 5;
-            let delay = 1000;
+            // --- 模擬 API 呼叫邏輯開始 (應替換為實際的 Google Search API 邏輯) ---
+            const rateApiUrl = 'https://api.exchangerate.host/latest?base=JPY&symbols=TWD'; // 實際環境會使用 Google Search
+            
+            let success = false;
+            let parsedRate = null;
 
-            for (let i = 0; i < maxRetries; i++) {
-                try {
-                    const response = await fetch(rateApiUrl);
+            try {
+                const response = await fetchWithRetry(rateApiUrl, { method: 'GET' });
 
-                    if (!response.ok) {
-                        if ((response.status === 429 || response.status >= 500) && i < maxRetries - 1) {
-                            await new Promise(resolve => setTimeout(resolve, delay));
-                            delay *= 2; 
-                            continue; 
-                        }
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-
+                if (response.ok) {
                     const result = await response.json();
-                    
-                    // 檢查 API 回傳的成功狀態和匯率數據
                     if (result.success && result.rates && result.rates.TWD) {
-                        const parsedRate = result.rates.TWD;
-                        
+                        parsedRate = result.rates.TWD;
                         if (parsedRate && parsedRate > 0) {
-                            currentExchangeRate = parsedRate; 
-                            convertCurrency(); 
-                            
-                            // 顯示成功狀態 (小字，突出匯率)
-                            statusDisplay.innerHTML = `
-                                <div class="text-right">
-                                    <p class="text-lg font-bold text-emerald-700 leading-tight">1 JPY = ${currentExchangeRate.toFixed(4)} TWD</p>
-                                    <p class="text-xs font-normal text-gray-500 mt-0.5">數據來源: ExchangeRate.host</p>
-                                </div>
-                            `;
-                            statusDisplay.className = 'mt-4 pt-2 border-t border-gray-100 flex justify-end'; // 保持基礎樣式
-                            return; 
-                        } else {
-                            // 數據有效但數值不正確，跳出迴圈使用 Fallback Rate
-                            break; 
+                            success = true;
                         }
-                    } else {
-                        // API 回傳格式不符或失敗
-                        break; 
                     }
-
-                } catch (error) {
-                    console.error("API Call Error:", error);
-                    if (i === maxRetries - 1) {
-                        break;
-                    } else {
-                        // 網路或解析錯誤，進行延遲重試
-                        await new Promise(resolve => setTimeout(resolve, delay));
-                        delay *= 2;
-                    }
-                }
+                } 
+            } catch (error) {
+                // 忽略錯誤，進入 fallback
             }
-            
-            // --- 重試迴圈結束，處理 Fallback (小字，黑字，錯誤使用紅字) ---
-            currentExchangeRate = FALLBACK_RATE;
-            convertCurrency(); 
+            // --- 模擬 API 呼叫邏輯結束 ---
 
-            statusDisplay.innerHTML = `
-                <div class="text-right text-red-600">
-                    <p class="text-xs font-normal">即時匯率查詢失敗 (API 錯誤或無法連線)</p>
-                    <p class="text-xs font-bold leading-tight">目前使用預設匯率：1 JPY ≈ ${FALLBACK_RATE.toFixed(4)} TWD</p>
-                </div>
-            `;
-            statusDisplay.className = 'mt-4 pt-2 border-t border-gray-100 flex justify-end';
+            if (success) {
+                currentExchangeRate = parsedRate; 
+                convertCurrency(); 
+                
+                // 顯示成功狀態 (小字，突出匯率，並加入重新整理按鈕)
+                statusDisplay.innerHTML = `
+                    <div class="text-right flex items-center justify-end space-x-2">
+                        <div class="text-xs font-normal text-gray-500">
+                            <p class="font-bold text-emerald-700 leading-tight">1 JPY = ${currentExchangeRate.toFixed(4)} TWD</p>
+                            <p class="mt-0.5">數據來源: ExchangeRate.host</p>
+                        </div>
+                        <!-- 重新整理 Icon -->
+                        <button 
+                            onclick="fetchExchangeRate()" 
+                            class="inline-flex items-center justify-center text-gray-500 hover:text-gray-700 p-0.5 rounded-full hover:bg-gray-100 transition duration-150 flex-shrink-0" 
+                            title="重新整理匯率"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 2v6h6"/><path d="M3 13a9 9 0 1 0 3-7.7L3 8"/>
+                            </svg>
+                        </button>
+                    </div>
+                `;
+            } else {
+                // --- 處理 Fallback (小字，紅字，並加入重新整理按鈕) ---
+                currentExchangeRate = FALLBACK_RATE;
+                convertCurrency(); 
+
+                statusDisplay.innerHTML = `
+                    <div class="text-right text-red-600 flex items-center justify-end space-x-2">
+                        <div class="text-xs font-normal">
+                            <p>即時匯率查詢失敗 (API 錯誤)。</p>
+                            <p class="font-bold leading-tight">目前使用預設匯率：1 JPY ≈ ${FALLBACK_RATE.toFixed(4)} TWD</p>
+                        </div>
+                        <!-- 重新整理 Icon -->
+                        <button 
+                            onclick="fetchExchangeRate()" 
+                            class="inline-flex items-center justify-center text-gray-500 hover:text-gray-700 p-0.5 rounded-full hover:bg-gray-100 transition duration-150 flex-shrink-0" 
+                            title="重新整理匯率"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 2v6h6"/><path d="M3 13a9 9 0 1 0 3-7.7L3 8"/>
+                            </svg>
+                        </button>
+                    </div>
+                `;
+            }
+            statusDisplay.className = 'mt-2 pt-1 border-t border-gray-100 flex justify-end'; // 無論成功失敗都保留分隔線
         }
 
         window.openInGoogleMaps = function(query) {
@@ -382,6 +488,51 @@
             }
         }
         // --- 匯率查詢/換算邏輯結束 ---
+
+        /**
+         * 渲染匯率轉換器區塊 - 移除卡片樣式
+         */
+        function renderExchangeRateBlock() {
+            return `
+                <!-- 外層容器：限制寬度、置中、移除所有卡片樣式 -->
+                <div id="exchange-rate-block" class="max-w-xs mx-auto p-2 my-2 bg-transparent">
+                    
+                    <p class="text-sm font-semibold text-gray-600 mb-2 text-center">💵 JPY ⇌ TWD 快速試算</p>
+
+                    <!-- 匯率輸入/輸出區塊：使用 flex 確保緊湊 -->
+                    <div class="flex space-x-2">
+                        <!-- JPY Input Block -->
+                        <div class="flex-1">
+                            <input 
+                                type="number" 
+                                id="jpy-input" 
+                                oninput="convertCurrency()" 
+                                placeholder="日幣金額 (JPY)" 
+                                class="w-full py-2 px-3 border border-gray-300 rounded-lg text-sm shadow-sm focus:ring-sky-500 focus:border-sky-500"
+                                min="0"
+                                max="999999" 
+                            >
+                        </div>
+
+                        <!-- TWD Output Block -->
+                        <div 
+                            id="twd-output" 
+                            class="flex-1 flex items-center justify-end py-2 px-3 border border-gray-300 rounded-lg bg-gray-100 text-sm font-bold text-gray-700 text-right shadow-inner"
+                        >
+                            0 TWD
+                        </div>
+                    </div>
+                    <!-- 匯率輸入/輸出區塊結束 -->
+
+                    <!-- 狀態訊息區塊 (包含重新整理按鈕) -->
+                    <div id="current-rate-status" class="mt-2 pt-1 flex justify-end">
+                        <!-- 初始內容將由 JS 設定 -->
+                    </div>
+
+                </div>
+            `;
+        }
+
 
         /**
          * 渲染主頁 (包含行程亮點)
@@ -396,7 +547,7 @@
                     </p>
 
                     <ul class="space-y-3 pl-4 list-disc text-gray-700">
-                        <li><strong class="text-sky-700">雪地奇觀：</strong>獨家安排搭乘紋別破冰船，近距離感受鄂霍次克海的流冰震撼。</li>
+                        <li><strong class="text-sky-700">雪地奇觀：</strong>搭乘紋別破冰船，近距離感受鄂霍次克海的流冰震撼。</li>
                         <li><strong class="text-sky-700">動物明星：</strong>前往旭山動物園，觀賞冬季限定的企鵝雪地散步。</li>
                         <li><strong class="text-sky-700">溫泉療癒：</strong>入住層雲峽頂級溫泉飯店，享受日式豪華會席料理與天然溫泉。</li>
                         <li><strong class="text-sky-700">浪漫散策：</strong>在小樽運河、音樂盒堂享受浪漫的自由時光與精緻甜點。</li>
@@ -416,73 +567,17 @@
                             <p class="text-gray-700">回程：<span class="font-bold text-[#00A8A0] bg-[#E0FFFF] px-1 rounded-sm">華航 CI 131</span> (14:40 - 18:15) 航廈待定 ｜ 托運 2x23kg</p>
                         </div>
                     </div>
+                    
+                    ${renderExchangeRateBlock()} <!-- 新增在主頁，無卡片外框 -->
 
-                    <!-- 2. 行程亮點 (已還原) -->
+                    <!-- 2. 行程亮點 -->
                     ${highlightsContent}
                 </div>
             `;
         }
 
         /**
-         * 渲染匯率轉換器區塊
-         */
-        function renderExchangeRateBlock() {
-            return `
-                <!-- 🎯 外層容器保持 max-w-md 限制寬度並置中 -->
-                <div id="exchange-rate-block" class="max-w-md mx-auto bg-white border border-gray-300 rounded-xl py-8 px-6 shadow-lg mb-12">
-                    <h3 class="text-2xl font-bold accent-color mb-4 border-b pb-2 flex justify-between items-center">
-                        <span>💵 匯率試算</span>
-                        <!-- 重新整理 Icon -->
-                        <button 
-                            onclick="fetchExchangeRate()" 
-                            class="inline-flex items-center justify-center text-sky-600 hover:text-sky-700 p-2 rounded-full hover:bg-sky-50 transition duration-150 shadow-md flex-shrink-0" 
-                            title="重新整理匯率"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M3 2v6h6"/><path d="M3 13a9 9 0 1 0 3-7.7L3 8"/>
-                            </svg>
-                        </button>
-                    </h3>
-                    
-                    <!-- 匯率輸入/輸出區塊：強制使用 grid-cols-2 讓手機也並排 -->
-                    <div class="grid grid-cols-2 gap-2">
-                        <!-- JPY Input Block -->
-                        <div class="space-y-2">
-                            <!-- 已新增 max="999999" (瀏覽器提示) 和 oninput JS 邏輯 (強制限制) -->
-                            <input 
-                                type="number" 
-                                id="jpy-input" 
-                                oninput="convertCurrency()" 
-                                placeholder="日幣 (JPY)" 
-                                class="w-full py-2 px-3 border border-gray-300 rounded-lg text-base shadow-sm focus:ring-sky-500 focus:border-sky-500"
-                                min="0"
-                                max="999999" 
-                            >
-                        </div>
-
-                        <!-- TWD Output Block -->
-                        <div class="space-y-2">
-                            <div 
-                                id="twd-output" 
-                                class="flex items-center justify-end py-2 px-3 border border-gray-300 rounded-lg bg-gray-100 text-base font-bold text-gray-700 text-right shadow-inner h-full"
-                            >
-                                0 TWD
-                            </div>
-                        </div>
-                    </div>
-                    <!-- 匯率輸入/輸出區塊結束 -->
-
-                    <!-- 狀態訊息區塊 (已移動到下方，並設定右對齊的基礎樣式) -->
-                    <div id="current-rate-status" class="mt-4 pt-2 border-t border-gray-100 flex justify-end">
-                        <!-- 初始內容將由 JS 設定 -->
-                    </div>
-
-                </div>
-            `;
-        }
-
-        /**
-         * 渲染單日內容
+         * 渲染單日內容 (包含天氣區塊)
          */
         function renderDayContent(day) {
             
@@ -496,6 +591,23 @@
                 const [hours, minutes] = timeStr.split(':').map(Number);
                 return hours * 60 + minutes;
             };
+
+            // 🎯 天氣預報區塊
+            const weatherSection = `
+                <div class="p-4 bg-sky-50 rounded-lg border border-sky-200 mb-6">
+                    <h4 class="text-lg font-bold text-sky-700 mb-2 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.111v2.98h4.5V3.11m-2.25 18.27v-2.98m-4.5 2.98v-2.98m9 0v-2.98M12 21.381A9.75 9.75 0 0021.75 12 9.75 9.75 0 0012 2.25 9.75 9.75 0 002.25 12 9.75 9.75 0 0012 21.381zM9.75 14.25v2.98h4.5v-2.98m-4.5-5.96h4.5v-2.98h-4.5v2.98z" />
+                        </svg>
+                        今日天氣預報 (${day.location.split(',')[0].trim()})
+                    </h4>
+                    <div id="weather-display-day-${day.id}">
+                        <!-- 天氣內容將由 fetchWeatherForLocation 載入 -->
+                        <div class="text-sm text-gray-500">點擊「詳細行程」標籤後即可查詢...</div>
+                    </div>
+                </div>
+            `;
+
 
             const detailsHtml = `
                 <h4 class="text-xl font-bold text-[#2E4057] mb-4 border-l-4 border-[#748DA6] pl-2">行程細節：</h4>
@@ -580,6 +692,8 @@
                     
                     <p class="text-gray-700 mb-6 font-medium text-xl leading-relaxed">${day.subtitle}</p>
                     
+                    ${weatherSection} <!-- 🎯 插入天氣區塊 -->
+
                     ${detailsHtml} <!-- 插入行程細節 -->
 
                     <div class="meal-summary p-4 mt-8 rounded-lg text-base font-semibold grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -647,17 +761,33 @@
                     tab.classList.add('active');
                 }
             });
+            
+            // --- 🎯 動態設定內容區域的留白 ---
+            // 基礎 Class
+            const baseClasses = 'content-area bg-gray-50 px-4 sm:px-6';
 
             if (viewId === 'home') {
-                // 顯示主頁內容 (只顯示 HomeContent，移除 ExchangeRateBlock)
+                // 主頁使用正常的上下留白
+                contentContainer.className = baseClasses + ' py-8 sm:py-12';
+
+                // 顯示主頁內容 
                 dayTabsContainer.style.display = 'none'; // 隱藏 Day Tabs
                 contentContainer.innerHTML = renderHomeContent();
+                
+                // 🎯 在切換到主頁時，執行初始化並嘗試獲取最新匯率
+                initializeExchangeRateStatus();
+                fetchExchangeRate();
 
             } else if (viewId === 'itinerary-group') {
-                // 顯示詳細行程內容組
-                dayTabsContainer.style.display = 'flex'; // 顯示 Day Tabs
+                // 詳細行程頁：頂部留白 (pt) 設為 0，只保留底部留白 (pb)
+                contentContainer.className = baseClasses + ' pt-0 pb-8 sm:pb-12';
+                
+                // 顯示 Day Tabs
+                dayTabsContainer.style.display = 'flex'; 
                 // 自動切換到當前活躍的 Day 視圖 
                 switchDayView(activeDayId); 
+                
+
             }
         }
 
@@ -677,19 +807,17 @@
             const dayNumber = parseInt(dayId.split('-')[1]);
             const dayData = itineraryData.find(d => d.id === dayNumber);
             if (dayData) {
-                // 組合渲染：先匯率轉換器，後接每日行程
-                contentContainer.innerHTML = renderExchangeRateBlock() + renderDayContent(dayData);
+                // 渲染單日內容 (已不含匯率試算器)
+                contentContainer.innerHTML = renderDayContent(dayData);
                 
-                // 執行初始化並嘗試獲取最新匯率
-                initializeExchangeRateStatus();
-                fetchExchangeRate();
+                // 🎯 新增：獲取該日行程的天氣資訊
+                const location = dayData.location;
+                fetchWeatherForLocation(location, dayId); // Pass location and dayId
             }
         }
 
         // 5. 初始化應用程式
         window.onload = function() {
-            // 由於這個 app 不使用 Firestore 進行資料儲存，我們不需要 Firebase 初始化邏輯
-
             renderMainTabs();
             renderDayTabs();
             // 預設切換到主頁視圖
