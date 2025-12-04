@@ -143,7 +143,8 @@
                 subtitle: "【初識札幌】從機場直奔市區，展開悠閒的冬季漫步。",
                 location: "札幌, 日本", 
                 details: [
-                    { time: "04:00", description: "桃園機場Terminal 1報到", query: "桃園機場" },
+                    { time: "04:00", description: "**虎航 IT 234** 桃園機場 Terminal 1 辦理報到手續與行李托運。", query: "桃園機場 Terminal 1" },
+                    { time: "06:20", description: "搭乘**虎航 IT 234** 航班 (06:20) 飛往北海道新千歲機場。", query: "桃園國際機場" },
                     { time: "11:30", description: "新千歲機場入境後，搭乘交通工具前往札幌市區。", query: "新千歲機場" },
                     { time: "15:00", description: "參觀**大通公園**及經典地標**札幌電視塔**。", query: "札幌大通公園 札幌電視塔" },
                     { time: "18:30", description: "在美食與購物天堂**狸小路商店街**自由活動，享受日式晚餐。", query: "札幌狸小路商店街" }
@@ -487,20 +488,20 @@
             // 使用全域變數 currentExchangeRate
             if (currentExchangeRate <= 0) {
                 twdOutput.textContent = '匯率無效，請點擊「重新整理」';
-                twdOutput.className = twdOutput.className.replace(/text-emerald-800|bg-emerald-100|border-emerald-300|text-gray-700|bg-gray-100|border-gray-300|text-red-700|bg-red-100/g, 'text-red-700 bg-red-100 border-red-300');
+                twdOutput.className = twdOutput.className.replace(/text-pink-700|bg-pink-100|border-pink-300|text-gray-700|bg-gray-100|border-gray-300|text-red-700|bg-red-100/g, 'text-red-700 bg-red-100 border-red-300');
                 return;
             }
 
             if (isNaN(jpyAmount) || jpyAmount <= 0) {
                 twdOutput.textContent = '0 TWD';
-                twdOutput.className = twdOutput.className.replace(/text-red-700|bg-red-100|border-red-300|text-emerald-800|bg-emerald-100|border-emerald-300/g, 'text-gray-700 bg-gray-100 border-gray-300');
+                twdOutput.className = twdOutput.className.replace(/text-red-700|bg-red-100|border-red-300|text-pink-700|bg-pink-100|border-pink-300/g, 'text-gray-700 bg-gray-100 border-gray-300');
                 return;
             }
 
             const twdAmount = Math.round(jpyAmount * currentExchangeRate); 
             
             twdOutput.textContent = `${twdAmount.toLocaleString('en-US')} TWD`;
-            twdOutput.className = twdOutput.className.replace(/text-red-700|bg-red-100|border-red-300|text-gray-700|bg-gray-100|border-gray-300/g, 'text-emerald-800 bg-emerald-100 border-emerald-300');
+            twdOutput.className = twdOutput.className.replace(/text-red-700|bg-red-100|border-red-300|text-gray-700|bg-gray-100|border-gray-300/g, 'text-pink-700 bg-pink-100 border-pink-300');
         }
 
         /**
@@ -569,7 +570,7 @@
                 statusDisplay.innerHTML = renderRateLimitedStatus(minutes, currentExchangeRate.toFixed(4));
                 statusDisplay.className = 'mt-2 pt-1 border-t border-gray-100 flex justify-end';
                 // 將輸出框變成警告/非最新狀態
-                twdOutput.className = twdOutput.className.replace(/text-emerald-800|bg-emerald-100|border-emerald-300|text-gray-700|bg-gray-100|border-gray-300/g, 'text-red-700 bg-red-100 border-red-300');
+                twdOutput.className = twdOutput.className.replace(/text-pink-700|bg-pink-100|border-pink-300|text-gray-700|bg-gray-100|border-gray-300/g, 'text-red-700 bg-red-100 border-red-300');
 
                 return; // 提前退出，不進行 API 呼叫
             }
@@ -647,7 +648,7 @@
                 statusDisplay.innerHTML = `
                     <div class="text-right flex items-center justify-end space-x-2">
                         <div class="text-xs font-normal text-gray-500">
-                            <p class="font-bold text-emerald-700 leading-tight">1 JPY = ${currentExchangeRate.toFixed(4)} TWD</p>
+                            <p class="font-bold text-pink-700 leading-tight">1 JPY = ${currentExchangeRate.toFixed(4)} TWD</p>
                             <p class="mt-0.5">數據來源: 即時網路查詢</p>
                         </div>
                         <!-- 重新整理 Icon -->
@@ -777,16 +778,39 @@
 
 
         /**
+         * 🎯 更新 highlightText 函式：根據關鍵字類型套用不同的顏色
+         */
+        const ACTION_KEYWORDS = [
+            "虎航 IT 234", "華航 CI 131", "刺激雪上活動", 
+            "破冰船", "三大蟹吃到飽"
+        ];
+        
+        const highlightText = (text) => {
+            // 1. 定義顏色
+            // 灰冷色系 (地點類): text-slate-700 bg-slate-200
+            const locationClass = "font-bold text-slate-700 bg-slate-200 px-1 rounded-sm";
+            // 暖粉色系 (非地點/動作類): text-pink-700 bg-pink-100 (保留上次設定)
+            const actionClass = "font-bold text-pink-700 bg-pink-100 px-1 rounded-sm";
+
+            // 2. 使用 regex 找到所有 **...** 的區塊
+            return text.replace(/\*\*(.*?)\*\*/g, (match, p1) => {
+                // 3. 檢查 p1 (內部內容) 是否包含在 ACTION_KEYWORDS 中
+                const isAction = ACTION_KEYWORDS.some(keyword => p1.includes(keyword));
+                
+                // 4. 根據結果套用不同的 class
+                const className = isAction ? actionClass : locationClass;
+
+                return `<span class="${className}">${p1}</span>`;
+            });
+        };
+
+
+        /**
          * 渲染主頁 (包含行程亮點)
          */
         function renderHomeContent() {
             
-            const highlightText = (text) => {
-                return text.replace(/\*\*(.*?)\*\*/g, (match, p1) => {
-                    return `<span class="font-bold text-[#00A8A0] bg-[#E0FFFF] px-1 rounded-sm">${p1}</span>`;
-                });
-            };
-
+            // 🎯 在此處也使用新的 highlight 顏色
             const highlightsContent = `
                 <div>
                     <h3 class="text-2xl font-bold accent-color mb-3 border-b pb-2">🎯 行程亮點</h3>
@@ -795,11 +819,11 @@
                     </p>
 
                     <ul class="space-y-3 pl-4 list-disc text-gray-700">
-                        <li><strong class="text-sky-700">雪地奇觀：</strong>搭乘紋別破冰船，近距離感受鄂霍次克海的流冰震撼。</li>
-                        <li><strong class="text-sky-700">動物明星：</strong>前往旭山動物園，觀賞冬季限定的企鵝雪地散步。</li>
-                        <li><strong class="text-sky-700">溫泉療癒：</strong>入住層雲峽頂級溫泉飯店，享受日式豪華會席料理與天然溫泉。</li>
-                        <li><strong class="text-sky-700">浪漫散策：</strong>在小樽運河、音樂盒堂享受浪漫的自由時光與精緻甜點。</li>
-                        <li><strong class="text-sky-700">美食天堂：</strong>特別安排蟹腳海鮮陶板燒、並建議體驗三大蟹吃到飽。</li>
+                        <li><strong class="text-sky-700">雪地奇觀：</strong>搭乘紋別${highlightText('**破冰船**')}，近距離感受鄂霍次克海的流冰震撼。</li>
+                        <li><strong class="text-sky-700">動物明星：</strong>前往${highlightText('**旭山動物園**')}，觀賞冬季限定的企鵝雪地散步。</li>
+                        <li><strong class="text-sky-700">溫泉療癒：</strong>入住${highlightText('**層雲峽溫泉飯店**')}，享受日式豪華會席料理與天然溫泉。</li>
+                        <li><strong class="text-sky-700">浪漫散策：</strong>在${highlightText('**小樽運河**')}、${highlightText('**音樂盒堂**')}享受浪漫的自由時光與精緻甜點。</li>
+                        <li><strong class="text-sky-700">美食天堂：</strong>特別安排蟹腳海鮮陶板燒、並建議體驗${highlightText('**三大蟹吃到飽**')}。</li>
                     </ul>
                 </div>
             `;
@@ -814,8 +838,8 @@
                     <div>
                         <h3 class="text-2xl font-bold accent-color mb-3 border-b pb-2">✈️ 航班/集合資訊</h3>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm font-medium p-4 bg-gray-100 rounded-xl shadow-inner">
-                            <p class="text-gray-700">去程：<span class="font-bold text-[#00A8A0] bg-[#E0FFFF] px-1 rounded-sm">虎航 IT 234</span> (06:20 - 10:55) 第一航廈 ｜ 托運 20kg</p>
-                            <p class="text-gray-700">回程：<span class="font-bold text-[#00A8A0] bg-[#E0FFFF] px-1 rounded-sm">華航 CI 131</span> (14:40 - 18:15) 航廈待定 ｜ 托運 2x23kg</p>
+                            <p class="text-gray-700">去程：${highlightText('**虎航 IT 234**')} (06:20 - 10:55) 第一航廈 ｜ 托運 20kg</p>
+                            <p class="text-gray-700">回程：${highlightText('**華航 CI 131**')} (14:40 - 18:15) 航廈待定 ｜ 托運 2x23kg</p>
                         </div>
                     </div>
                     
@@ -832,11 +856,7 @@
          */
         function renderDayContent(day) {
             
-            const highlightText = (text) => {
-                return text.replace(/\*\*(.*?)\*\*/g, (match, p1) => {
-                    return `<span class="font-bold text-[#00A8A0] bg-[#E0FFFF] px-1 rounded-sm">${p1}</span>`;
-                });
-            };
+            // 🎯 highlightText 已更新，這裡會根據內容自動套用灰冷或暖粉色
 
             const timeToMinutes = (timeStr) => {
                 const [hours, minutes] = timeStr.split(':').map(Number);
@@ -915,6 +935,9 @@
                 </div>
             `;
             
+            // 處理住宿資訊的 highlight (特別處理 Lodging 欄位)
+            const lodgingHtml = highlightText(day.lodging);
+            
             // 包裝單日行程
             return `
                 <div class="day-content p-8 sm:p-10 bg-white rounded-xl shadow-lg border border-gray-100">
@@ -930,7 +953,7 @@
 
                     <div class="meal-summary p-4 mt-8 rounded-lg text-base font-semibold grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <div><span class="text-[#2E4057]">🍽️ 午/晚餐：</span> ${day.meals}</div>
-                        <div><span class="text-[#2E4057]">🏨 住宿：</span> ${day.lodging}</div>
+                        <div><span class="text-[#2E4057]">🏨 住宿：</span> ${lodgingHtml}</div>
                     </div>
                 </div>
             `;
