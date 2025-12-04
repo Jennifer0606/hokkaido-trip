@@ -116,11 +116,17 @@
     <script type="module">
         // --- API & 環境設定 ---
         // 🎯 注意：如果您將此檔案部署到外部網站（非 Canvas），請在這裡填入您的 Gemini API Key
+        // 您的 API Key 已經被保留
         const API_KEY = "AIzaSyCUAqeZHGu8dildmhdmOd_nTmoHa15EggU"; 
         const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent";
         const MAX_RETRIES = 5;
         const WEATHER_DISPLAY_ID = "weather-display-home"; // 全域 ID
 
+        // --- API 呼叫頻率限制設定 ---
+        // 🎯 限制匯率查詢改為每 12 小時才能發起一次新的 API 請求
+        const RATE_LIMIT_MS = 43200000; // 12 小時 (Hour) = 43200000 ms
+        const LAST_RATE_UPDATE_KEY = 'lastExchangeRateUpdate';
+        
         // --- 匯率相關全域變數與設定 ---
         const FALLBACK_RATE = 0.22; 
         let currentExchangeRate = FALLBACK_RATE; 
@@ -251,51 +257,60 @@
             }
         }
         
+        // --- 頻率限制輔助函式 ---
+
+        /**
+         * 檢查是否受到頻率限制 (根據 localStorage 儲存的時間戳記)
+         * @returns {number|null} 如果有限制，返回剩餘的等待時間（毫秒），否則返回 null
+         */
+        function isRateLimited() {
+            const lastUpdateStr = localStorage.getItem(LAST_RATE_UPDATE_KEY);
+            if (!lastUpdateStr) return null;
+
+            const lastUpdateTime = parseInt(lastUpdateStr, 10);
+            const currentTime = new Date().getTime();
+            const elapsedTime = currentTime - lastUpdateTime;
+
+            if (elapsedTime < RATE_LIMIT_MS) {
+                return RATE_LIMIT_MS - elapsedTime;
+            }
+            return null;
+        }
+
+        /**
+         * 更新最後一次成功呼叫 API 的時間戳記
+         */
+        function updateRateLimitTimestamp() {
+            localStorage.setItem(LAST_RATE_UPDATE_KEY, new Date().getTime().toString());
+        }
+
+        // --- 天氣查詢邏輯 ---
+
         /**
          * 通用天氣查詢邏輯
          * @param {string} userQuery - 傳給 LLM 的查詢字串 (e.g., "Current weather in Taipei")
-         * @param {string} fallbackLocationName - 當定位失敗時，顯示在 UI 上的地點名稱 (e.g., "台北")
-         * @param {string} weatherDisplayId - 渲染結果的 DOM ID
+         * @param {string} locationName - 當前地點名稱 (e.g., "台北" 或 "您目前的位置")
+         * @param {string} weatherDisplayId - 渲染結果容器 (如 "weather-display-home") 的 ID
          */
-        async function fetchWeather(userQuery, fallbackLocationName, weatherDisplayId) {
-            const weatherDisplay = document.getElementById(weatherDisplayId);
+        async function fetchWeather(userQuery, locationName, weatherDisplayId) {
+            const resultContainer = document.getElementById('weather-result');
+            const lastUpdatedContainer = document.getElementById('weather-last-updated');
             
-            if (!weatherDisplay) return;
-
-            // 🎯 新增 API Key 檢查，解決外部部署失敗問題
-            if (API_KEY.trim() === "") {
-                weatherDisplay.innerHTML = `
-                    <div class="flex items-start text-sm text-red-600 font-bold p-3 bg-red-50 rounded-lg border border-red-300">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <p>
-                            天氣查詢失敗：請在程式碼中 \`const API_KEY\` 處填入**有效的 Gemini API Key**。
-                        </p>
-                    </div>
-                `;
-                return;
-            }
-
+            if (!resultContainer || !lastUpdatedContainer) return;
 
             // 1. 顯示載入狀態
             const loadingHtml = `
-                <div class="flex items-center text-sm text-gray-500 animate-pulse">
+                <div class="flex items-center text-sm text-gray-500 animate-pulse mt-2">
                     <svg class="animate-spin h-4 w-4 mr-2 text-sky-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    正在查詢 ${fallbackLocationName} 的即時天氣...
+                    正在查詢 ${locationName} 的即時天氣...
                 </div>
             `;
-            const currentContent = weatherDisplay.innerHTML;
-            // 如果當前內容包含定位錯誤訊息，則保留該訊息，只更新載入狀態
-            if (currentContent.includes('因系統環境限制')) {
-                weatherDisplay.innerHTML = currentContent.split('</div>')[0] + '</div>' + loadingHtml;
-            } else {
-                 weatherDisplay.innerHTML = loadingHtml;
-            }
             
+            resultContainer.innerHTML = loadingHtml;
+            lastUpdatedContainer.textContent = '更新中...';
 
             // 2. 構建 API 請求
             const payload = {
@@ -314,18 +329,18 @@
                 });
 
                 if (!response.ok) {
-                    // 🎯 處理 403/400 等錯誤碼，明確提示金鑰或 CORS 問題
+                    let errorDetails = `API Call failed (Status: ${response.status}).`;
                     if (response.status === 403 || response.status === 400) {
-                         throw new Error(`API Key 或 CORS 錯誤 (狀態碼: ${response.status})。請檢查您的 API Key。`);
+                         errorDetails = `API Key 錯誤或 CORS 限制 (狀態碼: ${response.status})。請確認 API Key 有效性。`;
                     }
-                    throw new Error(`API call failed with status: ${response.status}`);
+                    throw new Error(errorDetails);
                 }
 
                 const result = await response.json();
-                const generatedText = result.candidates?.[0]?.content?.parts?.[0]?.text || `無法取得 ${fallbackLocationName} 的天氣資訊，請嘗試重新整理。`;
+                const generatedText = result.candidates?.[0]?.content?.parts?.[0]?.text || `無法取得 ${locationName} 的天氣資訊，請嘗試重新整理。`;
 
-                // 3. 顯示成功結果 (保留定位錯誤訊息，只替換查詢狀態)
-                weatherDisplay.innerHTML = currentContent.split('</div>')[0] + '</div>' + `
+                // 3. 顯示成功結果 
+                resultContainer.innerHTML = `
                     <div class="flex items-start mt-2">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 mt-0.5 text-sky-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.975 4 4 0 10-7.432-1.761l-1.63 1.63a.1.1 0 01-.108.025l-2.923-1.125A3 3 0 003 15z" />
@@ -334,56 +349,116 @@
                     </div>
                 `;
                 
+                // 🎯 成功後更新時間
+                lastUpdatedContainer.textContent = `上次更新時間: ${new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })}`;
+                
             } catch (error) {
                 console.error("Error fetching weather:", error);
                 
-                // 4. 顯示失敗結果 (保留定位錯誤訊息，只替換查詢狀態)
-                const errorMessage = error.message.includes('API Key') ? error.message : '連線失敗，可能是網路或 CORS 錯誤。';
+                // 4. 顯示失敗結果 
+                const errorMessage = error.message.includes('API') || error.message.includes('CORS') 
+                    ? error.message 
+                    : `網路或連線錯誤。請檢查網路連線或 API Key。`;
 
-                weatherDisplay.innerHTML = currentContent.split('</div>')[0] + '</div>' + `
-                    <div class="flex items-start text-sm text-red-600 mt-2">
+                resultContainer.innerHTML = `
+                    <div class="flex items-start text-sm text-red-600 mt-2 p-2 bg-red-50 rounded-lg">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         <p>天氣查詢失敗：${errorMessage}</p>
                     </div>
                 `;
+                lastUpdatedContainer.textContent = '更新失敗';
             }
         }
-        // --- 通用天氣查詢邏輯結束 ---
+        // --- 天氣查詢邏輯結束 ---
 
         /**
-         * 取得使用者當前位置並查詢天氣 (已修改為直接預設查詢「台北」以避免權限錯誤)
+         * 當定位失敗或被阻止時，回退到查詢預設城市的天氣
+         * @param {HTMLElement} weatherDisplay - 顯示結果的 DOM 元素
+         * @param {string} fallbackCity - 預設查詢的城市名稱 (e.g., "台北")
+         * @param {string} reason - 失敗的原因，用於顯示給使用者
+         */
+        function fallbackToTaipei(weatherDisplay, fallbackCity, reason = "因系統環境限制，無法取得您的即時位置") {
+            const userQuery = `What is the current temperature, condition (e.g., cloudy, snowy), and expected high/low temperature for ${fallbackCity}? Summarize in one sentence in Traditional Chinese.`;
+
+            // 1. 顯示回退原因 (顯示在主容器而非結果容器)
+            weatherDisplay.innerHTML = `
+                <div class="flex items-start text-sm text-yellow-600 mb-2 p-2 bg-yellow-50 rounded-lg border border-yellow-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.398 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <p>
+                        ${reason} (已回退至查詢 <span class="font-bold">${fallbackCity}</span> 天氣)。
+                    </p>
+                </div>
+                <div id="weather-result">
+                    <!-- fetchWeather 將在下方插入載入和結果 -->
+                </div>
+            `;
+            
+            // 2. 呼叫天氣查詢
+            fetchWeather(userQuery, fallbackCity, WEATHER_DISPLAY_ID);
+        }
+
+        /**
+         * 取得使用者當前位置並查詢天氣 (先嘗試定位，失敗則回退至預設城市)
          */
         function getDynamicWeather() {
             const weatherDisplay = document.getElementById(WEATHER_DISPLAY_ID);
             const fallbackCity = "台北";
             
-            // 由於環境限制，我們直接跳過 Geolocation 嘗試，使用預設城市。
-
-            const userQuery = `What is the current temperature, condition (e.g., cloudy, snowy), and expected high/low temperature for ${fallbackCity}? Summarize in one sentence in Traditional Chinese.`;
-
-            // 1. 顯示回退原因和正在查詢的狀態
+            // 1. 顯示初始載入狀態
             weatherDisplay.innerHTML = `
-                <div class="flex items-start text-sm text-yellow-600 mb-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.398 16c-.77 1.333.192 3 1.732 3z" />
+                <div class="flex items-start text-sm text-gray-500 mb-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 flex-shrink-0 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
-                    <p>
-                        因系統環境限制，無法取得您的即時位置 (已回退至查詢 <span class="font-bold">${fallbackCity}</span> 天氣)。
-                    </p>
+                    正在嘗試取得您的即時位置並查詢天氣...
                 </div>
-                <div class="flex items-center text-sm text-gray-500 animate-pulse mt-2">
-                    <svg class="animate-spin h-4 w-4 mr-2 text-sky-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    正在查詢 ${fallbackCity} 的即時天氣...
+                <div id="weather-result">
+                    <!-- fetchWeather 將在下方插入載入和結果 -->
                 </div>
+                <!-- 🎯 新增上次更新時間容器 -->
+                <p id="weather-last-updated" class="text-xs text-right text-gray-400 mt-2">...</p>
             `;
-            
-            // 2. 直接呼叫天氣查詢
-            fetchWeather(userQuery, fallbackCity, WEATHER_DISPLAY_ID);
+
+            // 嘗試取得地理位置
+            if (navigator.geolocation) {
+                // 🎯 縮短 timeout 時間至 3000 毫秒 (3 秒)，以避免在 iframe 中卡住太久。
+                navigator.geolocation.getCurrentPosition(
+                    // 成功取得位置
+                    (position) => {
+                        const { latitude, longitude } = position.coords;
+                        const userQuery = `What is the current temperature, condition (e.g., cloudy, snowy), and expected high/low temperature for the location near latitude ${latitude} and longitude ${longitude}? Summarize in one sentence in Traditional Chinese.`;
+                        
+                        // 清除定位訊息，準備顯示結果 (保留最下方的 last-updated 容器)
+                        weatherDisplay.querySelector('#weather-result').innerHTML = ``; 
+                        
+                        // 成功取得位置後，地點名稱設為「您目前的位置」
+                        fetchWeather(userQuery, "您目前的位置", WEATHER_DISPLAY_ID);
+                    },
+                    // 取得位置失敗 (包括被拒絕或 iframe 限制)
+                    (error) => {
+                        console.warn("Geolocation failed:", error.message);
+                        let reason = "因系統環境限制，無法取得您的即時位置";
+                        if (error.code === error.PERMISSION_DENIED) {
+                            reason = "您拒絕了瀏覽器的定位授權";
+                        } else if (error.code === error.POSITION_UNAVAILABLE) {
+                            reason = "定位資訊無法使用";
+                        } else if (error.code === error.TIMEOUT) {
+                            reason = "定位嘗試超時";
+                        }
+                        fallbackToTaipei(weatherDisplay, fallbackCity, reason);
+                    },
+                    // 選項：設定最大等待時間為 3 秒
+                    { timeout: 3000 }
+                );
+            } else {
+                // 瀏覽器不支援 Geolocation
+                fallbackToTaipei(weatherDisplay, fallbackCity, "您的瀏覽器不支援定位功能");
+            }
         }
 
         // --- 匯率查詢/換算邏輯 ---
@@ -418,21 +493,46 @@
             // 使用全域變數 currentExchangeRate
             if (currentExchangeRate <= 0) {
                 twdOutput.textContent = '匯率無效，請點擊「重新整理」';
-                twdOutput.className = twdOutput.className.replace(/text-emerald-800|bg-emerald-100|border-emerald-300|text-gray-700|bg-gray-100|border-gray-300/g, 'text-red-600 bg-red-50 border-red-300');
+                twdOutput.className = twdOutput.className.replace(/text-emerald-800|bg-emerald-100|border-emerald-300|text-gray-700|bg-gray-100|border-gray-300|text-red-700|bg-red-100/g, 'text-red-700 bg-red-100 border-red-300');
                 return;
             }
 
             if (isNaN(jpyAmount) || jpyAmount <= 0) {
                 twdOutput.textContent = '0 TWD';
-                twdOutput.className = twdOutput.className.replace(/text-red-600|bg-red-50|border-red-300|text-emerald-800|bg-emerald-100|border-emerald-300/g, 'text-gray-700 bg-gray-100 border-gray-300');
+                twdOutput.className = twdOutput.className.replace(/text-red-700|bg-red-100|border-red-300|text-emerald-800|bg-emerald-100|border-emerald-300/g, 'text-gray-700 bg-gray-100 border-gray-300');
                 return;
             }
 
             const twdAmount = Math.round(jpyAmount * currentExchangeRate); 
             
             twdOutput.textContent = `${twdAmount.toLocaleString('en-US')} TWD`;
-            twdOutput.className = twdOutput.className.replace(/text-red-600|bg-red-50|border-red-300|text-gray-700|bg-gray-100|border-gray-300/g, 'text-emerald-800 bg-emerald-100 border-emerald-300');
+            twdOutput.className = twdOutput.className.replace(/text-red-700|bg-red-100|border-red-300|text-gray-700|bg-gray-100|border-gray-300/g, 'text-emerald-800 bg-emerald-100 border-emerald-300');
         }
+
+        /**
+         * 渲染被頻率限制時的狀態
+         */
+        function renderRateLimitedStatus(minutes, rate) {
+            return `
+                <div class="text-right text-red-700 flex items-center justify-end space-x-2">
+                    <div class="text-xs font-normal">
+                        <p class="font-bold leading-tight">呼叫太頻繁！需等待 ${minutes} 分鐘。</p>
+                        <p>目前使用上次匯率：1 JPY ≈ ${rate} TWD</p>
+                    </div>
+                    <!-- 重新整理 Icon (DISABLED) -->
+                    <button 
+                        class="inline-flex items-center justify-center text-gray-400 p-0.5 rounded-full bg-gray-50 cursor-not-allowed flex-shrink-0" 
+                        title="重新整理頻率限制中"
+                        disabled
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 2v6h6"/><path d="M3 13a9 9 0 1 0 3-7.7L3 8"/>
+                        </svg>
+                    </button>
+                </div>
+            `;
+        }
+
 
         /**
          * 初始化匯率狀態顯示
@@ -456,11 +556,32 @@
         }
 
         /**
-         * 匯率查詢邏輯 (使用外部 API)
+         * 🎯 匯率查詢邏輯 (改為使用 Gemini API 搭配 Google Search)
          */
         async function fetchExchangeRate() {
             const statusDisplay = document.getElementById('current-rate-status');
-            if (!statusDisplay) return;
+            const twdOutput = document.getElementById('twd-output');
+            if (!statusDisplay || !twdOutput) return;
+
+            // --- 🎯 頻率限制檢查 ---
+            const remainingTime = isRateLimited();
+            if (remainingTime !== null) {
+                // 將剩餘時間轉換為分鐘並向上取整
+                const minutes = Math.ceil(remainingTime / 60000); 
+                // 使用 Fallback Rate 作為當前顯示的匯率
+                currentExchangeRate = FALLBACK_RATE; 
+                convertCurrency();
+
+                // 顯示被限制的狀態
+                statusDisplay.innerHTML = renderRateLimitedStatus(minutes, currentExchangeRate.toFixed(4));
+                statusDisplay.className = 'mt-2 pt-1 border-t border-gray-100 flex justify-end';
+                // 將輸出框變成警告/非最新狀態
+                twdOutput.className = twdOutput.className.replace(/text-emerald-800|bg-emerald-100|border-emerald-300|text-gray-700|bg-gray-100|border-gray-300/g, 'text-red-700 bg-red-100 border-red-300');
+
+                return; // 提前退出，不進行 API 呼叫
+            }
+            // --- 頻率限制檢查結束 ---
+
 
             // 1. 顯示正在查詢的狀態
             statusDisplay.innerHTML = `
@@ -469,44 +590,63 @@
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    <span>正在查詢即時匯率</span>
+                    <span>正在查詢即時匯率 (透過 Google Search)</span>
                     <span class="w-5 h-5"></span> <!-- 佔位符 -->
                 </div>
             `;
             statusDisplay.className = 'mt-2 pt-1 border-t border-gray-100 flex justify-end'; // 查詢時顯示分隔線
             
-            // --- API 呼叫邏輯 ---
-            const rateApiUrl = 'https://api.exchangerate.host/latest?base=JPY&symbols=TWD'; 
-            
+            // --- Gemini API 呼叫邏輯 ---
+            const rateQuery = "What is the current exchange rate for 1 Japanese Yen (JPY) in New Taiwan Dollars (TWD)?";
+            const ratePayload = {
+                contents: [{ parts: [{ text: rateQuery }] }],
+                tools: [{ "google_search": {} }],
+                systemInstruction: {
+                    // Instruct the model to return ONLY the numeric rate, rounded to 4 decimal places.
+                    parts: [{ text: "You are an accurate financial assistant. Find the current exchange rate for JPY to TWD. Your response must contain ONLY the numeric value, rounded to 4 decimal places. Do not include currency symbols, text, or explanations." }]
+                },
+            };
+
             let success = false;
             let parsedRate = null;
 
             try {
-                const response = await fetchWithRetry(rateApiUrl, { method: 'GET' });
+                const response = await fetchWithRetry(`${API_URL}?key=${API_KEY}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(ratePayload)
+                });
 
-                if (response.ok) {
-                    const result = await response.json();
-                    if (result.success && result.rates && result.rates.TWD) {
-                        parsedRate = result.rates.TWD;
-                        if (parsedRate && parsedRate > 0) {
+                if (!response.ok) {
+                    throw new Error(`Gemini API call failed with status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                const generatedText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (generatedText) {
+                    // 使用正規表達式嘗試從 LLM 的回覆中提取數字 (允許小數點)
+                    const match = generatedText.match(/(\d+\.\d+)/);
+                    if (match && match[1]) {
+                        const rate = parseFloat(match[1]);
+                        // 進行基本的日幣/台幣匯率合理性檢查 (通常在 0.1 到 0.3 之間)
+                        if (rate > 0.1 && rate < 0.3) { 
+                            parsedRate = rate;
                             success = true;
+                        } else {
+                            console.warn("Extracted rate failed sanity check:", rate);
                         }
                     } else {
-                        // 處理 API 成功回應但數據無效的情況
-                        console.error("Exchange Rate API returned success=false or missing rate data.");
+                        console.warn("Could not extract rate from LLM response:", generatedText);
                     }
-                } else {
-                    // 🎯 處理 HTTP 錯誤 (例如 404, 500)
-                    console.error(`Exchange Rate API failed with status: ${response.status}`);
-                    // 檢查是否為 CORS 相關的常見狀態碼，如果無法判斷，後續將以網路錯誤處理
                 }
             } catch (error) {
-                // 🎯 處理網路錯誤 (例如 CORS 錯誤、網路連線問題)
-                console.error("Error fetching exchange rate (Network/CORS):", error);
+                console.error("Error fetching exchange rate (Gemini API):", error);
             }
-            // --- API 呼叫邏輯結束 ---
+            // --- Gemini API 呼叫邏輯結束 ---
 
             if (success) {
+                updateRateLimitTimestamp(); // 🎯 成功後更新時間戳記
                 currentExchangeRate = parsedRate; 
                 convertCurrency(); 
                 
@@ -515,7 +655,7 @@
                     <div class="text-right flex items-center justify-end space-x-2">
                         <div class="text-xs font-normal text-gray-500">
                             <p class="font-bold text-emerald-700 leading-tight">1 JPY = ${currentExchangeRate.toFixed(4)} TWD</p>
-                            <p class="mt-0.5">數據來源: ExchangeRate.host</p>
+                            <p class="mt-0.5">數據來源: 即時網路查詢</p>
                         </div>
                         <!-- 重新整理 Icon -->
                         <button 
@@ -530,14 +670,14 @@
                     </div>
                 `;
             } else {
-                // --- 處理 Fallback (網路失敗或 CORS 錯誤時) ---
+                // --- 處理 Fallback (網路失敗或 API 錯誤時) ---
                 currentExchangeRate = FALLBACK_RATE;
                 convertCurrency(); 
 
                 statusDisplay.innerHTML = `
                     <div class="text-right text-red-600 flex items-center justify-end space-x-2">
                         <div class="text-xs font-normal">
-                            <p>即時匯率查詢失敗 (網路/CORS 錯誤)。</p>
+                            <p>即時匯率查詢失敗 (API 錯誤或網路問題)。</p>
                             <p class="font-bold leading-tight">目前使用預設匯率：1 JPY ≈ ${FALLBACK_RATE.toFixed(4)} TWD</p>
                         </div>
                         <!-- 重新整理 Icon -->
@@ -581,14 +721,17 @@
                         當前所在地即時天氣
                     </h3>
                     <div id="${WEATHER_DISPLAY_ID}" class="mt-2">
-                        <!-- 初始載入狀態將由 getDynamicWeather() 設定 -->
-                        <div class="text-sm text-gray-500 flex items-center">
-                            <svg class="animate-spin h-4 w-4 mr-2 text-sky-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            正在檢查定位權限並準備查詢天氣...
+                        <div id="weather-result">
+                            <!-- 初始/定位狀態將由 getDynamicWeather() 設定 -->
+                            <div class="text-sm text-gray-500 flex items-center">
+                                <svg class="animate-spin h-4 w-4 mr-2 text-sky-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                正在檢查定位權限並準備查詢天氣...
+                            </div>
                         </div>
+                        <p id="weather-last-updated" class="text-xs text-right text-gray-400 mt-2">...</p>
                     </div>
                 </div>
             `;
@@ -873,7 +1016,7 @@
                 // 🎯 執行主頁獨有的初始化功能
                 initializeExchangeRateStatus();
                 fetchExchangeRate();
-                // 🎯 查詢當前所在地天氣 (已改為預設查詢台北)
+                // 🎯 查詢當前所在地天氣 (已改為先嘗試定位，失敗則回退至預設城市)
                 getDynamicWeather(); 
 
             } else if (viewId === 'itinerary-group') {
