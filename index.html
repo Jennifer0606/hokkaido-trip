@@ -115,9 +115,10 @@
     <!-- 🎯 修正：新增 type="module" 屬性，確保 'const' 等現代 JavaScript 語法能被正確解析。 -->
     <script type="module">
         // --- API & 環境設定 ---
-        // 🎯 注意：如果您將此檔案部署到外部網站（非 Canvas），請在這裡填入您的 Gemini API Key
-        // 您的 API Key 已經被保留
-        const API_KEY = "AIzaSyCUAqeZHGu8dildmhdmOd_nTmoHa15EggU"; 
+        const apiKey = ""; // 系統將在此處自動填入 API Key
+        // 優先使用系統提供的 apiKey，若無則使用原始代碼中的 Key (為了相容性)
+        const API_KEY = apiKey || "AIzaSyCUAqeZHGu8dildmhdmOd_nTmoHa15EggU"; 
+
         const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent";
         const MAX_RETRIES = 5;
         const WEATHER_DISPLAY_ID = "weather-display-home"; // 全域 ID
@@ -143,28 +144,33 @@
                 subtitle: "【初識札幌】從機場直奔市區，展開悠閒的冬季漫步。",
                 location: "札幌, 日本", 
                 details: [
-                    { time: "04:00", description: "**虎航 IT 234** 桃園機場 Terminal 1 辦理報到手續與行李托運。", query: "桃園機場 Terminal 1" },
+                    { time: "04:00", description: "桃園機場 Terminal 1 辦理報到手續與行李托運。", query: "桃園機場 Terminal 1" },
                     { time: "06:20", description: "搭乘**虎航 IT 234** 航班 (06:20) 飛往北海道新千歲機場。", query: "桃園國際機場" },
                     { time: "11:30", description: "新千歲機場入境後，搭乘交通工具前往札幌市區。", query: "新千歲機場" },
                     { time: "15:00", description: "參觀**大通公園**及經典地標**札幌電視塔**。", query: "札幌大通公園 札幌電視塔" },
                     { time: "18:30", description: "在美食與購物天堂**狸小路商店街**自由活動，享受日式晚餐。", query: "札幌狸小路商店街" }
                 ],
-                meals: "機場自理 / 狸小路自理",
+                breakfast: "溫暖的家 / 機上自理",
+                lunch: "機場自理",
+                dinner: "狸小路自理",
                 lodging: "札幌市區飯店",
             },
             {
                 id: 2,
                 title: "02/21：企鵝．雪上活動．溫泉 🐧",
                 subtitle: "【冰雪樂園】整日精彩活動，以溫泉解除疲勞。",
-                warning: "⚠️ 團體巴士行程：07:40 JR札幌北口集合",
+                warning: "團體巴士行程：07:40JR札幌北口集合，每人限帶一件大型行李。<br>⚠️ 日本司機工時控管嚴格,切勿遲到, 以免被丟包",
                 location: "旭川, 日本", 
                 details: [
+                    { time: "08:00", description: "搭乘專屬巴士", query: "札幌車站" },
                     { time: "08:00", description: "搭乘專屬巴士前往**旭山動物園**，觀賞冬季限定的企鵝散步。", query: "旭山動物園" },
                     { time: "12:00", description: "午餐時間 (焗烤螃蟹海鮮陶板燒御膳)。", query: "旭川午餐地點" },
                     { time: "14:00", description: "前往雪上樂園，體驗雪上摩托車、雪盆、橡皮艇等**刺激雪上活動**。", query: "北海道雪上樂園" },
                     { time: "18:00", description: "專車前往**層雲峽溫泉區**，享受飯店內豪華晚餐及溫泉。", query: "層雲峽溫泉飯店" }
                 ],
-                meals: "焗烤螃蟹海鮮陶板燒御膳 / 溫泉飯店豪華晚餐",
+                breakfast: "飯店內早餐",
+                lunch: "焗烤螃蟹海鮮陶板燒御膳",
+                dinner: "溫泉飯店豪華晚餐",
                 lodging: "**層雲峽周邊溫泉飯店**",
             },
             {
@@ -180,8 +186,10 @@
                     { time: "14:30", description: "文化體驗：參觀**旭川男山酒造**，了解清酒釀製過程。", query: "旭川男山酒造" },
                     { time: "18:00", description: "返回札幌市區飯店辦理入住，晚餐自理。", query: "札幌市區飯店" }
                 ],
-                meals: "豪華蟹腳干貝端爐燒套餐 / 札幌市區自理",
-                lodging: "札幌市區飯店",
+                breakfast: "飯店內早餐",
+                lunch: "豪華蟹腳干貝端爐燒套餐",
+                dinner: "札幌市區自理",
+                lodging: "札幌蒙特利埃德爾霍夫酒店",
             },
             {
                 id: 4,
@@ -196,8 +204,10 @@
                     { time: "16:00", description: "別忘了在 **LeTAO 總店**享受下午茶。", query: "小樽 LeTAO 總店" },
                     { time: "18:30", description: "晚餐：返回札幌後，建議前往札幌拉麵共和國 (自理)。", query: "札幌拉麵共和國" }
                 ],
-                meals: "小樽壽司或自理 / 札幌拉麵共和國 (自理)",
-                lodging: "札幌市區飯店",
+                breakfast: "飯店內早餐",
+                lunch: "小樽壽司或自理",
+                dinner: "札幌拉麵共和國 (自理)",
+                lodging: "札幌蒙特利埃德爾霍夫酒店",
             },
             {
                 id: 5,
@@ -210,8 +220,10 @@
                     { time: "14:00", description: "下午：在**狸小路商店街**或**大通公園**周邊進行補貨購物。", query: "狸小路商店街 大通公園" },
                     { time: "19:00", description: "晚餐：建議享受經典的**三大蟹吃到飽** (帝王蟹、松葉蟹、毛蟹) (自理)。", query: "札幌三大蟹吃到飽" }
                 ],
-                meals: "場外市場海鮮丼 (自理) / 三大蟹吃到飽 (自理)",
-                lodging: "札幌市區飯店",
+                breakfast: "飯店內早餐",
+                lunch: "場外市場海鮮丼 (自理)",
+                dinner: "三大蟹吃到飽 (自理)",
+                lodging: "札幌蒙特利埃德爾霍夫酒店",
             },
             {
                 id: 6,
@@ -224,8 +236,10 @@
                     { time: "13:30", description: "集合前往新千歲機場。", query: "新千歲機場" },
                     { time: "14:40", description: "搭乘華航 CI 131 班機返回台北。", query: "新千歲機場" }
                 ],
-                meals: "OUTLET 簡餐 (自理) / 機上簡餐",
-                lodging: "溫暖的家",
+                breakfast: "飯店內早餐",
+                lunch: "OUTLET 簡餐 (自理)",
+                dinner: "機上簡餐",
+                lodging: "溫暖ㄉ家",
             },
         ];
 
@@ -951,8 +965,10 @@
                     
                     ${detailsHtml} <!-- 插入行程細節 -->
 
-                    <div class="meal-summary p-4 mt-8 rounded-lg text-base font-semibold grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <div><span class="text-[#2E4057]">🍽️ 午/晚餐：</span> ${day.meals}</div>
+                    <div class="meal-summary p-4 mt-8 rounded-lg text-base font-semibold grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div><span class="text-[#2E4057]">🍳 早餐：</span> ${day.breakfast}</div>
+                        <div><span class="text-[#2E4057]">☀️ 午餐：</span> ${day.lunch}</div>
+                        <div><span class="text-[#2E4057]">🌙 晚餐：</span> ${day.dinner}</div>
                         <div><span class="text-[#2E4057]">🏨 住宿：</span> ${lodgingHtml}</div>
                     </div>
                 </div>
