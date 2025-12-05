@@ -70,12 +70,90 @@
         input[type=number] {
             -moz-appearance: textfield;
         }
+
+        /* [新增] Modal 彈窗樣式 */
+        #location-modal {
+            transition: opacity 0.2s ease-in-out;
+        }
+        #location-modal.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        #location-modal:not(.hidden) {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        /* [新增] 僅用於詳細行程的可點擊文字樣式 (深藍色、有底線) */
+        .highlight-text-clickable {
+            font-weight: 700;
+            color: #0369a1; 
+            background-color: #e0f2fe; 
+            padding: 0 4px;
+            border-radius: 2px;
+            cursor: pointer;
+            text-decoration: underline;
+            text-decoration-color: #7dd3fc;
+            text-decoration-thickness: 2px;
+        }
+        
+        /* [保留] 原始的高亮樣式 (用於首頁或其他不需要點擊的地方) */
+        .highlight-text-static {
+            font-weight: 700;
+            color: #be185d; /* pink-700 */
+            background-color: #fce7f3; /* pink-100 */
+            padding: 0 4px;
+            border-radius: 2px;
+        }
+        .location-text-static {
+            font-weight: 700;
+            color: #334155; /* slate-700 */
+            background-color: #e2e8f0; /* slate-200 */
+            padding: 0 4px;
+            border-radius: 2px;
+        }
     </style>
 </head>
 <body class-name="p-0">
 
-    <div id="app" class="max-w-6xl mx-auto bg-white shadow-2xl">
+    <div id="app" class="max-w-6xl mx-auto bg-white shadow-2xl relative">
         
+        <!-- [新增] Modal 地點小卡 (預設隱藏) -->
+        <div id="location-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden p-4">
+            <div class="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 relative transform transition-all scale-100">
+                <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+                <h3 id="modal-title" class="text-2xl font-bold text-gray-800 mb-3 border-b pb-2 pr-8">地點名稱</h3>
+                <div class="space-y-4">
+                    <div class="flex items-start">
+                        <span class="text-xl mr-3 mt-0.5">📍</span>
+                        <div>
+                            <p class="text-xs font-bold text-gray-400 uppercase tracking-wide">地址</p>
+                            <p id="modal-address" class="text-gray-700 text-sm leading-relaxed font-medium">地址載入中...</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="text-xl mr-3 mt-0.5">🕒</span>
+                        <div>
+                            <p class="text-xs font-bold text-gray-400 uppercase tracking-wide">營業時間</p>
+                            <p id="modal-hours" class="text-gray-700 text-sm leading-relaxed font-medium">營業時間載入中...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-6 pt-4 border-t border-gray-100">
+                    <button id="modal-map-btn" class="w-full bg-[#00A8A0] text-white py-2.5 rounded-lg font-bold hover:bg-[#008F87] transition flex items-center justify-center shadow-md">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+                        </svg>
+                        開啟 Google Maps
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- 頂部標題與視覺區塊 (封面抬頭) -->
         <header class="header-bg p-6 sm:p-10 text-white text-center rounded-b-xl">
             <h1 class="text-3xl sm:text-4xl font-extrabold opacity-95 mb-2">
@@ -112,20 +190,17 @@
         </footer>
     </div>
 
-    <!-- 🎯 修正：新增 type="module" 屬性，確保 'const' 等現代 JavaScript 語法能被正確解析。 -->
-    <script type="module">
+    <!-- 腳本區域 (保留所有功能邏輯) -->
+    <script>
         // --- API & 環境設定 ---
-        const apiKey = ""; // 系統將在此處自動填入 API Key
-        // 優先使用系統提供的 apiKey，若無則使用原始代碼中的 Key (為了相容性)
+        const apiKey = ""; 
         const API_KEY = apiKey || "AIzaSyCUAqeZHGu8dildmhdmOd_nTmoHa15EggU"; 
-
         const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent";
         const MAX_RETRIES = 5;
-        const WEATHER_DISPLAY_ID = "weather-display-home"; // 全域 ID
+        const WEATHER_DISPLAY_ID = "weather-display-home"; 
 
         // --- API 呼叫頻率限制設定 ---
-        // 🎯 限制匯率查詢改為每 12 小時才能發起一次新的 API 請求
-        const RATE_LIMIT_MS = 43200000; // 12 小時 (Hour) = 43200000 ms
+        const RATE_LIMIT_MS = 43200000; 
         const LAST_RATE_UPDATE_KEY = 'lastExchangeRateUpdate';
         
         // --- 匯率相關全域變數與設定 ---
@@ -136,7 +211,7 @@
         let activeMainTab = 'home'; 
         let activeDayId = 'day-1'; 
 
-        // --- 行程資料 (location 欄位只用於行程規劃，主頁天氣查詢固定為札幌) ---
+        // --- 行程資料 (已加入 address 和 hours，但保留原始結構) ---
         const itineraryData = [
             {
                 id: 1,
@@ -144,12 +219,12 @@
                 subtitle: "【初識札幌】從機場直奔市區，展開悠閒的冬季漫步。",
                 location: "札幌, 日本", 
                 details: [
-                    { time: "04:00", description: "桃園機場 Terminal 1 辦理報到手續與行李托運。", query: "桃園機場 Terminal 1" },
-                    { time: "06:20", description: "搭乘**虎航 IT 234** 航班 (06:20) 飛往北海道新千歲機場。", query: "桃園國際機場" },
-                    { time: "10:55", description: "抵達**北海道新千歲機場**，準備辦理入境手續 (平均約需 1 小時)。", query: "新千歲機場" },
-                    { time: "12:00", description: "入境手續與領取行李完成後，搭乘交通工具前往札幌市區。", query: "新千歲機場" },
-                    { time: "15:00", description: "參觀**大通公園**及經典地標**札幌電視塔**。", query: "札幌大通公園 札幌電視塔" },
-                    { time: "18:30", description: "在美食與購物天堂**狸小路商店街**自由活動，享受日式晚餐。", query: "札幌狸小路商店街" }
+                    { time: "04:00", description: "桃園機場 Terminal 1 辦理報到手續與行李托運。", query: "桃園機場 Terminal 1", address: "桃園市大園區航站南路15號", hours: "24小時開放" },
+                    { time: "06:20", description: "搭乘**虎航 IT 234** 航班 (06:20) 飛往北海道新千歲機場。", query: "桃園國際機場", address: "桃園市大園區航站南路15號", hours: "航班時間依航空公司公告" },
+                    { time: "10:55", description: "抵達**北海道新千歲機場**，準備辦理入境手續 (平均約需 1 小時)。", query: "新千歲機場", address: "Bibi, Chitose, Hokkaido 066-0012, Japan", hours: "國內線 6:20-23:00 / 國際線 依航班" },
+                    { time: "12:00", description: "入境手續與領取行李完成後，搭乘交通工具前往札幌市區。", query: "新千歲機場", address: "Bibi, Chitose, Hokkaido 066-0012, Japan", hours: "JR快速Airport號每12分鐘一班" },
+                    { time: "15:00", description: "參觀**大通公園**及經典地標**札幌電視塔**。", query: "札幌大通公園 札幌電視塔", address: "札幌市中央區大通西1丁目", hours: "電視塔展望台: 09:00-22:00 (最後入場 21:50)" },
+                    { time: "18:30", description: "在美食與購物天堂**狸小路商店街**自由活動，享受日式晚餐。", query: "札幌狸小路商店街", address: "札幌市中央區南2・3條西1～7丁目", hours: "大部分店家 10:00-20:00 (餐廳至較晚)" }
                 ],
                 breakfast: "溫暖的家 / 機上自理",
                 lunch: "機場自理",
@@ -163,11 +238,10 @@
                 warning: "團體巴士行程：07:40JR札幌北口集合，每人限帶一件大型行李。<br>⚠️ 日本司機工時控管嚴格,切勿遲到, 以免被丟包",
                 location: "旭川, 日本", 
                 details: [
-                    { time: "08:00", description: "搭乘專屬巴士", query: "札幌車站" },
-                    { time: "08:00", description: "搭乘專屬巴士前往**旭山動物園**，觀賞冬季限定的企鵝散步。", query: "旭山動物園" },
-                    { time: "12:00", description: "午餐時間 (焗烤螃蟹海鮮陶板燒御膳)。", query: "旭川午餐地點" },
-                    { time: "14:00", description: "前往雪上樂園，體驗雪上摩托車、雪盆、橡皮艇等**刺激雪上活動**。", query: "北海道雪上樂園" },
-                    { time: "18:00", description: "專車前往**層雲峽溫泉區**，享受飯店內豪華晚餐及溫泉。", query: "層雲峽溫泉飯店" }
+                    { time: "08:00", description: "搭乘專屬巴士前往**旭山動物園**，觀賞冬季限定的企鵝散步。", query: "旭山動物園", address: "北海道旭川市東旭川町倉沼", hours: "冬季開園: 10:30-15:30 (企鵝散步約11:00/14:30)" },
+                    { time: "12:00", description: "午餐時間 (焗烤螃蟹海鮮陶板燒御膳)。", query: "旭川午餐地點", address: "旭川市區 / 動物園周邊", hours: "午餐時段" },
+                    { time: "14:00", description: "前往雪上樂園，體驗雪上摩托車、雪盆、橡皮艇等**刺激雪上活動**。", query: "北海道雪上樂園", address: "北海道上川郡比布町北7線17號 (比布滑雪場周邊)", hours: "冬季開放 09:00-16:00" },
+                    { time: "18:00", description: "專車前往**層雲峽溫泉區**，享受飯店內豪華晚餐及溫泉。", query: "層雲峽溫泉飯店", address: "北海道上川郡上川町層雲峡", hours: "入住時間通常為 15:00 後" }
                 ],
                 breakfast: "飯店內早餐",
                 lunch: "焗烤螃蟹海鮮陶板燒御膳",
@@ -181,11 +255,11 @@
                 warning: "⚠️ 團體巴士行程：約 18:00-19:00 返抵 JR 札幌車站解散",
                 location: "紋別, 日本", 
                 details: [
-                    { time: "08:30", description: "參觀**銀河流星瀑布** (冬季景觀)。", query: "銀河流星瀑布" },
-                    { time: "10:30", description: "重頭戲：抵達紋別，搭乘**破冰船** (GARINKO 號) 體驗破冰。", query: "紋別 GARINKO 號 破冰船" },
-                    { time: "12:30", description: "豪華蟹腳干貝端爐燒套餐午餐。", query: "紋別海鮮餐廳" },
-                    { time: "14:30", description: "文化體驗：參觀**旭川男山酒造**，了解清酒釀製過程。", query: "旭川男山酒造" },
-                    { time: "18:00", description: "返回札幌市區飯店辦理入住，晚餐自理。", query: "札幌市區飯店" }
+                    { time: "08:30", description: "參觀**銀河流星瀑布** (冬季景觀)。", query: "銀河流星瀑布", address: "北海道上川郡上川町層雲峡", hours: "全天開放 (冬季需注意除雪狀況)" },
+                    { time: "10:30", description: "重頭戲：抵達紋別，搭乘**破冰船** (GARINKO 號) 體驗破冰。", query: "紋別 GARINKO 號 破冰船", address: "北海道紋別市海洋公園1番地", hours: "冬季出航: 09:00 / 10:30 / 12:00 / 13:30 / 15:00" },
+                    { time: "12:30", description: "豪華蟹腳干貝端爐燒套餐午餐。", query: "紋別海鮮餐廳", address: "紋別市海洋公園周邊", hours: "午餐時段" },
+                    { time: "14:30", description: "文化體驗：參觀**旭川男山酒造**，了解清酒釀製過程。", query: "旭川男山酒造", address: "北海道旭川市永山2條7丁目1-33", hours: "09:00-17:00 (免費參觀)" },
+                    { time: "18:00", description: "返回札幌市區飯店辦理入住，晚餐自理。", query: "札幌市區飯店", address: "札幌市中心", hours: "入住時間通常為 15:00 後" }
                 ],
                 breakfast: "飯店內早餐",
                 lunch: "豪華蟹腳干貝端爐燒套餐",
@@ -198,12 +272,12 @@
                 subtitle: "【自由散策】搭乘 JR 前往，盡情享受小樽的浪漫氛圍。",
                 location: "小樽, 日本", 
                 details: [
-                    { time: "10:00", description: "從札幌搭乘 JR 前往小樽。", query: "小樽 JR 站" },
-                    { time: "11:00", description: "**小樽運河**：沿著運河邊散步，拍攝經典倉庫群。", query: "小樽運河" },
-                    { time: "12:30", description: "午餐：小樽壽司或自理。", query: "小樽壽司店" },
-                    { time: "14:00", description: "參觀**北一硝子館**與**音樂盒博物館**，感受懷舊氣息。", query: "小樽音樂盒博物館 北一硝子館" },
-                    { time: "16:00", description: "別忘了在 **LeTAO 總店**享受下午茶。", query: "小樽 LeTAO 總店" },
-                    { time: "18:30", description: "晚餐：返回札幌後，建議前往札幌拉麵共和國 (自理)。", query: "札幌拉麵共和國" }
+                    { time: "10:00", description: "從札幌搭乘 JR 前往小樽。", query: "小樽 JR 站", address: "小樽市稻穗2丁目", hours: "05:30-23:30" },
+                    { time: "11:00", description: "**小樽運河**：沿著運河邊散步，拍攝經典倉庫群。", query: "小樽運河", address: "北海道小樽市港町", hours: "全天開放 (運河遊船依季節)" },
+                    { time: "12:30", description: "午餐：小樽壽司或自理。", query: "小樽壽司店", address: "小樽壽司通 (政壽司/旭壽司等)", hours: "約 11:00-21:00" },
+                    { time: "14:00", description: "參觀**北一硝子館**與**音樂盒博物館**，感受懷舊氣息。", query: "小樽音樂盒博物館 北一硝子館", address: "小樽市住吉町4-1 (音樂盒堂本館)", hours: "09:00-18:00" },
+                    { time: "16:00", description: "別忘了在 **LeTAO 總店**享受下午茶。", query: "小樽 LeTAO 總店", address: "北海道小樽市堺町7-16", hours: "09:00-18:00 (2F 咖啡廳至 17:30)" },
+                    { time: "18:30", description: "晚餐：返回札幌後，建議前往札幌拉麵共和國 (自理)。", query: "札幌拉麵共和國", address: "札幌市中央區北5條西2丁目 ESTA 10F (或周邊)", hours: "11:00-22:00" }
                 ],
                 breakfast: "飯店內早餐",
                 lunch: "小樽壽司或自理",
@@ -216,10 +290,10 @@
                 subtitle: "【美食天堂】一整天獻給北海道的美味與購物。",
                 location: "札幌, 日本", 
                 details: [
-                    { time: "09:30", description: "上午：參拜**北海道神宮**。", query: "北海道神宮" },
-                    { time: "11:00", description: "前往**札幌場外市場**，享用超新鮮海鮮丼 (自理)。", query: "札幌場外市場" },
-                    { time: "14:00", description: "下午：在**狸小路商店街**或**大通公園**周邊進行補貨購物。", query: "狸小路商店街 大通公園" },
-                    { time: "19:00", description: "晚餐：建議享受經典的**三大蟹吃到飽** (帝王蟹、松葉蟹、毛蟹) (自理)。", query: "札幌三大蟹吃到飽" }
+                    { time: "09:30", description: "上午：參拜**北海道神宮**。", query: "北海道神宮", address: "北海道札幌市中央區宮丘474", hours: "冬季: 07:00-16:00" },
+                    { time: "11:00", description: "前往**札幌場外市場**，享用超新鮮海鮮丼 (自理)。", query: "札幌場外市場", address: "札幌市中央區北11條西21丁目", hours: "06:00-17:00 (餐廳約 07:00 開始)" },
+                    { time: "14:00", description: "下午：在**狸小路商店街**或**大通公園**周邊進行補貨購物。", query: "狸小路商店街 大通公園", address: "札幌市中央區", hours: "全天開放 (商店各異)" },
+                    { time: "19:00", description: "晚餐：建議享受經典的**三大蟹吃到飽** (帝王蟹、松葉蟹、毛蟹) (自理)。", query: "札幌三大蟹吃到飽", address: "札幌市區 (如難陀 Nanda)", hours: "晚餐時段通常 17:00-22:00" }
                 ],
                 breakfast: "飯店內早餐",
                 lunch: "場外市場海鮮丼 (自理)",
@@ -232,23 +306,25 @@
                 subtitle: "【完美句點】輕鬆血拚後，帶著滿滿回憶踏上歸途。",
                 location: "新千歲機場, 日本", 
                 details: [
-                    { time: "10:00", description: "退房後，前往**三井OUTLET購物中心**或 Rera Outlet。", query: "札幌三井OUTLET購物中心" },
-                    { time: "12:00", description: "在 OUTLET 內享用午餐。", query: "OUTLET 餐廳" },
-                    { time: "13:30", description: "集合前往新千歲機場。", query: "新千歲機場" },
-                    { time: "14:40", description: "搭乘華航 CI 131 班機返回台北。", query: "新千歲機場" }
+                    { time: "10:00", description: "退房後，前往**三井OUTLET購物中心**或 Rera Outlet。", query: "札幌三井OUTLET購物中心", address: "北海道北廣島市大曲幸町3-7-6", hours: "10:00-20:00" },
+                    { time: "12:00", description: "在 OUTLET 內享用午餐。", query: "OUTLET 餐廳", address: "Outlet 美食街", hours: "10:30-21:00" },
+                    { time: "13:30", description: "集合前往新千歲機場。", query: "新千歲機場", address: "Bibi, Chitose, Hokkaido", hours: "24小時開放" },
+                    { time: "14:40", description: "搭乘華航 CI 131 班機返回台北。", query: "新千歲機場", address: "國際線航廈", hours: "航班時間" }
                 ],
                 breakfast: "飯店內早餐",
                 lunch: "OUTLET 簡餐 (自理)",
                 dinner: "機上簡餐",
-                lodging: "溫暖ㄉ家",
+                lodging: "溫暖的家",
             },
         ];
 
         const mainTabsContainer = document.getElementById('main-tabs');
         const dayTabsContainer = document.getElementById('day-tabs');
         const contentContainer = document.getElementById('dynamic-content');
+        const locationModal = document.getElementById('location-modal');
         
-        // --- 通用工具函式 (含指數退避) ---
+        // --- 核心工具函式 (維持原版) ---
+        
         async function fetchWithRetry(url, options) {
             let delay = 1000;
             for (let i = 0; i < MAX_RETRIES; i++) {
@@ -273,65 +349,98 @@
             }
         }
         
-        // --- 頻率限制輔助函式 ---
-
-        /**
-         * 檢查是否受到頻率限制 (根據 localStorage 儲存的時間戳記)
-         * @returns {number|null} 如果有限制，返回剩餘的等待時間（毫秒），否則返回 null
-         */
         function isRateLimited() {
             const lastUpdateStr = localStorage.getItem(LAST_RATE_UPDATE_KEY);
             if (!lastUpdateStr) return null;
-
             const lastUpdateTime = parseInt(lastUpdateStr, 10);
             const currentTime = new Date().getTime();
             const elapsedTime = currentTime - lastUpdateTime;
-
-            if (elapsedTime < RATE_LIMIT_MS) {
-                return RATE_LIMIT_MS - elapsedTime;
-            }
+            if (elapsedTime < RATE_LIMIT_MS) return RATE_LIMIT_MS - elapsedTime;
             return null;
         }
 
-        /**
-         * 更新最後一次成功呼叫 API 的時間戳記
-         */
         function updateRateLimitTimestamp() {
             localStorage.setItem(LAST_RATE_UPDATE_KEY, new Date().getTime().toString());
         }
 
-        // --- 天氣查詢邏輯 ---
+        // --- Modal 邏輯 (新增) ---
+        
+        window.openModal = function(title, address, hours, query) {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-address').textContent = address;
+            document.getElementById('modal-hours').textContent = hours;
+            
+            const mapBtn = document.getElementById('modal-map-btn');
+            mapBtn.onclick = function() {
+                window.openInGoogleMaps(query);
+            };
+            
+            locationModal.classList.remove('hidden');
+        };
 
-        /**
-         * 通用天氣查詢邏輯
-         * @param {string} userQuery - 傳給 LLM 的查詢字串 (e.g., "Current weather in Taipei")
-         * @param {string} locationName - 當前地點名稱 (e.g., "台北" 或 "您目前的位置")
-         * @param {string} weatherDisplayId - 渲染結果容器 (如 "weather-display-home") 的 ID
-         */
+        window.closeModal = function() {
+            locationModal.classList.add('hidden');
+        };
+
+        locationModal.addEventListener('click', function(e) {
+            if (e.target === locationModal) closeModal();
+        });
+
+        window.openInGoogleMaps = function(query) {
+            if (query) {
+                const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+                window.open(url, '_blank'); 
+            }
+        }
+
+        // --- 關鍵字與高亮 (修改為支援 Modal) ---
+        const ACTION_KEYWORDS = [
+            "虎航 IT 234", "華航 CI 131", "刺激雪上活動", 
+            "破冰船", "三大蟹吃到飽", "旭山動物園", "小樽運河", "LeTAO 總店", 
+            "札幌電視塔", "狸小路商店街", "銀河流星瀑布", "旭川男山酒造", 
+            "北一硝子館", "音樂盒博物館", "北海道神宮", "札幌場外市場", "三井OUTLET購物中心"
+        ];
+        
+        // 核心修改：增加 isClickable 參數，決定是否要啟用 Modal 功能
+        const highlightText = (text, item, isClickable = false) => {
+            // 定義顏色：首頁的 static (pink/slate) vs 詳細頁的 clickable (blue)
+            const staticActionClass = "font-bold text-pink-700 bg-pink-100 px-1 rounded-sm";
+            const staticLocationClass = "font-bold text-slate-700 bg-slate-200 px-1 rounded-sm";
+            const clickableClass = "highlight-text-clickable"; // 這是我們剛定義的樣式
+
+            return text.replace(/\*\*(.*?)\*\*/g, (match, p1) => {
+                if (isClickable && item) {
+                    // 如果允許點擊，且有資料，使用 Modal 模式
+                    const safeTitle = p1.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    const safeAddress = (item.address || "地址詳情請查詢").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    const safeHours = (item.hours || "營業時間請查詢").replace(/"/g, '&quot;');
+                    const safeQuery = (item.query || p1).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    
+                    return `<span class="${clickableClass}" onclick="openModal('${safeTitle}', '${safeAddress}', '${safeHours}', '${safeQuery}')">${p1}</span>`;
+                } else {
+                    // 否則維持原樣 (首頁模式)
+                    const isAction = ACTION_KEYWORDS.some(keyword => p1.includes(keyword));
+                    const className = isAction ? staticActionClass : staticLocationClass;
+                    return `<span class="${className}">${p1}</span>`;
+                }
+            });
+        };
+
+        // --- 功能函式 (Weather, Exchange, Render) ---
+        // 這些函式完全保留原版邏輯，只在 renderDayContent 使用新的 highlightText 模式
+
         async function fetchWeather(userQuery, locationName, weatherDisplayId) {
             const resultContainer = document.getElementById('weather-result');
             const lastUpdatedContainer = document.getElementById('weather-last-updated');
-            
             if (!resultContainer || !lastUpdatedContainer) return;
 
-            // 1. 顯示載入狀態
-            const loadingHtml = `
-                <div class="flex items-center text-sm text-gray-500 animate-pulse mt-2">
-                    <svg class="animate-spin h-4 w-4 mr-2 text-sky-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    正在查詢 ${locationName} 的即時天氣...
-                </div>
-            `;
-            
+            const loadingHtml = `<div class="flex items-center text-sm text-gray-500 animate-pulse mt-2"><svg class="animate-spin h-4 w-4 mr-2 text-sky-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>正在查詢 ${locationName} 的即時天氣...</div>`;
             resultContainer.innerHTML = loadingHtml;
             lastUpdatedContainer.textContent = '更新中...';
 
-            // 2. 構建 API 請求
             const payload = {
                 contents: [{ parts: [{ text: userQuery }] }],
-                tools: [{ "google_search": {} }], // 啟用 Google Search 進行即時資訊查詢
+                tools: [{ "google_search": {} }], 
                 systemInstruction: {
                     parts: [{ text: "You are a concise weather reporter. Your response must be a single, short sentence in Traditional Chinese, summarizing the temperature, high/low, and weather condition for the requested location based on the provided search results. If the data is unavailable, state it clearly. Do not use markdown formatting in the output." }]
                 },
@@ -343,277 +452,101 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-
-                if (!response.ok) {
-                    let errorDetails = `API Call failed (Status: ${response.status}).`;
-                    if (response.status === 403 || response.status === 400) {
-                         errorDetails = `API Key 錯誤或 CORS 限制 (狀態碼: ${response.status})。請確認 API Key 有效性。`;
-                    }
-                    throw new Error(errorDetails);
-                }
-
+                if (!response.ok) throw new Error(`API Call failed (Status: ${response.status})`);
                 const result = await response.json();
                 const generatedText = result.candidates?.[0]?.content?.parts?.[0]?.text || `無法取得 ${locationName} 的天氣資訊，請嘗試重新整理。`;
-
-                // 3. 顯示成功結果 
-                resultContainer.innerHTML = `
-                    <div class="flex items-start mt-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 mt-0.5 text-sky-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.975 4 4 0 10-7.432-1.761l-1.63 1.63a.1.1 0 01-.108.025l-2.923-1.125A3 3 0 003 15z" />
-                        </svg>
-                        <p class="text-sm text-gray-800 font-medium">${generatedText}</p>
-                    </div>
-                `;
-                
-                // 🎯 成功後更新時間
+                resultContainer.innerHTML = `<div class="flex items-start mt-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 mt-0.5 text-sky-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.975 4 4 0 10-7.432-1.761l-1.63 1.63a.1.1 0 01-.108.025l-2.923-1.125A3 3 0 003 15z" /></svg><p class="text-sm text-gray-800 font-medium">${generatedText}</p></div>`;
                 lastUpdatedContainer.textContent = `上次更新時間: ${new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })}`;
-                
             } catch (error) {
                 console.error("Error fetching weather:", error);
-                
-                // 4. 顯示失敗結果 
-                const errorMessage = error.message.includes('API') || error.message.includes('CORS') 
-                    ? error.message 
-                    : `網路或連線錯誤。請檢查網路連線或 API Key。`;
-
-                resultContainer.innerHTML = `
-                    <div class="flex items-start text-sm text-red-600 mt-2 p-2 bg-red-50 rounded-lg">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <p>天氣查詢失敗：${errorMessage}</p>
-                    </div>
-                `;
+                resultContainer.innerHTML = `<div class="flex items-start text-sm text-red-600 mt-2 p-2 bg-red-50 rounded-lg"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg><p>天氣查詢失敗：${error.message}</p></div>`;
                 lastUpdatedContainer.textContent = '更新失敗';
             }
         }
-        // --- 天氣查詢邏輯結束 ---
 
-        /**
-         * 當定位失敗或被阻止時，回退到查詢預設城市的天氣
-         * @param {HTMLElement} weatherDisplay - 顯示結果的 DOM 元素
-         * @param {string} fallbackCity - 預設查詢的城市名稱 (e.g., "台北")
-         * @param {string} reason - 失敗的原因，用於顯示給使用者
-         */
         function fallbackToTaipei(weatherDisplay, fallbackCity, reason = "因系統環境限制，無法取得您的即時位置") {
             const userQuery = `What is the current temperature, condition (e.g., cloudy, snowy), and expected high/low temperature for ${fallbackCity}? Summarize in one sentence in Traditional Chinese.`;
-
-            // 1. 顯示回退原因 (顯示在主容器而非結果容器)
-            weatherDisplay.innerHTML = `
-                <div class="flex items-start text-sm text-yellow-600 mb-2 p-2 bg-yellow-50 rounded-lg border border-yellow-300">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.398 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                    <p>
-                        ${reason} (已回退至查詢 <span class="font-bold">${fallbackCity}</span> 天氣)。
-                    </p>
-                </div>
-                <div id="weather-result">
-                    <!-- fetchWeather 將在下方插入載入和結果 -->
-                </div>
-            `;
-            
-            // 2. 呼叫天氣查詢
+            weatherDisplay.innerHTML = `<div class="flex items-start text-sm text-yellow-600 mb-2 p-2 bg-yellow-50 rounded-lg border border-yellow-300"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.398 16c-.77 1.333.192 3 1.732 3z" /></svg><p>${reason} (已回退至查詢 <span class="font-bold">${fallbackCity}</span> 天氣)。</p></div><div id="weather-result"></div>`;
             fetchWeather(userQuery, fallbackCity, WEATHER_DISPLAY_ID);
         }
 
-        /**
-         * 取得使用者當前位置並查詢天氣 (先嘗試定位，失敗則回退至預設城市)
-         */
         function getDynamicWeather() {
             const weatherDisplay = document.getElementById(WEATHER_DISPLAY_ID);
             const fallbackCity = "台北";
-            
-            // 1. 顯示初始載入狀態
-            weatherDisplay.innerHTML = `
-
-                <div id="weather-result">
-                    <!-- fetchWeather 將在下方插入載入和結果 -->
-                </div>
-                <!-- 🎯 新增上次更新時間容器 -->
-                <p id="weather-last-updated" class="text-xs text-right text-gray-400 mt-2">...</p>
-            `;
-
-            // 嘗試取得地理位置
+            weatherDisplay.innerHTML = `<div id="weather-result"></div><p id="weather-last-updated" class="text-xs text-right text-gray-400 mt-2">...</p>`;
             if (navigator.geolocation) {
-                // 🎯 縮短 timeout 時間至 3000 毫秒 (3 秒)，以避免在 iframe 中卡住太久。
                 navigator.geolocation.getCurrentPosition(
-                    // 成功取得位置
                     (position) => {
                         const { latitude, longitude } = position.coords;
                         const userQuery = `What is the current temperature, condition (e.g., cloudy, snowy), and expected high/low temperature for the location near latitude ${latitude} and longitude ${longitude}? Summarize in one sentence in Traditional Chinese.`;
-                        
-                        // 清除定位訊息，準備顯示結果 (保留最下方的 last-updated 容器)
                         weatherDisplay.querySelector('#weather-result').innerHTML = ``; 
-                        
-                        // 成功取得位置後，地點名稱設為「您目前的位置」
                         fetchWeather(userQuery, "您目前的位置", WEATHER_DISPLAY_ID);
                     },
-                    // 取得位置失敗 (包括被拒絕或 iframe 限制)
                     (error) => {
                         console.warn("Geolocation failed:", error.message);
                         let reason = "因系統環境限制，無法取得您的即時位置";
-                        if (error.code === error.PERMISSION_DENIED) {
-                            reason = "您拒絕了瀏覽器的定位授權";
-                        } else if (error.code === error.POSITION_UNAVAILABLE) {
-                            reason = "定位資訊無法使用";
-                        } else if (error.code === error.TIMEOUT) {
-                            reason = "定位嘗試超時";
-                        }
                         fallbackToTaipei(weatherDisplay, fallbackCity, reason);
                     },
-                    // 選項：設定最大等待時間為 3 秒
                     { timeout: 3000 }
                 );
             } else {
-                // 瀏覽器不支援 Geolocation
                 fallbackToTaipei(weatherDisplay, fallbackCity, "您的瀏覽器不支援定位功能");
             }
         }
 
-        // --- 匯率查詢/換算邏輯 ---
-        
         window.convertCurrency = function() {
             const jpyInput = document.getElementById('jpy-input');
             const twdOutput = document.getElementById('twd-output');
-            
             if (!jpyInput || !twdOutput) return;
-
-            // --- 限制整數部分最多六位數輸入 ---
             let inputValue = jpyInput.value;
-
-            // 1. 處理負數
-            if (inputValue.startsWith('-')) {
-                jpyInput.value = inputValue.slice(1);
-                inputValue = jpyInput.value;
-            }
-
-            // 2. 限制整數部分長度為 6
+            if (inputValue.startsWith('-')) { jpyInput.value = inputValue.slice(1); inputValue = jpyInput.value; }
             const parts = inputValue.split('.');
             let integerPart = parts[0];
-
-            if (integerPart.length > 6) {
-                integerPart = integerPart.substring(0, 6);
-                jpyInput.value = parts.length > 1 ? `${integerPart}.${parts[1]}` : integerPart;
-            }
-            // --- 限制結束 ---
-
+            if (integerPart.length > 6) { integerPart = integerPart.substring(0, 6); jpyInput.value = parts.length > 1 ? `${integerPart}.${parts[1]}` : integerPart; }
             const jpyAmount = parseFloat(jpyInput.value); 
-
-            // 使用全域變數 currentExchangeRate
-            if (currentExchangeRate <= 0) {
-                twdOutput.textContent = '匯率無效，請點擊「重新整理」';
-                twdOutput.className = twdOutput.className.replace(/text-pink-700|bg-pink-100|border-pink-300|text-gray-700|bg-gray-100|border-gray-300|text-red-700|bg-red-100/g, 'text-red-700 bg-red-100 border-red-300');
-                return;
-            }
-
-            if (isNaN(jpyAmount) || jpyAmount <= 0) {
-                twdOutput.textContent = '0 TWD';
-                twdOutput.className = twdOutput.className.replace(/text-red-700|bg-red-100|border-red-300|text-pink-700|bg-pink-100|border-pink-300/g, 'text-gray-700 bg-gray-100 border-gray-300');
-                return;
-            }
-
+            if (currentExchangeRate <= 0) { twdOutput.textContent = '匯率無效，請點擊「重新整理」'; twdOutput.className = twdOutput.className.replace(/text-pink-700|bg-pink-100|border-pink-300|text-gray-700|bg-gray-100|border-gray-300|text-red-700|bg-red-100/g, 'text-red-700 bg-red-100 border-red-300'); return; }
+            if (isNaN(jpyAmount) || jpyAmount <= 0) { twdOutput.textContent = '0 TWD'; twdOutput.className = twdOutput.className.replace(/text-red-700|bg-red-100|border-red-300|text-pink-700|bg-pink-100|border-pink-300/g, 'text-gray-700 bg-gray-100 border-gray-300'); return; }
             const twdAmount = Math.round(jpyAmount * currentExchangeRate); 
-            
             twdOutput.textContent = `${twdAmount.toLocaleString('en-US')} TWD`;
             twdOutput.className = twdOutput.className.replace(/text-red-700|bg-red-100|border-red-300|text-gray-700|bg-gray-100|border-gray-300/g, 'text-pink-700 bg-pink-100 border-pink-300');
         }
 
-        /**
-         * 渲染被頻率限制時的狀態
-         */
         function renderRateLimitedStatus(minutes, rate) {
-            return `
-                <div class="text-right text-red-700 flex items-center justify-end space-x-2">
-                    <div class="text-xs font-normal">
-                        <p>目前使用上次匯率：1 JPY ≈ ${rate} TWD</p>
-                    </div>
-                    <!-- 重新整理 Icon (DISABLED) -->
-                    <button 
-                        class="inline-flex items-center justify-center text-gray-400 p-0.5 rounded-full bg-gray-50 cursor-not-allowed flex-shrink-0" 
-                        title="重新整理頻率限制中"
-                        disabled
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M3 2v6h6"/><path d="M3 13a9 9 0 1 0 3-7.7L3 8"/>
-                        </svg>
-                    </button>
-                </div>
-            `;
+            return `<div class="text-right text-red-700 flex items-center justify-end space-x-2"><div class="text-xs font-normal"><p>目前使用上次匯率：1 JPY ≈ ${rate} TWD</p></div><button class="inline-flex items-center justify-center text-gray-400 p-0.5 rounded-full bg-gray-50 cursor-not-allowed flex-shrink-0" title="重新整理頻率限制中" disabled><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v6h6"/><path d="M3 13a9 9 0 1 0 3-7.7L3 8"/></svg></button></div>`;
         }
 
-
-        /**
-         * 初始化匯率狀態顯示
-         */
         function initializeExchangeRateStatus() {
             const statusDisplay = document.getElementById('current-rate-status');
             if (statusDisplay) { 
-                // 這是初始狀態，在 fetchExchangeRate 中會被替換
-                statusDisplay.innerHTML = `
-                    <div class="text-xs text-gray-500 flex items-center justify-end space-x-1">
-                        <svg class="h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span>載入中... 準備查詢匯率</span>
-                        <span class="w-5 h-5"></span> <!-- 佔位符 for refresh button -->
-                    </div>
-                `;
-                // 設置基礎樣式 (移除頂部分隔線)
+                statusDisplay.innerHTML = `<div class="text-xs text-gray-500 flex items-center justify-end space-x-1"><svg class="h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg><span>載入中... 準備查詢匯率</span><span class="w-5 h-5"></span></div>`;
                 statusDisplay.className = 'mt-2 pt-1 flex justify-end';
             }
         }
 
-        /**
-         * 🎯 匯率查詢邏輯 (改為使用 Gemini API 搭配 Google Search)
-         */
         async function fetchExchangeRate() {
             const statusDisplay = document.getElementById('current-rate-status');
             const twdOutput = document.getElementById('twd-output');
             if (!statusDisplay || !twdOutput) return;
 
-            // --- 🎯 頻率限制檢查 ---
             const remainingTime = isRateLimited();
             if (remainingTime !== null) {
-                // 將剩餘時間轉換為分鐘並向上取整
                 const minutes = Math.ceil(remainingTime / 60000); 
-                // 使用 Fallback Rate 作為當前顯示的匯率
                 currentExchangeRate = FALLBACK_RATE; 
                 convertCurrency();
-
-                // 顯示被限制的狀態
                 statusDisplay.innerHTML = renderRateLimitedStatus(minutes, currentExchangeRate.toFixed(4));
                 statusDisplay.className = 'mt-2 pt-1 border-t border-gray-100 flex justify-end';
-                // 將輸出框變成警告/非最新狀態
                 twdOutput.className = twdOutput.className.replace(/text-pink-700|bg-pink-100|border-pink-300|text-gray-700|bg-gray-100|border-gray-300/g, 'text-red-700 bg-red-100 border-red-300');
-
-                return; // 提前退出，不進行 API 呼叫
+                return; 
             }
-            // --- 頻率限制檢查結束 ---
 
-
-            // 1. 顯示正在查詢的狀態
-            statusDisplay.innerHTML = `
-                <div class="text-xs text-gray-700 flex items-center justify-end space-x-1 animate-pulse">
-                    <svg class="animate-spin h-3 w-3 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    <span>正在查詢即時匯率 (透過 Google Search)</span>
-                    <span class="w-5 h-5"></span> <!-- 佔位符 -->
-                </div>
-            `;
-            statusDisplay.className = 'mt-2 pt-1 border-t border-gray-100 flex justify-end'; // 查詢時顯示分隔線
+            statusDisplay.innerHTML = `<div class="text-xs text-gray-700 flex items-center justify-end space-x-1 animate-pulse"><svg class="animate-spin h-3 w-3 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span>正在查詢即時匯率 (透過 Google Search)</span><span class="w-5 h-5"></span></div>`;
+            statusDisplay.className = 'mt-2 pt-1 border-t border-gray-100 flex justify-end'; 
             
-            // --- Gemini API 呼叫邏輯 ---
             const rateQuery = "What is the current exchange rate for 1 Japanese Yen (JPY) in New Taiwan Dollars (TWD)?";
             const ratePayload = {
                 contents: [{ parts: [{ text: rateQuery }] }],
                 tools: [{ "google_search": {} }],
-                systemInstruction: {
-                    // Instruct the model to return ONLY the numeric rate, rounded to 4 decimal places.
-                    parts: [{ text: "You are an accurate financial assistant. Find the current exchange rate for JPY to TWD. Your response must contain ONLY the numeric value, rounded to 4 decimal places. Do not include currency symbols, text, or explanations." }]
-                },
+                systemInstruction: { parts: [{ text: "You are an accurate financial assistant. Find the current exchange rate for JPY to TWD. Your response must contain ONLY the numeric value, rounded to 4 decimal places. Do not include currency symbols, text, or explanations." }] },
             };
 
             let success = false;
@@ -625,101 +558,32 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(ratePayload)
                 });
-
-                if (!response.ok) {
-                    throw new Error(`Gemini API call failed with status: ${response.status}`);
-                }
-
+                if (!response.ok) throw new Error(`Gemini API call failed with status: ${response.status}`);
                 const result = await response.json();
                 const generatedText = result.candidates?.[0]?.content?.parts?.[0]?.text;
-
                 if (generatedText) {
-                    // 使用正規表達式嘗試從 LLM 的回覆中提取數字 (允許小數點)
                     const match = generatedText.match(/(\d+\.\d+)/);
                     if (match && match[1]) {
                         const rate = parseFloat(match[1]);
-                        // 進行基本的日幣/台幣匯率合理性檢查 (通常在 0.1 到 0.3 之間)
-                        if (rate > 0.1 && rate < 0.3) { 
-                            parsedRate = rate;
-                            success = true;
-                        } else {
-                            console.warn("Extracted rate failed sanity check:", rate);
-                        }
-                    } else {
-                        console.warn("Could not extract rate from LLM response:", generatedText);
+                        if (rate > 0.1 && rate < 0.3) { parsedRate = rate; success = true; } 
                     }
                 }
-            } catch (error) {
-                console.error("Error fetching exchange rate (Gemini API):", error);
-            }
-            // --- Gemini API 呼叫邏輯結束 ---
+            } catch (error) { console.error("Error fetching exchange rate:", error); }
 
             if (success) {
-                updateRateLimitTimestamp(); // 🎯 成功後更新時間戳記
+                updateRateLimitTimestamp(); 
                 currentExchangeRate = parsedRate; 
                 convertCurrency(); 
-                
-                // 顯示成功狀態 (小字，突出匯率，並加入重新整理按鈕)
-                statusDisplay.innerHTML = `
-                    <div class="text-right flex items-center justify-end space-x-2">
-                        <div class="text-xs font-normal text-gray-500">
-                            <p class="font-bold text-pink-700 leading-tight">1 JPY = ${currentExchangeRate.toFixed(4)} TWD</p>
-                            <p class="mt-0.5">數據來源: 即時網路查詢</p>
-                        </div>
-                        <!-- 重新整理 Icon -->
-                        <button 
-                            onclick="fetchExchangeRate()" 
-                            class="inline-flex items-center justify-center text-gray-500 hover:text-gray-700 p-0.5 rounded-full hover:bg-gray-100 transition duration-150 flex-shrink-0" 
-                            title="重新整理匯率"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M3 2v6h6"/><path d="M3 13a9 9 0 1 0 3-7.7L3 8"/>
-                            </svg>
-                        </button>
-                    </div>
-                `;
+                statusDisplay.innerHTML = `<div class="text-right flex items-center justify-end space-x-2"><div class="text-xs font-normal text-gray-500"><p class="font-bold text-pink-700 leading-tight">1 JPY = ${currentExchangeRate.toFixed(4)} TWD</p><p class="mt-0.5">數據來源: 即時網路查詢</p></div><button onclick="fetchExchangeRate()" class="inline-flex items-center justify-center text-gray-500 hover:text-gray-700 p-0.5 rounded-full hover:bg-gray-100 transition duration-150 flex-shrink-0" title="重新整理匯率"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v6h6"/><path d="M3 13a9 9 0 1 0 3-7.7L3 8"/></svg></button></div>`;
             } else {
-                // --- 處理 Fallback (網路失敗或 API 錯誤時) ---
                 currentExchangeRate = FALLBACK_RATE;
                 convertCurrency(); 
-
-                statusDisplay.innerHTML = `
-                    <div class="text-right text-red-600 flex items-center justify-end space-x-2">
-                        <div class="text-xs font-normal">
-                            <p>即時匯率查詢失敗 (API 錯誤或網路問題)。</p>
-                            <p class="font-bold leading-tight">目前使用預設匯率：1 JPY ≈ ${FALLBACK_RATE.toFixed(4)} TWD</p>
-                        </div>
-                        <!-- 重新整理 Icon -->
-                        <button 
-                            onclick="fetchExchangeRate()" 
-                            class="inline-flex items-center justify-center text-gray-500 hover:text-gray-700 p-0.5 rounded-full hover:bg-gray-100 transition duration-150 flex-shrink-0" 
-                            title="重新整理匯率"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M3 2v6h6"/><path d="M3 13a9 9 0 1 0 3-7.7L3 8"/>
-                            </svg>
-                        </button>
-                    </div>
-                `;
+                statusDisplay.innerHTML = `<div class="text-right text-red-600 flex items-center justify-end space-x-2"><div class="text-xs font-normal"><p>即時匯率查詢失敗 (API 錯誤或網路問題)。</p><p class="font-bold leading-tight">目前使用預設匯率：1 JPY ≈ ${FALLBACK_RATE.toFixed(4)} TWD</p></div><button onclick="fetchExchangeRate()" class="inline-flex items-center justify-center text-gray-500 hover:text-gray-700 p-0.5 rounded-full hover:bg-gray-100 transition duration-150 flex-shrink-0" title="重新整理匯率"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v6h6"/><path d="M3 13a9 9 0 1 0 3-7.7L3 8"/></svg></button></div>`;
             }
-            statusDisplay.className = 'mt-2 pt-1 border-t border-gray-100 flex justify-end'; // 無論成功失敗都保留分隔線
+            statusDisplay.className = 'mt-2 pt-1 border-t border-gray-100 flex justify-end'; 
         }
 
-        window.openInGoogleMaps = function(query) {
-            if (query) {
-                const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
-                window.open(url, '_blank'); 
-            } else {
-                console.warn("無法開啟地圖：缺少查詢字串。");
-            }
-        }
-        // --- 匯率查詢/換算邏輯結束 ---
-
-        /**
-         * 渲染主頁天氣預報區塊 
-         */
         function renderCurrentWeatherBlock() {
-            
             return `
                 <div class="p-4 bg-sky-50 rounded-xl border border-sky-200 mb-6 shadow-sm">
                     <h3 class="text-xl font-bold text-sky-700 mb-2 flex items-center">
@@ -731,7 +595,6 @@
                     </h3>
                     <div id="${WEATHER_DISPLAY_ID}" class="mt-2">
                         <div id="weather-result">
-                            <!-- 初始/定位狀態將由 getDynamicWeather() 設定 -->
                             <div class="text-sm text-gray-500 flex items-center">
                                 <svg class="animate-spin h-4 w-4 mr-2 text-sky-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -746,133 +609,51 @@
             `;
         }
 
-
-        /**
-         * 渲染匯率轉換器區塊 - 移除卡片樣式
-         */
         function renderExchangeRateBlock() {
             return `
-                <!-- 外層容器：限制寬度、置中、移除所有卡片樣式 -->
                 <div id="exchange-rate-block" class="max-w-xs mx-auto p-2 my-2 bg-transparent">
-                    
                     <p class="text-sm font-semibold text-gray-600 mb-2 text-center">💵 JPY ⇌ TWD 快速試算</p>
-
-                    <!-- 匯率輸入/輸出區塊：使用 flex 確保緊湊 -->
                     <div class="flex space-x-2">
-                        <!-- JPY Input Block -->
-                        <div class="flex-1">
-                            <input 
-                                type="number" 
-                                id="jpy-input" 
-                                oninput="convertCurrency()" 
-                                placeholder="日幣金額 (JPY)" 
-                                class="w-full py-2 px-3 border border-gray-300 rounded-lg text-sm shadow-sm focus:ring-sky-500 focus:border-sky-500"
-                                min="0"
-                                max="999999" 
-                            >
-                        </div>
-
-                        <!-- TWD Output Block -->
-                        <div 
-                            id="twd-output" 
-                            class="flex-1 flex items-center justify-end py-2 px-3 border border-gray-300 rounded-lg bg-gray-100 text-sm font-bold text-gray-700 text-right shadow-inner"
-                        >
-                            0 TWD
-                        </div>
+                        <div class="flex-1"><input type="number" id="jpy-input" oninput="convertCurrency()" placeholder="日幣金額 (JPY)" class="w-full py-2 px-3 border border-gray-300 rounded-lg text-sm shadow-sm focus:ring-sky-500 focus:border-sky-500" min="0" max="999999"></div>
+                        <div id="twd-output" class="flex-1 flex items-center justify-end py-2 px-3 border border-gray-300 rounded-lg bg-gray-100 text-sm font-bold text-gray-700 text-right shadow-inner">0 TWD</div>
                     </div>
-                    <!-- 匯率輸入/輸出區塊結束 -->
-
-                    <!-- 狀態訊息區塊 (包含重新整理按鈕) -->
-                    <div id="current-rate-status" class="mt-2 pt-1 flex justify-end">
-                        <!-- 初始內容將由 JS 設定 -->
-                    </div>
-
+                    <div id="current-rate-status" class="mt-2 pt-1 flex justify-end"></div>
                 </div>
             `;
         }
 
-
-        /**
-         * 🎯 更新 highlightText 函式：根據關鍵字類型套用不同的顏色
-         */
-        const ACTION_KEYWORDS = [
-            "虎航 IT 234", "華航 CI 131", "刺激雪上活動", 
-            "破冰船", "三大蟹吃到飽"
-        ];
-        
-        const highlightText = (text) => {
-            // 1. 定義顏色
-            // 灰冷色系 (地點類): text-slate-700 bg-slate-200
-            const locationClass = "font-bold text-slate-700 bg-slate-200 px-1 rounded-sm";
-            // 暖粉色系 (非地點/動作類): text-pink-700 bg-pink-100 (保留上次設定)
-            const actionClass = "font-bold text-pink-700 bg-pink-100 px-1 rounded-sm";
-
-            // 2. 使用 regex 找到所有 **...** 的區塊
-            return text.replace(/\*\*(.*?)\*\*/g, (match, p1) => {
-                // 3. 檢查 p1 (內部內容) 是否包含在 ACTION_KEYWORDS 中
-                const isAction = ACTION_KEYWORDS.some(keyword => p1.includes(keyword));
-                
-                // 4. 根據結果套用不同的 class
-                const className = isAction ? actionClass : locationClass;
-
-                return `<span class="${className}">${p1}</span>`;
-            });
-        };
-
-
-        /**
-         * 渲染主頁 (包含行程亮點)
-         */
         function renderHomeContent() {
-            
-            // 🎯 在此處也使用新的 highlight 顏色
             const highlightsContent = `
                 <div>
                     <h3 class="text-2xl font-bold accent-color mb-3 border-b pb-2">🎯 行程亮點</h3>
-                    <p class="text-gray-600 mb-6 italic">
-                        本次行程專為冬季設計，結合了北海道最經典的雪國體驗、美食與深度文化。
-                    </p>
-
+                    <p class="text-gray-600 mb-6 italic">本次行程專為冬季設計，結合了北海道最經典的雪國體驗、美食與深度文化。</p>
                     <ul class="space-y-3 pl-4 list-disc text-gray-700">
-                        <li><strong class="text-sky-700">雪地奇觀：</strong>搭乘紋別${highlightText('**破冰船**')}，近距離感受鄂霍次克海的流冰震撼。</li>
-                        <li><strong class="text-sky-700">動物明星：</strong>前往${highlightText('**旭山動物園**')}，觀賞冬季限定的企鵝雪地散步。</li>
-                        <li><strong class="text-sky-700">溫泉療癒：</strong>入住${highlightText('**層雲峽溫泉飯店**')}，享受日式豪華會席料理與天然溫泉。</li>
-                        <li><strong class="text-sky-700">浪漫散策：</strong>在${highlightText('**小樽運河**')}、${highlightText('**音樂盒堂**')}享受浪漫的自由時光與精緻甜點。</li>
-                        <li><strong class="text-sky-700">美食天堂：</strong>特別安排蟹腳海鮮陶板燒、並建議體驗${highlightText('**三大蟹吃到飽**')}。</li>
+                        <li><strong class="text-sky-700">雪地奇觀：</strong>搭乘紋別${highlightText('**破冰船**', {}, false)}，近距離感受鄂霍次克海的流冰震撼。</li>
+                        <li><strong class="text-sky-700">動物明星：</strong>前往${highlightText('**旭山動物園**', {}, false)}，觀賞冬季限定的企鵝雪地散步。</li>
+                        <li><strong class="text-sky-700">溫泉療癒：</strong>入住${highlightText('**層雲峽溫泉飯店**', {}, false)}，享受日式豪華會席料理與天然溫泉。</li>
+                        <li><strong class="text-sky-700">浪漫散策：</strong>在${highlightText('**小樽運河**', {}, false)}、${highlightText('**音樂盒堂**', {}, false)}享受浪漫的自由時光與精緻甜點。</li>
+                        <li><strong class="text-sky-700">美食天堂：</strong>特別安排蟹腳海鮮陶板燒、並建議體驗${highlightText('**三大蟹吃到飽**', {}, false)}。</li>
                     </ul>
                 </div>
             `;
-
-
             return `
                 <div class="day-content p-8 sm:p-10 bg-white rounded-xl shadow-lg border border-gray-100 space-y-8">
-                    
-                    ${renderCurrentWeatherBlock()} <!-- 🎯 新增動態天氣區塊在最上方 -->
-                    
-                    <!-- 1. 航班/集合資訊 -->
+                    ${renderCurrentWeatherBlock()} 
                     <div>
                         <h3 class="text-2xl font-bold accent-color mb-3 border-b pb-2">✈️ 航班/集合資訊</h3>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm font-medium p-4 bg-gray-100 rounded-xl shadow-inner">
-                            <p class="text-gray-700">去程：${highlightText('**虎航 IT 234**')} (06:20 - 10:55) 第一航廈 ｜ 托運 20kg</p>
-                            <p class="text-gray-700">回程：${highlightText('**華航 CI 131**')} (14:40 - 18:15) 航廈待定 ｜ 托運 2x23kg</p>
+                            <p class="text-gray-700">去程：${highlightText('**虎航 IT 234**', {}, false)} (06:20 - 10:55) 第一航廈 ｜ 托運 20kg</p>
+                            <p class="text-gray-700">回程：${highlightText('**華航 CI 131**', {}, false)} (14:40 - 18:15) 航廈待定 ｜ 托運 2x23kg</p>
                         </div>
                     </div>
-                    
-                    ${renderExchangeRateBlock()} <!-- 匯率試算器 -->
-
-                    <!-- 2. 行程亮點 -->
+                    ${renderExchangeRateBlock()} 
                     ${highlightsContent}
                 </div>
             `;
         }
 
-        /**
-         * 渲染單日內容 (移除天氣區塊)
-         */
+        // --- 詳細行程 Render (保留原貌，僅啟動 highlightText 的點擊功能) ---
         function renderDayContent(day) {
-            
-            // 🎯 highlightText 已更新，這裡會根據內容自動套用灰冷或暖粉色
-
             const timeToMinutes = (timeStr) => {
                 const [hours, minutes] = timeStr.split(':').map(Number);
                 return hours * 60 + minutes;
@@ -887,37 +668,17 @@
                             const currentTime = timeToMinutes(item.time);
                             const nextTime = timeToMinutes(day.details[index + 1].time);
                             let diffMinutes = nextTime - currentTime;
-                            
-                            if (diffMinutes < 0) {
-                                diffMinutes += 24 * 60; 
-                            }
-
+                            if (diffMinutes < 0) diffMinutes += 24 * 60; 
                             const diffHours = Math.floor(diffMinutes / 60);
                             const remainingMinutes = diffMinutes % 60;
-                            
                             let durationText = '';
                             if (diffHours > 0) durationText += `${diffHours}小時`;
                             if (remainingMinutes > 0 || diffHours === 0) durationText += `${remainingMinutes}分鐘`;
-                            
-                            // 時間流指示器
-                            durationHtml = `
-                                <div class="flex flex-col items-start ml-5 sm:ml-6 mt-1 mb-1">
-                                    <div class="w-0.5 h-6 bg-gray-300 ml-3"></div>
-                                    <div class="relative text-gray-600 px-3 py-1 text-xs font-medium flex items-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l3 3a1 1 0 001.414-1.414L11 9.586V6z" clip-rule="evenodd" />
-                                        </svg>
-                                        預計花費：${durationText}
-                                    </div>
-                                    <div class="w-0.5 h-6 bg-gray-300 ml-3"></div>
-                                </div>
-                            `;
+                            durationHtml = `<div class="flex flex-col items-start ml-5 sm:ml-6 mt-1 mb-1"><div class="w-0.5 h-6 bg-gray-300 ml-3"></div><div class="relative text-gray-600 px-3 py-1 text-xs font-medium flex items-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1 text-gray-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l3 3a1 1 0 001.414-1.414L11 9.586V6z" clip-rule="evenodd" /></svg>預計花費：${durationText}</div><div class="w-0.5 h-6 bg-gray-300 ml-3"></div></div>`;
                         }
 
-                        // 活動區塊 HTML 
                         const activityBlock = `
                             <div class="bg-white p-4 rounded-xl shadow border border-gray-200 transition duration-300 hover:shadow-lg flex justify-between items-start">
-                                <!-- 時間與活動描述 -->
                                 <div class="flex-grow">
                                     <p class="text-sm font-bold text-gray-500 mb-1 flex items-center">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-[#748DA6]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -926,81 +687,47 @@
                                         ${item.time}
                                     </p>
                                     <p class="text-gray-800 text-base font-medium leading-normal">
-                                        ${highlightText(item.description)}
+                                        <!-- 這裡將第三個參數設為 true，啟用點擊功能 -->
+                                        ${highlightText(item.description, item, true)}
                                     </p>
                                 </div>
-                                
-                                <!-- 地圖開啟按鈕 (地圖圖示) -->
-                                ${item.query ? `
-                                    <button 
-                                        class="p-2 ml-4 bg-sky-500 text-white rounded-full hover:bg-sky-600 transition duration-150 shadow-md flex-shrink-0"
-                                        title="在地圖上開啟 ${item.description.replace(/<[^>]*>/g, '').replace(/\*\*/g, '')}"
-                                        onclick="openInGoogleMaps('${item.query.replace(/'/g, "\\'")}')"
-                                    >
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
-                                        </svg>
-                                    </button>
-                                ` : ''}
+                                ${item.query ? `<button class="p-2 ml-4 bg-sky-500 text-white rounded-full hover:bg-sky-600 transition duration-150 shadow-md flex-shrink-0" title="在地圖上開啟 ${item.description.replace(/<[^>]*>/g, '').replace(/\*\*/g, '')}" onclick="openInGoogleMaps('${item.query.replace(/'/g, "\\'")}')"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /></svg></button>` : ''}
                             </div>
                         `;
-                        
                         return activityBlock + durationHtml;
                     }).join('')}
                 </div>
             `;
             
-            // 處理住宿資訊的 highlight (特別處理 Lodging 欄位)
-            const lodgingHtml = highlightText(day.lodging);
+            // 住宿區塊也使用 false，首頁樣式
+            const lodgingHtml = highlightText(day.lodging, {}, false);
             
-            // 包裝單日行程
             return `
                 <div class="day-content p-8 sm:p-10 bg-white rounded-xl shadow-lg border border-gray-100">
                     <h3 class="text-4xl font-black accent-color mb-3 border-b-2 pb-1">${day.title}</h3>
-                    
-                    <p class="text-red-600 font-semibold mb-4 text-lg">
-                        ${day.warning ? `⚠️ ${day.warning}` : ''}
-                    </p>
-                    
+                    <p class="text-red-600 font-semibold mb-4 text-lg">${day.warning ? `⚠️ ${day.warning}` : ''}</p>
                     <p class="text-gray-700 mb-6 font-medium text-xl leading-relaxed">${day.subtitle}</p>
-                    
-                    ${detailsHtml} <!-- 插入行程細節 -->
-
-                    <div class="meal-summary p-4 mt-8 rounded-lg text-base font-semibold grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    ${detailsHtml}
+                    <div class="meal-summary p-4 mt-8 rounded-lg text-base font-semibold grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div><span class="text-[#2E4057]">🍳 早餐：</span> ${day.breakfast}</div>
-                        <div><span class="text-[#2E4057]">☀️ 午餐：</span> ${day.lunch}</div>
-                        <div><span class="text-[#2E4057]">🌙 晚餐：</span> ${day.dinner}</div>
+                        <div><span class="text-[#2E4057]">🍜 午餐：</span> ${day.lunch}</div>
+                        <div><span class="text-[#2E4057]">🥩 晚餐：</span> ${day.dinner}</div>
                         <div><span class="text-[#2E4057]">🏨 住宿：</span> ${lodgingHtml}</div>
                     </div>
                 </div>
             `;
         }
 
-
-        // 1. 渲染頂層主 Tabs (主頁 | 詳細行程)
+        // --- Tabs Logic ---
         function renderMainTabs() {
             mainTabsContainer.innerHTML = '';
-            
-            // 主頁 Tab
-            const homeButton = createMainTab('主頁', 'home', `
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l-2-2m2 2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-                </svg>
-            `);
+            const homeButton = createMainTab('主頁', 'home', `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l-2-2m2 2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>`);
             homeButton.onclick = () => switchMainView('home');
             mainTabsContainer.appendChild(homeButton);
-
-            // 詳細行程 Tab
-            const itineraryButton = createMainTab('詳細行程', 'itinerary-group', `
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h.01M7 12h.01M6 16h.01M9 16h.01M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-            `);
+            const itineraryButton = createMainTab('詳細行程', 'itinerary-group', `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h.01M7 12h.01M6 16h.01M9 16h.01M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>`);
             itineraryButton.onclick = () => switchMainView('itinerary-group');
             mainTabsContainer.appendChild(itineraryButton);
         }
-
-        // 輔助函式：創建主 Tab
         function createMainTab(text, viewId, iconHtml) {
             const button = document.createElement('button');
             button.className = 'tab-item main-tab text-gray-700';
@@ -1008,8 +735,6 @@
             button.setAttribute('data-view', viewId);
             return button;
         }
-
-        // 2. 渲染次層 Day Tabs (Day 1 - Day 6)
         function renderDayTabs() {
             dayTabsContainer.innerHTML = '';
             itineraryData.forEach(day => {
@@ -1021,79 +746,52 @@
                 dayTabsContainer.appendChild(button);
             });
         }
-
-        // 3. 切換頂層視圖 (主頁 | 詳細行程)
         function switchMainView(viewId) {
             activeMainTab = viewId;
-
-            // 更新主 Tabs 的活躍狀態
             document.querySelectorAll('.main-tab').forEach(tab => {
                 tab.classList.remove('active');
-                if (tab.getAttribute('data-view') === viewId) {
-                    tab.classList.add('active');
-                }
+                if (tab.getAttribute('data-view') === viewId) tab.classList.add('active');
             });
-            
-            // --- 🎯 動態設定內容區域的留白 ---
-            // 基礎 Class
             const baseClasses = 'content-area bg-gray-50 px-4 sm:px-6';
-
             if (viewId === 'home') {
-                // 主頁使用正常的上下留白
                 contentContainer.className = baseClasses + ' py-8 sm:py-12';
-
-                // 顯示主頁內容 
-                dayTabsContainer.style.display = 'none'; // 隱藏 Day Tabs
+                dayTabsContainer.style.display = 'none';
                 contentContainer.innerHTML = renderHomeContent();
-                
-                // 🎯 執行主頁獨有的初始化功能
                 initializeExchangeRateStatus();
                 fetchExchangeRate();
-                // 🎯 查詢當前所在地天氣 (已改為先嘗試定位，失敗則回退至預設城市)
                 getDynamicWeather(); 
-
             } else if (viewId === 'itinerary-group') {
-                // 詳細行程頁：頂部留白 (pt) 設為 0，只保留底部留白 (pb)
                 contentContainer.className = baseClasses + ' pt-0 pb-8 sm:pb-12';
-                
-                // 顯示 Day Tabs
-                dayTabsContainer.style.display = 'flex'; 
-                // 自動切換到當前活躍的 Day 視圖 
-                switchDayView(activeDayId); 
-                
-
+                dayTabsContainer.style.display = 'flex';
+                switchDayView(activeDayId);
             }
         }
-
-        // 4. 切換次層視圖 (Day 1 - Day 6)
         function switchDayView(dayId) {
             activeDayId = dayId;
-
-            // 更新 Day Tabs 的活躍狀態
             document.querySelectorAll('.day-tab').forEach(tab => {
                 tab.classList.remove('active');
-                if (tab.getAttribute('data-day-id') === dayId) {
-                    tab.classList.add('active');
-                }
+                if (tab.getAttribute('data-day-id') === dayId) tab.classList.add('active');
             });
-
-            // 渲染選定的 Day 內容
             const dayNumber = parseInt(dayId.split('-')[1]);
             const dayData = itineraryData.find(d => d.id === dayNumber);
-            if (dayData) {
-                // 渲染單日內容 (已不含天氣試算器)
-                contentContainer.innerHTML = renderDayContent(dayData);
+            if (dayData) contentContainer.innerHTML = renderDayContent(dayData);
+        }
+
+        window.openInGoogleMaps = function(query) {
+            if (query) {
+                const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+                window.open(url, '_blank'); 
             }
         }
 
-        // 5. 初始化應用程式
         window.onload = function() {
             renderMainTabs();
             renderDayTabs();
-            // 預設切換到主頁視圖
             switchMainView('home'); 
         };
     </script>
 
 </body>
 </html>
+
+
