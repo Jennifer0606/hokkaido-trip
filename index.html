@@ -4,28 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>北海道六日遊</title>
+    <!-- 引入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 設定字體與樣式 -->
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;500;700;900&family=Noto+Sans+JP:wght@400;700&display=swap');
         body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; }
         .header-bg { background-image: linear-gradient(135deg, #2E4057 0%, #748DA6 100%); }
         .accent-color { color: #00A8A0; }
         
-        /* [核心修正] 導覽列容器與項目樣式 */
+        /* 導覽列 Tab 樣式 (還原第一版) */
         .tab-item {
             padding: 12px 20px;
             cursor: pointer;
             border-bottom: 3px solid transparent;
             font-weight: 500;
             transition: all 0.2s;
-            flex-shrink: 0; /* 防止擠壓 */
+            flex-shrink: 0;
             display: flex;
             align-items: center;
-            white-space: nowrap; /* 強制不換行 */
+            white-space: nowrap;
         }
-        .tab-item:hover { color: #00A8A0; }
+        .tab-item:hover { color: #00A8A0; border-bottom-color: #00A8A0; }
         
-        /* 主選單活躍狀態 */
+        /* 主選單活躍 */
         .main-tab.active {
             border-bottom-color: #00A8A0;
             color: #00A8A0;
@@ -33,7 +36,8 @@
             background-color: #fff;
         }
         
-        /* Day Tabs 活躍狀態 (改回底部線條樣式，避免跑版) */
+        /* Day Tabs 活躍 (還原第一版藍色系) */
+        .day-tab:hover { background-color: #f8fafc; color: #3C79D5; }
         .day-tab.active {
             border-bottom-color: #3C79D5;
             color: #3C79D5;
@@ -50,18 +54,12 @@
         #location-modal.hidden, #settings-modal.hidden { opacity: 0; pointer-events: none; }
         #location-modal:not(.hidden), #settings-modal:not(.hidden) { opacity: 1; pointer-events: auto; }
         
+        /* Highlight Styles */
         .highlight-text-clickable { font-weight: 700; color: #0369a1; background-color: #e0f2fe; padding: 0 4px; border-radius: 2px; cursor: pointer; text-decoration: underline; text-decoration-color: #7dd3fc; text-decoration-thickness: 2px; }
         .highlight-text-activity { font-weight: 700; color: #be185d; background-color: #fce7f3; padding: 0 4px; border-radius: 2px; }
         .highlight-text-location { font-weight: 700; color: #334155; background-color: #e2e8f0; padding: 0 4px; border-radius: 2px; }
         .location-text-static { font-weight: 700; color: #334155; background-color: #e2e8f0; padding: 0 4px; border-radius: 2px; }
 
-        /* 時間軸 */
-        .timeline-item { position: relative; padding-left: 2rem; padding-bottom: 2rem; }
-        .timeline-item:last-child { padding-bottom: 0; }
-        .timeline-item::before { content: ''; position: absolute; top: 0.6rem; left: 0.5rem; width: 2px; height: 100%; background-color: #e5e7eb; z-index: 0; }
-        .timeline-item:last-child::before { display: none; }
-        .timeline-item-dot { position: absolute; top: 0.4rem; left: 0.1rem; width: 1rem; height: 1rem; background-color: #00A8A0; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 0 2px #00A8A0; z-index: 10; }
-        
         .api-key-reminder { display: none; }
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         input[type=number] { -moz-appearance: textfield; }
@@ -71,7 +69,7 @@
 
     <div id="app" class="max-w-6xl mx-auto bg-white shadow-2xl relative">
         
-        <!-- 設定 Modal -->
+        <!-- Settings Modal -->
         <div id="settings-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden p-4">
             <div class="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 relative transform transition-all scale-100">
                 <button onclick="closeSettingsModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
@@ -93,7 +91,7 @@
             </div>
         </div>
 
-        <!-- 地點小卡 Modal -->
+        <!-- Location Modal -->
         <div id="location-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden p-4">
             <div class="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 relative transform transition-all scale-100">
                 <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
@@ -116,7 +114,7 @@
             </div>
         </div>
 
-        <!-- Header (還原：只有標題) -->
+        <!-- Header -->
         <header class="header-bg p-6 sm:p-10 text-white text-center rounded-b-xl relative">
             <button onclick="openSettingsModal()" class="absolute top-4 right-4 p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition" title="設定">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
@@ -125,37 +123,28 @@
             <p class="text-lg font-light tracking-widest">破冰船．雪上活動．小樽散策</p>
         </header>
 
-        <!-- 導覽列容器 (Sticky) -->
+        <!-- 導覽列 (Sticky) -->
         <div class="sticky top-0 z-10 bg-white shadow-md">
-            <!-- 1. 頂層主選單 -->
-            <div id="main-tabs" class="flex overflow-x-auto whitespace-nowrap px-4 sm:px-6 border-b border-gray-300">
-                <!-- JS Rendered -->
-            </div>
-            <!-- 2. 次層天數選單 (修正樣式) -->
-            <div id="day-tabs" class="flex overflow-x-auto whitespace-nowrap px-4 sm:px-6 border-b border-gray-200 bg-gray-50" style="display: none;">
-                <!-- JS Rendered -->
-            </div>
+            <div id="main-tabs" class="flex overflow-x-auto whitespace-nowrap px-4 sm:px-6 border-b border-gray-300"></div>
+            <div id="day-tabs" class="flex overflow-x-auto whitespace-nowrap px-4 sm:px-6 border-b border-gray-200 bg-gray-50" style="display: none;"></div>
         </div>
 
-        <!-- 內容區 -->
         <div id="dynamic-content" class="content-area bg-gray-50 px-4 sm:px-6">
             <div class="text-center text-gray-500 py-16">載入中...</div>
         </div>
 
-        <!-- Footer -->
         <footer class="header-bg p-4 text-center text-white text-sm mt-8">
             <p>※ 本行程為建議草稿，請留意圖片皆為示意圖，實際餐食/住宿以最終行程為準。</p>
             <p id="db-status" class="text-xs opacity-70 mt-1"></p>
         </footer>
     </div>
 
-    <!-- Firebase SDK (使用 Module 載入) -->
+    <!-- Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, getDocs, addDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- 全域變數 ---
         let API_KEY = localStorage.getItem('GEMINI_API_KEY') || ""; 
         const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent";
         const WEATHER_DISPLAY_ID = "weather-display-home"; 
@@ -168,7 +157,6 @@
         let auth = null;
         let user = null;
 
-        // --- 行程資料 (含 Day 1 修正與四欄餐食) ---
         const DEFAULT_ITINERARY_DATA = [
             {
                 id: 1, title: "02/20：札幌啟程 ✈️", subtitle: "【初識札幌】從機場直奔市區，展開悠閒的冬季漫步。", location: "札幌, 日本", 
@@ -205,23 +193,24 @@
                 breakfast: "飯店內早餐", lunch: "豪華蟹腳干貝端爐燒套餐", dinner: "札幌市區自理", lodging: "札幌蒙特利埃德爾霍夫酒店"
             },
             {
-                id: 4, title: "02/23：小樽運河．音樂盒堂 🔔", subtitle: "【自由散策】搭乘 JR 前往，盡情享受小樽的浪漫氛圍。", location: "小樽, 日本", 
+                id: 4, title: "02/23：小樽運河．天狗山夜景 🔔", subtitle: "【浪漫小樽】從歷史運河到百萬夜景，盡情享受小樽的日與夜。", location: "小樽, 日本", 
                 details: [
                     { time: "10:00", description: "從札幌搭乘 JR 前往小樽。", query: "小樽 JR 站", jpName: "小樽駅", address: "小樽市稻穗2丁目", hours: "05:30-23:30" },
                     { time: "11:00", description: "**小樽運河**：沿著運河邊散步，拍攝經典倉庫群。", query: "小樽運河", jpName: "小樽運河", address: "北海道小樽市港町", hours: "全天開放" },
-                    { time: "12:30", description: "午餐：小樽壽司或自理。", query: "小樽壽司店", jpName: "小樽寿司屋通り", address: "小樽寿司屋通り", hours: "11:00-21:00" },
+                    { time: "12:30", description: "午餐：小樽壽司或自理。", query: "小樽壽司店", jpName: "小樽寿司屋通り", address: "小樽寿司屋通り", hours: "約 11:00-21:00" },
                     { time: "14:00", description: "參觀**北一硝子館**與**音樂盒博物館**，感受懷舊氣息。", query: "小樽音樂盒博物館 北一硝子館", jpName: "北一硝子・小樽オルゴール堂", address: "小樽市住吉町4-1", hours: "09:00-18:00" },
-                    { time: "16:00", description: "別忘了在 **LeTAO 總店**享受下午茶。", query: "小樽 LeTAO 總店", jpName: "小樽洋菓子舗ルタオ本店", address: "北海道小樽市堺町7-16", hours: "09:00-18:00" },
+                    { time: "16:30", description: "前往**天狗山纜車**，欣賞北海道三大夜景之一。", query: "天狗山纜車", jpName: "小樽天狗山ロープウエイ", address: "北海道小樽市最上2-16-15", hours: "09:00-21:00" },
                     { time: "18:30", description: "晚餐：返回札幌後，建議前往札幌拉麵共和國 (自理)。", query: "札幌拉麵共和國", jpName: "札幌ら～めん共和国", address: "札幌市中央区 (ESTA關閉，可至周邊)", hours: "11:00-22:00" }
                 ],
                 breakfast: "飯店內早餐", lunch: "小樽壽司或自理", dinner: "札幌拉麵共和國 (自理)", lodging: "札幌蒙特利埃德爾霍夫酒店"
             },
             {
-                id: 5, title: "02/24：海鮮購物．三大蟹宴 🛍️", subtitle: "【美食天堂】一整天獻給北海道的美味與購物。", location: "札幌, 日本", 
+                id: 5, title: "02/24：神宮．白色戀人．三大蟹 🛍️", subtitle: "【文化與美食】體驗北海道神宮的莊嚴與白色戀人的童話世界。", location: "札幌, 日本", 
                 details: [
-                    { time: "09:30", description: "上午：參拜**北海道神宮**。", query: "北海道神宮", jpName: "北海道神宮", address: "北海道札幌市中央区宮ヶ丘474", hours: "冬季: 07:00-16:00" },
-                    { time: "11:00", description: "前往**札幌場外市場**，享用超新鮮海鮮丼 (自理)。", query: "札幌場外市場", jpName: "札幌場外市場", address: "札幌市中央区北11条西21丁目", hours: "06:00-17:00" },
-                    { time: "14:00", description: "下午：在**狸小路商店街**或**大通公園**周邊進行補貨購物。", query: "狸小路商店街 大通公園", jpName: "狸小路商店街・大通公園", address: "札幌市中央区", hours: "全天開放" },
+                    { time: "09:00", description: "上午：參拜**北海道神宮**。", query: "北海道神宮", jpName: "北海道神宮", address: "北海道札幌市中央区宮ヶ丘474", hours: "冬季: 07:00-16:00" },
+                    { time: "10:30", description: "前往夢幻的**白色戀人公園**，參觀工廠與拍照。", query: "白色戀人公園", jpName: "白い恋人パーク", address: "北海道札幌市西区宮の沢2-2-11-36", hours: "10:00-17:00" },
+                    { time: "12:30", description: "前往**札幌場外市場**，享用超新鮮海鮮丼 (自理)。", query: "札幌場外市場", jpName: "札幌場外市場", address: "札幌市中央区北11条西21丁目", hours: "06:00-17:00" },
+                    { time: "14:30", description: "下午：在**狸小路商店街**或**大通公園**周邊進行補貨購物。", query: "狸小路商店街 大通公園", jpName: "狸小路商店街・大通公園", address: "札幌市中央区", hours: "全天開放" },
                     { time: "19:00", description: "晚餐：建議享受經典的**三大蟹吃到飽** (帝王蟹、松葉蟹、毛蟹) (自理)。", query: "札幌三大蟹吃到飽", jpName: "三大カニ食べ放題", address: "札幌市區", hours: "晚餐時段" }
                 ],
                 breakfast: "飯店內早餐", lunch: "場外市場海鮮丼 (自理)", dinner: "三大蟹吃到飽 (自理)", lodging: "札幌蒙特利埃德爾霍夫酒店"
@@ -241,18 +230,27 @@
         
         let appItineraryData = [...DEFAULT_ITINERARY_DATA];
 
-        // --- 核心邏輯 ---
-        
         async function initApp() {
+            window.openSettingsModal = openSettingsModal;
+            window.closeSettingsModal = closeSettingsModal;
+            window.saveApiKeyFromModal = saveApiKeyFromModal;
+            window.clearApiKey = clearApiKey;
+            window.openModal = openModal;
+            window.closeModal = closeModal;
+            window.openInGoogleMaps = openInGoogleMaps;
+            window.switchMainView = switchMainView;
+            window.switchDayView = switchDayView;
+            window.convertCurrency = convertCurrency;
+            window.requestUserLocation = requestUserLocation;
+            window.fetchExchangeRate = fetchExchangeRate;
+
             renderMainTabs();
             renderDayTabs();
             switchMainView('home');
 
-            // Firebase 連線 (自動切換模式)
             try {
                 const firebaseConfigStr = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
                 const appId = typeof __app_id !== 'undefined' ? __app_id : 'demo-app';
-                
                 if (firebaseConfigStr) {
                     const firebaseConfig = JSON.parse(firebaseConfigStr);
                     const app = initializeApp(firebaseConfig);
@@ -290,9 +288,7 @@
             } catch (e) { console.error("Data load error:", e); }
         }
 
-        // --- UI Logic ---
-        
-        const ACTIVITY_KEYWORDS = ["虎航 IT 234", "華航 CI 131", "刺激雪上活動", "破冰船", "三大蟹吃到飽"];
+        const ACTIVITY_KEYWORDS = ["虎航 IT 234", "華航 CI 131", "刺激雪上活動", "破冰船", "三大蟹吃到飽", "天狗山纜車", "白色戀人公園"];
         const LOCATION_KEYWORDS = ["旭山動物園", "小樽運河", "LeTAO 總店", "札幌電視塔", "狸小路商店街", "銀河流星瀑布", "旭川男山酒造", "北一硝子館", "音樂盒博物館", "北海道神宮", "札幌場外市場", "三井OUTLET購物中心", "大通公園", "層雲峽溫泉飯店", "音樂盒堂"];
 
         const highlightText = (text, item, isClickable = false) => {
@@ -315,7 +311,6 @@
             });
         };
 
-        // Modal Controls
         window.openSettingsModal = function() {
             const input = document.getElementById('api-key-input');
             if (input) input.value = API_KEY; 
@@ -365,9 +360,10 @@
         function renderMainTabs() {
             const container = document.getElementById('main-tabs');
             container.innerHTML = '';
-            container.appendChild(createMainTab('主頁', 'home', `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l-2-2m2 2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>`));
+            container.appendChild(createMainTab('主頁', 'home', `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l-2-2m2 2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 01-1 1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>`));
             container.appendChild(createMainTab('詳細行程', 'itinerary-group', `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h.01M7 12h.01M6 16h.01M9 16h.01M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>`));
         }
+        
         function createMainTab(text, viewId, iconHtml) {
             const button = document.createElement('button');
             button.className = 'tab-item main-tab text-gray-700';
@@ -376,18 +372,20 @@
             button.setAttribute('data-view', viewId);
             return button;
         }
+
         function renderDayTabs() {
             const container = document.getElementById('day-tabs');
             container.innerHTML = '';
             appItineraryData.forEach(day => {
                 const button = document.createElement('button');
-                button.className = 'tab-item day-tab text-gray-600'; // 修正樣式，使用 tab-item 保持橫向
+                button.className = 'tab-item day-tab text-gray-600';
                 button.textContent = `Day ${day.id}`;
                 button.setAttribute('data-day-id', `day-${day.id}`);
                 button.onclick = () => switchDayView(`day-${day.id}`);
                 container.appendChild(button);
             });
         }
+
         function switchMainView(viewId) {
             activeMainTab = viewId;
             document.querySelectorAll('.main-tab').forEach(tab => {
@@ -408,6 +406,7 @@
                 switchDayView(activeDayId);
             }
         }
+
         function switchDayView(dayId) {
             activeDayId = dayId;
             document.querySelectorAll('.day-tab').forEach(tab => {
@@ -419,12 +418,16 @@
             if (dayData) document.getElementById('dynamic-content').innerHTML = renderDayContent(dayData);
         }
 
-        // Feature Renders
         async function fetchWithRetry(url, options) {
             if (!API_KEY) throw new Error("No API Key");
             return fetch(url, options);
         }
         
+        async function fetchExchangeRate() {
+             const twdOutput = document.getElementById('twd-output');
+             if(!twdOutput) return;
+        }
+
         async function getDynamicWeather() {
             const container = document.getElementById('weather-result');
             const updated = document.getElementById('weather-last-updated');
@@ -446,7 +449,26 @@
             if (updated) updated.textContent = '';
         }
 
-        window.convertCurrency = function() {
+        function requestUserLocation() {
+            if (navigator.geolocation) {
+                document.getElementById('weather-result').innerHTML = '<div class="text-sm text-gray-500 animate-pulse">正在嘗試定位...</div>';
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                         alert("定位成功！(功能演示)");
+                         getDynamicWeather();
+                    },
+                    (error) => {
+                        alert("無法取得位置，已切回預設地點。");
+                        getDynamicWeather();
+                    },
+                    { timeout: 5000 }
+                );
+            } else {
+                alert("您的瀏覽器不支援定位功能。");
+            }
+        };
+
+        function convertCurrency() {
             const input = document.getElementById('jpy-input');
             const output = document.getElementById('twd-output');
             if (input && output) {
@@ -494,6 +516,7 @@
             `;
         }
 
+        // [還原] 卡片式排版 (白底、陰影、圓角)，包含時間計算條
         function renderDayContent(day) {
             const timeToMinutes = (timeStr) => {
                 const [hours, minutes] = timeStr.split(':').map(Number);
@@ -513,21 +536,48 @@
                     if (diffHours > 0) durationText += `${diffHours}小時`;
                     if (remainingMinutes > 0 || diffHours === 0) durationText += `${remainingMinutes}分鐘`;
                     
-                    durationHtml = `<div class="flex flex-col items-start ml-5 sm:ml-6 mt-1 mb-1"><div class="w-0.5 h-6 bg-gray-300 ml-3"></div><div class="relative text-gray-600 px-3 py-1 text-xs font-medium flex items-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1 text-gray-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l3 3a1 1 0 001.414-1.414L11 9.586V6z" clip-rule="evenodd" /></svg>預計花費：${durationText}</div><div class="w-0.5 h-6 bg-gray-300 ml-3"></div></div>`;
+                    // 連接線與時間計算
+                    durationHtml = `
+                        <div class="flex flex-col items-start ml-5 sm:ml-6 mt-1 mb-1">
+                            <div class="w-0.5 h-6 bg-gray-300 ml-3"></div>
+                            <div class="relative text-gray-600 px-3 py-1 text-xs font-medium flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1 text-gray-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l3 3a1 1 0 001.414-1.414L11 9.586V6z" clip-rule="evenodd" /></svg>
+                                預計花費：${durationText}
+                            </div>
+                            <div class="w-0.5 h-6 bg-gray-300 ml-3"></div>
+                        </div>
+                    `;
                 }
 
+                // 卡片式結構
                 const activityBlock = `
                     <div class="bg-white p-4 rounded-xl shadow border border-gray-200 transition duration-300 hover:shadow-lg flex justify-between items-start">
                         <div class="flex-grow">
                             <p class="text-sm font-bold text-gray-500 mb-1 flex items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-[#748DA6]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-[#748DA6]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
                                 ${item.time}
                             </p>
-                            <p class="text-gray-800 text-base font-medium leading-normal">${highlightText(item.description, item, true)}</p>
+                            <p class="text-gray-800 text-base font-medium leading-normal">
+                                ${highlightText(item.description, item, true)}
+                            </p>
                         </div>
-                        ${item.query ? `<button class="p-2 ml-4 bg-sky-500 text-white rounded-full hover:bg-sky-600 transition duration-150 shadow-md flex-shrink-0" title="在地圖上開啟" onclick="openInGoogleMaps('${item.query.replace(/'/g, "\\'")}')"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /></svg></button>` : ''}
+                        
+                        ${item.query ? `
+                            <button 
+                                class="p-2 ml-4 bg-sky-500 text-white rounded-full hover:bg-sky-600 transition duration-150 shadow-md flex-shrink-0"
+                                title="在地圖上開啟 ${item.description.replace(/<[^>]*>/g, '').replace(/\*\*/g, '')}"
+                                onclick="openInGoogleMaps('${item.query.replace(/'/g, "\\'")}')"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        ` : ''}
                     </div>
                 `;
+                
                 return activityBlock + durationHtml;
             }).join('');
             
@@ -539,6 +589,7 @@
                     <p class="text-red-600 font-semibold mb-4 text-lg">${day.warning ? `⚠️ ${day.warning}` : ''}</p>
                     <p class="text-gray-700 mb-6 font-medium text-xl leading-relaxed">${day.subtitle}</p>
                     ${detailsHtml}
+                    <!-- 餐食四欄 -->
                     <div class="meal-summary p-4 mt-8 rounded-lg text-base font-semibold grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <div><span class="text-[#2E4057]">🍳 早餐：</span> ${day.breakfast}</div>
                         <div><span class="text-[#2E4057]">🍜 午餐：</span> ${day.lunch}</div>
