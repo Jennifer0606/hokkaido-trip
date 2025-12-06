@@ -72,14 +72,14 @@
         }
 
         /* Modal 彈窗樣式 */
-        #location-modal {
+        #location-modal, #settings-modal {
             transition: opacity 0.2s ease-in-out;
         }
-        #location-modal.hidden {
+        #location-modal.hidden, #settings-modal.hidden {
             opacity: 0;
             pointer-events: none;
         }
-        #location-modal:not(.hidden) {
+        #location-modal:not(.hidden), #settings-modal:not(.hidden) {
             opacity: 1;
             pointer-events: auto;
         }
@@ -118,10 +118,34 @@
         .api-key-reminder { display: none; }
     </style>
 </head>
-<body class-name="p-0">
+<body class="min-h-screen">
 
     <div id="app" class="max-w-6xl mx-auto bg-white shadow-2xl relative">
         
+        <!-- 設定 Modal (輸入 API Key 用) -->
+        <div id="settings-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden p-4">
+            <div class="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 relative transform transition-all scale-100">
+                <button onclick="closeSettingsModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+                <h3 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">⚙️ 應用程式設定</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Google Gemini API Key</label>
+                        <input type="password" id="api-key-input" placeholder="貼上您的 API Key" class="w-full p-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-[#00A8A0] focus:border-transparent outline-none">
+                        <p class="text-xs text-gray-500 mt-1">Key 將儲存在您的瀏覽器中 (LocalStorage)，不會上傳。</p>
+                    </div>
+                    <div class="flex space-x-2 pt-2">
+                        <button onclick="saveApiKeyFromModal()" class="flex-1 bg-[#00A8A0] text-white py-2 rounded-lg font-bold hover:bg-[#008F87] transition text-sm">儲存並重試</button>
+                        <button onclick="clearApiKey()" class="px-3 py-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition text-sm">清除</button>
+                    </div>
+                    <div id="settings-status" class="text-xs text-center h-4"></div>
+                </div>
+            </div>
+        </div>
+
         <!-- Modal 地點小卡 -->
         <div id="location-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden p-4">
             <div class="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 relative transform transition-all scale-100">
@@ -131,10 +155,8 @@
                     </svg>
                 </button>
                 
-                <!-- 地點標題區 -->
                 <div class="mb-4 border-b pb-3 pr-8">
                     <h3 id="modal-title" class="text-2xl font-bold text-gray-800 leading-tight">地點名稱</h3>
-                    <!-- 日文名稱顯示區 -->
                     <p id="modal-jp-name" class="text-sm text-sky-600 font-medium font-['Noto_Sans_JP'] mt-1">Japanese Name</p>
                 </div>
 
@@ -165,21 +187,27 @@
             </div>
         </div>
 
-        <!-- Header -->
-        <header class="header-bg p-6 sm:p-10 text-white text-center rounded-b-xl">
+        <!-- Header (還原結構：移除 Nav，保留純 Header) -->
+        <header class="header-bg p-6 sm:p-10 text-white text-center rounded-b-xl relative">
+            <button onclick="openSettingsModal()" class="absolute top-4 right-4 p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition" title="設定 API Key">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+            </button>
             <h1 class="text-3xl sm:text-4xl font-extrabold opacity-95 mb-2">
                 ✈️ 2026 冬季限定 | 北海道六天五夜之旅
             </h1>
             <p class="text-lg font-light tracking-widest">破冰船．雪上活動．小樽散策</p>
         </header>
 
-        <!-- 導覽列容器 -->
+        <!-- 導覽列容器 (還原 Sticky 結構) -->
         <div class="sticky top-0 z-10 bg-white shadow-md">
-            <!-- 1. 主導覽列 -->
+            <!-- 1. 頂層主導覽列 (移回這裡) -->
             <div id="main-tabs" class="flex overflow-x-auto whitespace-nowrap px-4 sm:px-6 border-b border-gray-300">
                 <!-- JS Rendered -->
             </div>
-            <!-- 2. 日期導覽列 -->
+            <!-- 2. 次層日期導覽列 -->
             <div id="day-tabs" class="flex overflow-x-auto whitespace-nowrap px-4 sm:px-6 border-b border-gray-200 bg-gray-50" style="display: none;">
                 <!-- JS Rendered -->
             </div>
@@ -196,12 +224,12 @@
         </footer>
     </div>
 
+    <!-- ================= 邏輯程式碼 ================= -->
     <script>
-        // --- 設定 ---
-        const apiKey = ""; 
-        const API_KEY = apiKey || "AIzaSyCUAqeZHGu8dildmhdmOd_nTmoHa15EggU"; 
+        /* --- 1. 設定與工具 --- */
+        let API_KEY = localStorage.getItem('GEMINI_API_KEY') || ""; 
         const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent";
-        const MAX_RETRIES = 5;
+        const MAX_RETRIES = 3;
         const WEATHER_DISPLAY_ID = "weather-display-home"; 
         const RATE_LIMIT_MS = 43200000; 
         const LAST_RATE_UPDATE_KEY = 'lastExchangeRateUpdate';
@@ -210,440 +238,110 @@
         let activeMainTab = 'home'; 
         let activeDayId = 'day-1'; 
 
-        // --- 行程資料 ---
-        const itineraryData = [
-            {
-                id: 1,
-                title: "02/20：札幌啟程 ✈️",
-                subtitle: "【初識札幌】從機場直奔市區，展開悠閒的冬季漫步。",
-                location: "札幌, 日本", 
-                details: [
-                    { time: "04:00", description: "桃園機場 Terminal 1 辦理報到手續與行李托運。", query: "桃園機場 Terminal 1", jpName: "台湾桃園国際空港 第1ターミナル", address: "桃園市大園區航站南路15號", hours: "24小時開放" },
-                    { time: "06:20", description: "搭乘**虎航 IT 234** 航班 (06:20) 飛往北海道新千歲機場。", query: "桃園國際機場", jpName: "台湾桃園国際空港", address: "桃園市大園區航站南路15號", hours: "航班時間依航空公司公告" },
-                    { time: "10:55", description: "抵達**北海道新千歲機場**，準備辦理入境手續 (平均約需 1 小時)。", query: "新千歲機場", jpName: "新千歳空港", address: "Bibi, Chitose, Hokkaido 066-0012, Japan", hours: "國內線 6:20-23:00 / 國際線 依航班" },
-                    { time: "12:00", description: "入境手續與領取行李完成後，搭乘交通工具前往札幌市區。", query: "新千歲機場", jpName: "新千歳空港", address: "Bibi, Chitose, Hokkaido 066-0012, Japan", hours: "JR快速Airport號每12分鐘一班" },
-                    { time: "15:00", description: "參觀**大通公園**及經典地標**札幌電視塔**。", query: "札幌大通公園 札幌電視塔", jpName: "大通公園・さっぽろテレビ塔", address: "札幌市中央区大通西1丁目", hours: "電視塔展望台: 09:00-22:00 (最後入場 21:50)" },
-                    { time: "18:30", description: "在美食與購物天堂**狸小路商店街**自由活動，享受日式晚餐。", query: "札幌狸小路商店街", jpName: "狸小路商店街", address: "札幌市中央区南2・3条西1～7丁目", hours: "大部分店家 10:00-20:00 (餐廳至較晚)" }
-                ],
-                breakfast: "溫暖的家 / 機上自理",
-                lunch: "機場自理",
-                dinner: "狸小路自理",
-                lodging: "札幌市區飯店",
-            },
-            {
-                id: 2,
-                title: "02/21：企鵝．雪上活動．溫泉 🐧",
-                subtitle: "【冰雪樂園】整日精彩活動，以溫泉解除疲勞。",
-                warning: "團體巴士行程：07:40JR札幌北口集合，每人限帶一件大型行李。<br>⚠️ 日本司機工時控管嚴格,切勿遲到, 以免被丟包",
-                location: "旭川, 日本", 
-                details: [
-                    { time: "08:00", description: "搭乘專屬巴士前往**旭山動物園**，觀賞冬季限定的企鵝散步。", query: "旭山動物園", jpName: "旭川市旭山動物園", address: "北海道旭川市東旭川町倉沼", hours: "冬季開園: 10:30-15:30 (企鵝散步約11:00/14:30)" },
-                    { time: "12:00", description: "午餐時間 (焗烤螃蟹海鮮陶板燒御膳)。", query: "旭川午餐地點", jpName: "旭川ランチ", address: "旭川市區 / 動物園周邊", hours: "午餐時段" },
-                    { time: "14:00", description: "前往雪上樂園，體驗雪上摩托車、雪盆、橡皮艇等**刺激雪上活動**。", query: "北海道雪上樂園", jpName: "ぴっぷスキー場 (比布滑雪場周邊)", address: "北海道上川郡比布町北7線17號 (比布滑雪場周邊)", hours: "冬季開放 09:00-16:00" },
-                    { time: "18:00", description: "專車前往**層雲峽溫泉區**，享受飯店內豪華晚餐及溫泉。", query: "層雲峽溫泉飯店", jpName: "層雲峡温泉", address: "北海道上川郡上川町層雲峡", hours: "入住時間通常為 15:00 後" }
-                ],
-                breakfast: "飯店內早餐",
-                lunch: "焗烤螃蟹海鮮陶板燒御膳",
-                dinner: "溫泉飯店豪華晚餐",
-                lodging: "**層雲峽周邊溫泉飯店**",
-            },
-            {
-                id: 3,
-                title: "02/22：紋別破冰船．酒造巡禮 🚢",
-                subtitle: "【海之震撼】欣賞鄂霍次克海的流冰奇景。",
-                warning: "⚠️ 團體巴士行程：約 18:00-19:00 返抵 JR 札幌車站解散",
-                location: "紋別, 日本", 
-                details: [
-                    { time: "08:30", description: "參觀**銀河流星瀑布** (冬季景觀)。", query: "銀河流星瀑布", jpName: "銀河・流星の滝", address: "北海道上川郡上川町層雲峡", hours: "全天開放 (冬季需注意除雪狀況)" },
-                    { time: "10:30", description: "重頭戲：抵達紋別，搭乘**破冰船** (GARINKO 號) 體驗破冰。", query: "紋別 GARINKO 號 破冰船", jpName: "流氷砕氷船ガリンコ号", address: "北海道紋別市海洋公園1番地", hours: "冬季出航: 09:00 / 10:30 / 12:00 / 13:30 / 15:00" },
-                    { time: "12:30", description: "豪華蟹腳干貝端爐燒套餐午餐。", query: "紋別海鮮餐廳", jpName: "紋別海鮮料理", address: "紋別市海洋公園周邊", hours: "午餐時段" },
-                    { time: "14:30", description: "文化體驗：參觀**旭川男山酒造**，了解清酒釀製過程。", query: "旭川男山酒造", jpName: "男山酒造り資料舘", address: "北海道旭川市永山2条7丁目1-33", hours: "09:00-17:00" },
-                    { time: "18:00", description: "返回札幌市區飯店辦理入住，晚餐自理。", query: "札幌市區飯店", jpName: "札幌市内ホテル", address: "札幌市中心", hours: "入住時間通常為 15:00 後" }
-                ],
-                breakfast: "飯店內早餐",
-                lunch: "豪華蟹腳干貝端爐燒套餐",
-                dinner: "札幌市區自理",
-                lodging: "札幌蒙特利埃德爾霍夫酒店",
-            },
-            {
-                id: 4,
-                title: "02/23：小樽運河．音樂盒堂 🔔",
-                subtitle: "【自由散策】搭乘 JR 前往，盡情享受小樽的浪漫氛圍。",
-                location: "小樽, 日本", 
-                details: [
-                    { time: "10:00", description: "從札幌搭乘 JR 前往小樽。", query: "小樽 JR 站", jpName: "小樽駅", address: "小樽市稻穗2丁目", hours: "05:30-23:30" },
-                    { time: "11:00", description: "**小樽運河**：沿著運河邊散步，拍攝經典倉庫群。", query: "小樽運河", jpName: "小樽運河", address: "北海道小樽市港町", hours: "全天開放 (運河遊船依季節)" },
-                    { time: "12:30", description: "午餐：小樽壽司或自理。", query: "小樽壽司店", jpName: "小樽寿司屋通り", address: "小樽壽司通 (政壽司/旭壽司等)", hours: "約 11:00-21:00" },
-                    { time: "14:00", description: "參觀**北一硝子館**與**音樂盒博物館**，感受懷舊氣息。", query: "小樽音樂盒博物館 北一硝子館", jpName: "北一硝子・小樽オルゴール堂", address: "小樽市住吉町4-1 (音樂盒堂本館)", hours: "09:00-18:00" },
-                    { time: "16:00", description: "別忘了在 **LeTAO 總店**享受下午茶。", query: "小樽 LeTAO 總店", jpName: "小樽洋菓子舗ルタオ本店", address: "北海道小樽市堺町7-16", hours: "09:00-18:00 (2F 咖啡廳至 17:30)" },
-                    { time: "18:30", description: "晚餐：返回札幌後，建議前往札幌拉麵共和國 (自理)。", query: "札幌拉麵共和國", jpName: "札幌ら～めん共和国", address: "札幌市中央區北5條西2丁目 ESTA 10F (目前ESTA關閉，可改至大丸或周邊)", hours: "11:00-22:00" }
-                ],
-                breakfast: "飯店內早餐",
-                lunch: "小樽壽司或自理",
-                dinner: "札幌拉麵共和國 (自理)",
-                lodging: "札幌蒙特利埃德爾霍夫酒店",
-            },
-            {
-                id: 5,
-                title: "02/24：海鮮購物．三大蟹宴 🛍️",
-                subtitle: "【美食天堂】一整天獻給北海道的美味與購物。",
-                location: "札幌, 日本", 
-                details: [
-                    { time: "09:30", description: "上午：參拜**北海道神宮**。", query: "北海道神宮", jpName: "北海道神宮", address: "北海道札幌市中央區宮丘474", hours: "冬季: 07:00-16:00" },
-                    { time: "11:00", description: "前往**札幌場外市場**，享用超新鮮海鮮丼 (自理)。", query: "札幌場外市場", jpName: "札幌場外市場", address: "札幌市中央區北11條西21丁目", hours: "06:00-17:00 (餐廳約 07:00 開始)" },
-                    { time: "14:00", description: "下午：在**狸小路商店街**或**大通公園**周邊進行補貨購物。", query: "狸小路商店街 大通公園", jpName: "狸小路商店街・大通公園", address: "札幌市中央區", hours: "全天開放 (商店各異)" },
-                    { time: "19:00", description: "晚餐：建議享受經典的**三大蟹吃到飽** (帝王蟹、松葉蟹、毛蟹) (自理)。", query: "札幌三大蟹吃到飽", jpName: "三大カニ食べ放題", address: "札幌市區 (如難陀 Nanda)", hours: "晚餐時段通常 17:00-22:00" }
-                ],
-                breakfast: "飯店內早餐",
-                lunch: "場外市場海鮮丼 (自理)",
-                dinner: "三大蟹吃到飽 (自理)",
-                lodging: "札幌蒙特利埃德爾霍夫酒店",
-            },
-            {
-                id: 6,
-                title: "02/25：最終採買．返家 🏠",
-                subtitle: "【完美句點】輕鬆血拚後，帶著滿滿回憶踏上歸途。",
-                location: "新千歲機場, 日本", 
-                details: [
-                    { time: "10:00", description: "退房後，前往**三井OUTLET購物中心**或 Rera Outlet。", query: "札幌三井OUTLET購物中心", jpName: "三井アウトレットパーク 札幌北広島", address: "北海道北廣島市大曲幸町3-7-6", hours: "10:00-20:00" },
-                    { time: "12:00", description: "在 OUTLET 內享用午餐。", query: "OUTLET 餐廳", jpName: "レストラン", address: "Outlet 美食街", hours: "10:30-21:00" },
-                    { time: "13:30", description: "集合前往新千歲機場。", query: "新千歲機場", jpName: "新千歳空港", address: "Bibi, Chitose, Hokkaido", hours: "24小時開放" },
-                    { time: "14:40", description: "搭乘華航 CI 131 班機返回台北。", query: "新千歲機場", jpName: "新千歳空港 国際線ターミナル", address: "國際線航廈", hours: "航班時間" },
-                    { time: "18:15", description: "抵達桃園國際機場，溫暖的家。", query: "桃園國際機場", jpName: "桃園空港", address: "桃園市", hours: "24小時開放" }
-                ],
-                breakfast: "飯店內早餐",
-                lunch: "OUTLET 簡餐 (自理)",
-                dinner: "機上簡餐",
-                lodging: "溫暖的家",
-            },
-        ];
+        // 關鍵字設定
+        const ACTIVITY_KEYWORDS = ["虎航 IT 234", "華航 CI 131", "刺激雪上活動", "破冰船", "三大蟹吃到飽"];
+        const LOCATION_KEYWORDS = ["旭山動物園", "小樽運河", "LeTAO 總店", "札幌電視塔", "狸小路商店街", "銀河流星瀑布", "旭川男山酒造", "北一硝子館", "音樂盒博物館", "北海道神宮", "札幌場外市場", "三井OUTLET購物中心", "大通公園", "層雲峽溫泉飯店", "音樂盒堂"];
 
-        const mainTabsContainer = document.getElementById('main-tabs');
-        const dayTabsContainer = document.getElementById('day-tabs');
-        const contentContainer = document.getElementById('dynamic-content');
-        const locationModal = document.getElementById('location-modal');
-
-        // --- Helper Functions ---
-        // 拆分後的關鍵字列表
-        const ACTIVITY_KEYWORDS = [
-            "虎航 IT 234", "華航 CI 131", "刺激雪上活動", 
-            "破冰船", "三大蟹吃到飽"
-        ];
-        
-        const LOCATION_KEYWORDS = [
-            "旭山動物園", "小樽運河", "LeTAO 總店", 
-            "札幌電視塔", "狸小路商店街", "銀河流星瀑布", "旭川男山酒造", 
-            "北一硝子館", "音樂盒博物館", "北海道神宮", "札幌場外市場", 
-            "三井OUTLET購物中心", "大通公園"
-        ];
-
-        // --- Modal Logic ---
-        window.openModal = function(title, address, hours, query, jpTitle) {
-            document.getElementById('modal-title').textContent = title;
-            document.getElementById('modal-jp-name').textContent = jpTitle || ""; 
-            document.getElementById('modal-address').textContent = address;
-            document.getElementById('modal-hours').textContent = hours;
-            
-            const mapBtn = document.getElementById('modal-map-btn');
-            mapBtn.onclick = function() {
-                window.openInGoogleMaps(query);
-            };
-            
-            locationModal.classList.remove('hidden');
-        };
-
-        window.closeModal = function() {
-            locationModal.classList.add('hidden');
-        };
-
-        locationModal.addEventListener('click', function(e) {
-            if (e.target === locationModal) {
-                closeModal();
-            }
-        });
-
-        // --- Highlight Logic ---
+        // 核心：文字高亮與點擊事件
         const highlightText = (text, item, isClickable = false) => {
             return text.replace(/\*\*(.*?)\*\*/g, (match, p1) => {
                 if (isClickable && item) {
-                    // 詳細行程頁面 (啟用 Modal)
                     const safeTitle = p1.replace(/'/g, "\\'").replace(/"/g, '&quot;');
                     const safeAddress = (item.address || "地址詳情請查詢").replace(/'/g, "\\'").replace(/"/g, '&quot;');
                     const safeHours = (item.hours || "營業時間請查詢").replace(/"/g, '&quot;');
                     const safeQuery = (item.query || p1).replace(/'/g, "\\'").replace(/"/g, '&quot;');
                     const safeJpTitle = (item.jpName || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                    
                     return `<span class="highlight-text-clickable" onclick="openModal('${safeTitle}', '${safeAddress}', '${safeHours}', '${safeQuery}', '${safeJpTitle}')">${p1}</span>`;
                 } else {
-                    // 首頁模式 (不可點擊，分色顯示)
                     const isActivity = ACTIVITY_KEYWORDS.some(keyword => p1.includes(keyword));
                     const isLocation = LOCATION_KEYWORDS.some(keyword => p1.includes(keyword));
-                    
-                    // 判斷顏色：活動(粉紅) / 地點(深灰) / 其他(深灰)
-                    let className = "location-text-static"; // 預設
-                    if (isActivity) {
-                        className = "highlight-text-activity";
-                    } else if (isLocation) {
-                        className = "highlight-text-location";
-                    }
-
+                    let className = "location-text-static"; 
+                    if (isActivity) className = "highlight-text-activity";
+                    else if (isLocation) className = "highlight-text-location";
                     return `<span class="${className}">${p1}</span>`;
                 }
             });
         };
 
-        // --- API Helpers ---
-        async function fetchWithRetry(url, options, maxRetries = 3) {
-            for (let i = 0; i < maxRetries; i++) {
-                try {
-                    const response = await fetch(url, options);
-                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                    return response;
-                } catch (error) {
-                    if (i === maxRetries - 1) throw error;
-                    await new Promise(r => setTimeout(r, 1000));
-                }
+        /* --- 2. Modal 互動邏輯 --- */
+        window.openSettingsModal = function() {
+            const input = document.getElementById('api-key-input');
+            if (input) input.value = API_KEY; 
+            document.getElementById('settings-modal').classList.remove('hidden');
+        }
+        window.closeSettingsModal = function() {
+            document.getElementById('settings-modal').classList.add('hidden');
+            document.getElementById('settings-status').textContent = '';
+        }
+        window.saveApiKeyFromModal = function() {
+            const input = document.getElementById('api-key-input');
+            const status = document.getElementById('settings-status');
+            if (input) {
+                API_KEY = input.value.trim();
+                localStorage.setItem('GEMINI_API_KEY', API_KEY);
+                status.textContent = '儲存成功！重試中...';
+                status.className = 'text-xs text-center h-4 text-green-600';
+                getDynamicWeather();
+                setTimeout(() => closeSettingsModal(), 1000);
             }
         }
-        
-        function isRateLimited() {
-            const lastUpdateStr = localStorage.getItem(LAST_RATE_UPDATE_KEY);
-            if (!lastUpdateStr) return null;
-            const lastUpdateTime = parseInt(lastUpdateStr, 10);
-            const currentTime = new Date().getTime();
-            const elapsedTime = currentTime - lastUpdateTime;
-            if (elapsedTime < RATE_LIMIT_MS) return RATE_LIMIT_MS - elapsedTime;
-            return null;
+        window.clearApiKey = function() {
+            localStorage.removeItem('GEMINI_API_KEY');
+            API_KEY = "";
+            document.getElementById('api-key-input').value = "";
+            document.getElementById('settings-status').textContent = '已清除';
+            getDynamicWeather();
         }
-
-        function updateRateLimitTimestamp() {
-            localStorage.setItem(LAST_RATE_UPDATE_KEY, new Date().getTime().toString());
-        }
-
-        // --- Feature Logic ---
-        async function fetchWeather(userQuery, locationName) {
-            const resultContainer = document.getElementById('weather-result');
-            const lastUpdatedContainer = document.getElementById('weather-last-updated');
-            if (!resultContainer || !lastUpdatedContainer) return;
-            
-            resultContainer.innerHTML = `<div class="flex items-center text-sm text-gray-500 animate-pulse mt-2">正在查詢 ${locationName} 天氣...</div>`;
-            
-            const payload = {
-                contents: [{ parts: [{ text: userQuery }] }],
-                tools: [{ "google_search": {} }],
-                systemInstruction: { parts: [{ text: "You are a concise weather reporter. Response in Traditional Chinese." }] },
-            };
-
-            try {
-                const response = await fetchWithRetry(`${API_URL}?key=${API_KEY}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const result = await response.json();
-                const text = result.candidates?.[0]?.content?.parts?.[0]?.text || "暫無資料";
-                resultContainer.innerHTML = `<div class="flex items-start mt-2"><p class="text-sm text-gray-800 font-medium">${text}</p></div>`;
-                lastUpdatedContainer.textContent = `更新時間: ${new Date().toLocaleTimeString('zh-TW')}`;
-            } catch (error) {
-                console.error("Weather Error", error);
-                resultContainer.innerHTML = `<div class="text-red-500 text-sm">天氣查詢失敗</div>`;
-            }
-        }
-
-        function getDynamicWeather() {
-            const weatherDisplay = document.getElementById(WEATHER_DISPLAY_ID);
-            if(!weatherDisplay) return;
-            const defaultCity = "札幌";
-            const userQuery = `What is the current temperature, condition (e.g., cloudy, snowy), and expected high/low temperature for ${defaultCity}? Summarize in one sentence in Traditional Chinese.`;
-            
-            weatherDisplay.innerHTML = `
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-sm text-gray-500">預設顯示：${defaultCity}</span>
-                    <button onclick="requestUserLocation()" class="text-xs text-sky-600 hover:text-sky-800 underline">📍 定位我的位置</button>
-                </div>
-                <div id="weather-result"></div>
-                <p id="weather-last-updated" class="text-xs text-right text-gray-400 mt-2">...</p>
-            `;
-            fetchWeather(userQuery, defaultCity);
-        }
-
-        window.requestUserLocation = function() {
-            if (navigator.geolocation) {
-                document.getElementById('weather-result').innerHTML = '<div class="text-sm text-gray-500 animate-pulse">正在嘗試定位...</div>';
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        const { latitude, longitude } = position.coords;
-                        const userQuery = `What is the current temperature, condition (e.g., cloudy, snowy), and expected high/low temperature for the location near latitude ${latitude} and longitude ${longitude}? Summarize in one sentence in Traditional Chinese.`;
-                        fetchWeather(userQuery, "您目前的位置");
-                    },
-                    (error) => {
-                        alert("無法取得位置，已切回預設地點。");
-                        getDynamicWeather();
-                    },
-                    { timeout: 5000 }
-                );
-            } else {
-                alert("您的瀏覽器不支援定位功能。");
-            }
+        window.openModal = function(title, address, hours, query, jpTitle) {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-jp-name').textContent = jpTitle || ""; 
+            document.getElementById('modal-address').textContent = address;
+            document.getElementById('modal-hours').textContent = hours;
+            document.getElementById('modal-map-btn').onclick = function() { window.openInGoogleMaps(query); };
+            document.getElementById('location-modal').classList.remove('hidden');
         };
-
-        window.convertCurrency = function() {
-            const jpyInput = document.getElementById('jpy-input');
-            const twdOutput = document.getElementById('twd-output');
-            if (!jpyInput || !twdOutput) return;
-            let val = parseFloat(jpyInput.value);
-            if (!isNaN(val)) {
-                twdOutput.textContent = `${Math.round(val * 0.22)} TWD`;
-                twdOutput.className = twdOutput.className.replace('text-gray-700', 'text-pink-700');
-            } else {
-                twdOutput.textContent = '0 TWD';
-            }
+        window.closeModal = function() { document.getElementById('location-modal').classList.add('hidden'); };
+        window.openInGoogleMaps = function(query) {
+            if (query) window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`, '_blank'); 
         }
+        window.addEventListener('click', function(e) {
+            if (e.target === document.getElementById('location-modal')) closeModal();
+            if (e.target === document.getElementById('settings-modal')) closeSettingsModal();
+        });
 
-        function renderExchangeRateBlock() {
-            return `
-                <div id="exchange-rate-block" class="max-w-xs mx-auto p-2 my-2 bg-transparent">
-                    <p class="text-sm font-semibold text-gray-600 mb-2 text-center">💵 JPY ⇌ TWD 快速試算</p>
-                    <div class="flex space-x-2">
-                        <div class="flex-1"><input type="number" id="jpy-input" oninput="convertCurrency()" placeholder="日幣金額 (JPY)" class="w-full py-2 px-3 border border-gray-300 rounded-lg text-sm shadow-sm focus:ring-sky-500 focus:border-sky-500" min="0" max="999999"></div>
-                        <div id="twd-output" class="flex-1 flex items-center justify-end py-2 px-3 border border-gray-300 rounded-lg bg-gray-100 text-sm font-bold text-gray-700 text-right shadow-inner">0 TWD</div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function renderCurrentWeatherBlock() {
-            return `
-                <div class="p-4 bg-sky-50 rounded-xl border border-sky-200 mb-6 shadow-sm">
-                    <h3 class="text-xl font-bold text-sky-700 mb-2 flex items-center">當地天氣概況</h3>
-                    <div id="${WEATHER_DISPLAY_ID}" class="mt-2"></div>
-                </div>
-            `;
-        }
-
-        // --- Render Content ---
-        function renderHomeContent() {
-            const highlightsContent = `
-                <div>
-                    <h3 class="text-2xl font-bold accent-color mb-3 border-b pb-2">🎯 行程亮點</h3>
-                    <p class="text-gray-600 mb-6 italic">本次行程專為冬季設計，結合了北海道最經典的雪國體驗。</p>
-                    <ul class="space-y-3 pl-4 list-disc text-gray-700">
-                        <li><strong class="text-sky-700">雪地奇觀：</strong>搭乘紋別${highlightText('**破冰船**', {}, false)}，近距離感受流冰震撼。</li>
-                        <li><strong class="text-sky-700">動物明星：</strong>前往${highlightText('**旭山動物園**', {}, false)}，觀賞企鵝雪地散步。</li>
-                        <li><strong class="text-sky-700">溫泉療癒：</strong>入住${highlightText('**層雲峽溫泉飯店**', {}, false)}，享受日式豪華會席料理與天然溫泉。</li>
-                        <li><strong class="text-sky-700">浪漫散策：</strong>在${highlightText('**小樽運河**', {}, false)}享受浪漫時光。</li>
-                        <li><strong class="text-sky-700">美食天堂：</strong>特別安排蟹腳海鮮陶板燒、並建議體驗${highlightText('**三大蟹吃到飽**', {}, false)}。</li>
-                    </ul>
-                </div>
-            `;
-            return `
-                <div class="day-content p-8 sm:p-10 bg-white rounded-xl shadow-lg border border-gray-100 space-y-8">
-                    ${renderCurrentWeatherBlock()} 
-                    <div>
-                        <h3 class="text-2xl font-bold accent-color mb-3 border-b pb-2">✈️ 航班/集合資訊</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm font-medium p-4 bg-gray-100 rounded-xl shadow-inner">
-                            <p class="text-gray-700">去程：${highlightText('**虎航 IT 234**', {}, false)} (06:20 - 10:55)</p>
-                            <p class="text-gray-700">回程：${highlightText('**華航 CI 131**', {}, false)} (14:40 - 18:15)</p>
-                        </div>
-                    </div>
-                    ${renderExchangeRateBlock()} 
-                    ${highlightsContent}
-                </div>
-            `;
-        }
-
-        function renderDayContent(day) {
-            const timeToMinutes = (timeStr) => {
-                const [hours, minutes] = timeStr.split(':').map(Number);
-                return hours * 60 + minutes;
-            };
-            
-            const detailsHtml = `
-                <h4 class="text-xl font-bold text-[#2E4057] mb-4 border-l-4 border-[#748DA6] pl-2">行程細節：</h4>
-                <div class="space-y-4">
-                    ${day.details.map((item, index) => {
-                        let durationHtml = '';
-                        if (index < day.details.length - 1) {
-                            const currentTime = timeToMinutes(item.time);
-                            const nextTime = timeToMinutes(day.details[index + 1].time);
-                            let diffMinutes = nextTime - currentTime;
-                            if (diffMinutes < 0) diffMinutes += 24 * 60; 
-                            const diffHours = Math.floor(diffMinutes / 60);
-                            const remainingMinutes = diffMinutes % 60;
-                            let durationText = '';
-                            if (diffHours > 0) durationText += `${diffHours}小時`;
-                            if (remainingMinutes > 0 || diffHours === 0) durationText += `${remainingMinutes}分鐘`;
-                            
-                            durationHtml = `<div class="flex flex-col items-start ml-5 sm:ml-6 mt-1 mb-1"><div class="w-0.5 h-6 bg-gray-300 ml-3"></div><div class="relative text-gray-600 px-3 py-1 text-xs font-medium flex items-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1 text-gray-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l3 3a1 1 0 001.414-1.414L11 9.586V6z" clip-rule="evenodd" /></svg>預計花費：${durationText}</div><div class="w-0.5 h-6 bg-gray-300 ml-3"></div></div>`;
-                        }
-
-                        const activityBlock = `
-                            <div class="bg-white p-4 rounded-xl shadow border border-gray-200 transition duration-300 hover:shadow-lg flex justify-between items-start">
-                                <div class="flex-grow">
-                                    <p class="text-sm font-bold text-gray-500 mb-1 flex items-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-[#748DA6]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                        ${item.time}
-                                    </p>
-                                    <p class="text-gray-800 text-base font-medium leading-normal">
-                                        ${highlightText(item.description, item, true)}
-                                    </p>
-                                </div>
-                                ${item.query ? `<button class="p-2 ml-4 bg-sky-500 text-white rounded-full hover:bg-sky-600 transition duration-150 shadow-md flex-shrink-0" title="在地圖上開啟 ${item.description.replace(/<[^>]*>/g, '').replace(/\*\*/g, '')}" onclick="openInGoogleMaps('${item.query.replace(/'/g, "\\'")}')"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /></svg></button>` : ''}
-                            </div>
-                        `;
-                        return activityBlock + durationHtml;
-                    }).join('')}
-                </div>
-            `;
-            
-            const lodgingHtml = highlightText(day.lodging, {}, false);
-            
-            return `
-                <div class="day-content p-8 sm:p-10 bg-white rounded-xl shadow-lg border border-gray-100">
-                    <h3 class="text-4xl font-black accent-color mb-3 border-b-2 pb-1">${day.title}</h3>
-                    <p class="text-red-600 font-semibold mb-4 text-lg">${day.warning ? `⚠️ ${day.warning}` : ''}</p>
-                    <p class="text-gray-700 mb-6 font-medium text-xl leading-relaxed">${day.subtitle}</p>
-                    ${detailsHtml}
-                    <div class="meal-summary p-4 mt-8 rounded-lg text-base font-semibold grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div><span class="text-[#2E4057]">🍳 早餐：</span> ${day.breakfast}</div>
-                        <div><span class="text-[#2E4057]">🍜 午餐：</span> ${day.lunch}</div>
-                        <div><span class="text-[#2E4057]">🥩 晚餐：</span> ${day.dinner}</div>
-                        <div><span class="text-[#2E4057]">🏨 住宿：</span> ${lodgingHtml}</div>
-                    </div>
-                </div>
-            `;
-        }
-
-        // --- Tabs Logic ---
+        /* --- 3. 視圖渲染 --- */
         function renderMainTabs() {
-            mainTabsContainer.innerHTML = '';
-            const homeButton = createMainTab('主頁', 'home');
+            const container = document.getElementById('main-tabs');
+            container.innerHTML = '';
+            // 主頁按鈕 (還原樣式)
+            const homeButton = createMainTab('主頁', 'home', `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l-2-2m2 2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>`);
             homeButton.onclick = () => switchMainView('home');
-            mainTabsContainer.appendChild(homeButton);
-            const itineraryButton = createMainTab('詳細行程', 'itinerary-group');
+            container.appendChild(homeButton);
+            
+            // 詳細行程按鈕 (還原樣式)
+            const itineraryButton = createMainTab('詳細行程', 'itinerary-group', `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h.01M7 12h.01M6 16h.01M9 16h.01M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>`);
             itineraryButton.onclick = () => switchMainView('itinerary-group');
-            mainTabsContainer.appendChild(itineraryButton);
+            container.appendChild(itineraryButton);
         }
         
-        function createMainTab(text, viewId) {
+        function createMainTab(text, viewId, iconHtml) {
             const button = document.createElement('button');
             button.className = 'tab-item main-tab text-gray-700';
-            button.textContent = text;
+            button.innerHTML = iconHtml + text; // 加入 iconHtml
             button.setAttribute('data-view', viewId);
             return button;
         }
 
         function renderDayTabs() {
-            dayTabsContainer.innerHTML = '';
+            const container = document.getElementById('day-tabs');
+            container.innerHTML = '';
             itineraryData.forEach(day => {
                 const button = document.createElement('button');
                 button.className = 'tab-item day-tab text-gray-600';
                 button.textContent = `Day ${day.id}`;
                 button.setAttribute('data-day-id', `day-${day.id}`);
                 button.onclick = () => switchDayView(`day-${day.id}`);
-                dayTabsContainer.appendChild(button);
+                container.appendChild(button);
             });
         }
 
@@ -653,7 +351,10 @@
                 tab.classList.remove('active');
                 if (tab.getAttribute('data-view') === viewId) tab.classList.add('active');
             });
+            const contentContainer = document.getElementById('dynamic-content');
+            const dayTabsContainer = document.getElementById('day-tabs');
             const baseClasses = 'content-area bg-gray-50 px-4 sm:px-6';
+            
             if (viewId === 'home') {
                 contentContainer.className = baseClasses + ' py-8 sm:py-12';
                 dayTabsContainer.style.display = 'none';
@@ -674,17 +375,194 @@
             });
             const dayNumber = parseInt(dayId.split('-')[1]);
             const dayData = itineraryData.find(d => d.id === dayNumber);
-            if (dayData) contentContainer.innerHTML = renderDayContent(dayData);
+            if (dayData) document.getElementById('dynamic-content').innerHTML = renderDayContent(dayData);
         }
 
-        window.openInGoogleMaps = function(query) {
-            if (query) {
-                const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
-                window.open(url, '_blank'); 
+        /* --- 4. 內容生成函式 --- */
+        function renderHomeContent() {
+            return `
+                <div class="day-content p-8 sm:p-10 bg-white rounded-xl shadow-lg border border-gray-100 space-y-8">
+                    <div class="p-4 bg-sky-50 rounded-xl border border-sky-200 mb-6 shadow-sm">
+                        <h3 class="text-xl font-bold text-sky-700 mb-2 flex items-center">當地天氣概況 (預設：札幌)</h3>
+                        <div id="${WEATHER_DISPLAY_ID}" class="mt-2"></div>
+                        <p id="weather-last-updated" class="text-xs text-right text-gray-400 mt-2">...</p>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold accent-color mb-3 border-b pb-2">✈️ 航班/集合資訊</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm font-medium p-4 bg-gray-100 rounded-xl shadow-inner">
+                            <p class="text-gray-700">去程：${highlightText('**虎航 IT 234**', {}, false)} (06:20 - 10:55)</p>
+                            <p class="text-gray-700">回程：${highlightText('**華航 CI 131**', {}, false)} (14:40 - 18:15)</p>
+                        </div>
+                    </div>
+                    <div class="max-w-xs mx-auto p-2 my-2 bg-transparent">
+                        <p class="text-sm font-semibold text-gray-600 mb-2 text-center">💵 JPY ⇌ TWD 快速試算</p>
+                        <div class="flex space-x-2">
+                            <div class="flex-1"><input type="number" id="jpy-input" oninput="convertCurrency()" placeholder="日幣" class="w-full py-2 px-3 border border-gray-300 rounded-lg text-sm shadow-sm focus:ring-sky-500"></div>
+                            <div id="twd-output" class="flex-1 flex items-center justify-end py-2 px-3 border border-gray-300 rounded-lg bg-gray-100 text-sm font-bold text-gray-700 text-right">0 TWD</div>
+                        </div>
+                        <div class="text-right text-xs text-gray-400 mt-1">參考匯率: 0.22</div>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold accent-color mb-3 border-b pb-2">🎯 行程亮點</h3>
+                        <ul class="space-y-3 pl-4 list-disc text-gray-700">
+                            <li><strong class="text-sky-700">雪地奇觀：</strong>搭乘紋別${highlightText('**破冰船**', {}, false)}，近距離感受鄂霍次克海的流冰震撼。</li>
+                            <li><strong class="text-sky-700">動物明星：</strong>前往${highlightText('**旭山動物園**', {}, false)}，觀賞冬季限定的企鵝雪地散步。</li>
+                            <li><strong class="text-sky-700">溫泉療癒：</strong>入住${highlightText('**層雲峽溫泉飯店**', {}, false)}，享受日式豪華會席料理與天然溫泉。</li>
+                            <li><strong class="text-sky-700">浪漫散策：</strong>在${highlightText('**小樽運河**', {}, false)}、${highlightText('**音樂盒堂**', {}, false)}享受浪漫的自由時光與精緻甜點。</li>
+                            <li><strong class="text-sky-700">美食天堂：</strong>特別安排蟹腳海鮮陶板燒、並建議體驗${highlightText('**三大蟹吃到飽**', {}, false)}。</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderDayContent(day) {
+            const detailsHtml = day.details.map((item, index) => `
+                <div class="timeline-item">
+                    <div class="timeline-item-dot"></div>
+                    <div class="pl-2">
+                        <span class="text-xl font-bold text-gray-800 font-mono">${item.time}</span>
+                        <p class="mt-1 text-lg text-gray-700 leading-relaxed">${highlightText(item.description, item, true)}</p>
+                    </div>
+                </div>
+            `).join('');
+            const lodgingHtml = highlightText(day.lodging, {}, false);
+            return `
+                <div class="day-content p-8 sm:p-10 bg-white rounded-xl shadow-lg border border-gray-100">
+                    <h3 class="text-4xl font-black accent-color mb-3 border-b-2 pb-1">${day.title}</h3>
+                    <p class="text-red-600 font-semibold mb-4 text-lg">${day.warning ? `⚠️ ${day.warning}` : ''}</p>
+                    <p class="text-gray-700 mb-6 font-medium text-xl leading-relaxed">${day.subtitle}</p>
+                    ${detailsHtml}
+                    <div class="meal-summary p-4 mt-8 rounded-lg text-base font-semibold grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div><span class="text-[#2E4057]">🍳 早餐：</span> ${day.breakfast}</div>
+                        <div><span class="text-[#2E4057]">🍜 午餐：</span> ${day.lunch}</div>
+                        <div><span class="text-[#2E4057]">🥩 晚餐：</span> ${day.dinner}</div>
+                        <div><span class="text-[#2E4057]">🏨 住宿：</span> ${lodgingHtml}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        /* --- 5. 工具函式 (API & Mock) --- */
+        async function fetchWithRetry(url, options) {
+            if (!API_KEY) throw new Error("No API Key");
+            return fetch(url, options); // 若有 Key 則正常 Fetch
+        }
+        
+        async function getDynamicWeather() {
+            const container = document.getElementById('weather-result');
+            const updated = document.getElementById('weather-last-updated');
+            if (!container) return;
+            
+            // 嘗試使用 API (若有 Key)
+            if (API_KEY) {
+                container.innerHTML = `<div class="flex items-center text-sm text-gray-500 animate-pulse mt-2">查詢中...</div>`;
+                try {
+                    const response = await fetchWithRetry(`${API_URL}?key=${API_KEY}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: [{ parts: [{ text: "Current weather in Sapporo. Summarize in Traditional Chinese." }] }] })
+                    });
+                    const result = await response.json();
+                    const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if(text) {
+                        container.innerHTML = `<div class="flex items-start mt-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 mt-0.5 text-sky-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.975 4 4 0 10-7.432-1.761l-1.63 1.63a.1.1 0 01-.108.025l-2.923-1.125A3 3 0 003 15z" /></svg><p class="text-sm text-gray-800 font-medium">${text}</p></div>`;
+                        if (updated) updated.textContent = `更新: ${new Date().toLocaleTimeString('zh-TW')}`;
+                        return;
+                    }
+                } catch (e) { console.log("Fallback to mock"); }
+            }
+            // 預設模擬顯示
+            container.innerHTML = `<div class="flex items-start mt-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 mt-0.5 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.975 4 4 0 10-7.432-1.761l-1.63 1.63a.1.1 0 01-.108.025l-2.923-1.125A3 3 0 003 15z" /></svg><p class="text-sm text-gray-500 font-medium">札幌 -2°C ❄️ 小雪 (展示模式)</p></div>`;
+            if (updated) updated.textContent = '';
+        }
+
+        window.convertCurrency = function() {
+            const input = document.getElementById('jpy-input');
+            const output = document.getElementById('twd-output');
+            if (input && output) {
+                const val = parseFloat(input.value);
+                if (!isNaN(val)) {
+                    output.textContent = `${Math.round(val * FALLBACK_RATE)} TWD`;
+                    output.className = output.className.replace('text-gray-700', 'text-pink-700');
+                } else {
+                    output.textContent = '0 TWD';
+                }
             }
         }
 
-        // 使用 DOMContentLoaded 確保 DOM 載入後執行
+        /* --- 6. 資料區 (Data) --- */
+        const itineraryData = [
+            {
+                id: 1, title: "02/20：札幌啟程 ✈️", subtitle: "【初識札幌】從機場直奔市區，展開悠閒的冬季漫步。", location: "札幌, 日本", 
+                details: [
+                    { time: "04:00", description: "桃園機場 Terminal 1 辦理報到手續與行李托運。", query: "桃園機場 Terminal 1", jpName: "台湾桃園国際空港 第1ターミナル", address: "桃園市大園區航站南路15號", hours: "24小時開放" },
+                    { time: "06:20", description: "搭乘**虎航 IT 234** 航班 (06:20) 飛往北海道新千歲機場。", query: "桃園國際機場", jpName: "台湾桃園国際空港", address: "桃園市大園區航站南路15號", hours: "航班時間依航空公司公告" },
+                    { time: "10:55", description: "抵達**北海道新千歲機場**，準備辦理入境手續 (平均約需 1 小時)。", query: "新千歲機場", jpName: "新千歳空港", address: "Bibi, Chitose, Hokkaido 066-0012, Japan", hours: "國內線 6:20-23:00" },
+                    { time: "12:00", description: "入境手續與領取行李完成後，搭乘交通工具前往札幌市區。", query: "新千歲機場", jpName: "新千歳空港", address: "Bibi, Chitose, Hokkaido 066-0012, Japan", hours: "JR快速Airport號每12分鐘一班" },
+                    { time: "15:00", description: "漫步於雪白的**大通公園**，欣賞冬季景色。", query: "札幌大通公園", jpName: "大通公園", address: "札幌市中央区大通西1～12丁目", hours: "全天開放" },
+                    { time: "16:30", description: "登上地標**札幌電視塔**展望台，俯瞰札幌市區美景。", query: "札幌電視塔", jpName: "さっぽろテレビ塔", address: "札幌市中央区大通西1丁目", hours: "09:00-22:00" },
+                    { time: "18:30", description: "在美食與購物天堂**狸小路商店街**自由活動，享受日式晚餐。", query: "札幌狸小路商店街", jpName: "狸小路商店街", address: "札幌市中央区南2・3条西1～7丁目", hours: "大部分店家 10:00-20:00" }
+                ],
+                breakfast: "溫暖的家 / 機上自理", lunch: "機場自理", dinner: "狸小路自理", lodging: "Vessel Inn札幌中島公園飯店"
+            },
+            {
+                id: 2, title: "02/21：企鵝．雪上活動．溫泉 🐧", subtitle: "【冰雪樂園】整日精彩活動，以溫泉解除疲勞。", warning: "團體巴士行程：07:40JR札幌北口集合，每人限帶一件大型行李。<br>⚠️ 日本司機工時控管嚴格,切勿遲到, 以免被丟包", location: "旭川, 日本", 
+                details: [
+                    { time: "08:00", description: "搭乘專屬巴士前往**旭山動物園**，觀賞冬季限定的企鵝散步。", query: "旭山動物園", jpName: "旭川市旭山動物園", address: "北海道旭川市東旭川町倉沼", hours: "冬季開園: 10:30-15:30" },
+                    { time: "12:00", description: "午餐時間 (焗烤螃蟹海鮮陶板燒御膳)。", query: "旭川午餐地點", jpName: "旭川ランチ", address: "旭川市區 / 動物園周邊", hours: "午餐時段" },
+                    { time: "14:00", description: "前往雪上樂園，體驗雪上摩托車、雪盆、橡皮艇等**刺激雪上活動**。", query: "北海道雪上樂園", jpName: "ぴっぷスキー場 (比布滑雪場周邊)", address: "北海道上川郡比布町北7線17號", hours: "冬季開放 09:00-16:00" },
+                    { time: "18:00", description: "專車前往**層雲峽溫泉區**，享受飯店內豪華晚餐及溫泉。", query: "層雲峽溫泉飯店", jpName: "層雲峡温泉", address: "北海道上川郡上川町層雲峡", hours: "入住時間通常為 15:00 後" }
+                ],
+                breakfast: "飯店內早餐", lunch: "焗烤螃蟹海鮮陶板燒御膳", dinner: "溫泉飯店豪華晚餐", lodging: "**層雲峽周邊溫泉飯店**"
+            },
+            {
+                id: 3, title: "02/22：紋別破冰船．酒造巡禮 🚢", subtitle: "【海之震撼】欣賞鄂霍次克海的流冰奇景。", warning: "⚠️ 團體巴士行程：約 18:00-19:00 返抵 JR 札幌車站解散", location: "紋別, 日本", 
+                details: [
+                    { time: "08:30", description: "參觀**銀河流星瀑布** (冬季景觀)。", query: "銀河流星瀑布", jpName: "銀河・流星の滝", address: "北海道上川郡上川町層雲峡", hours: "全天開放" },
+                    { time: "10:30", description: "重頭戲：抵達紋別，搭乘**破冰船** (GARINKO 號) 體驗破冰。", query: "紋別 GARINKO 號 破冰船", jpName: "流氷砕氷船ガリンコ号", address: "北海道紋別市海洋公園1番地", hours: "冬季出航 09:00-15:00" },
+                    { time: "12:30", description: "豪華蟹腳干貝端爐燒套餐午餐。", query: "紋別海鮮餐廳", jpName: "紋別海鮮料理", address: "紋別市海洋公園周邊", hours: "午餐時段" },
+                    { time: "14:30", description: "文化體驗：參觀**旭川男山酒造**，了解清酒釀製過程。", query: "旭川男山酒造", jpName: "男山酒造り資料舘", address: "北海道旭川市永山2条7丁目1-33", hours: "09:00-17:00" },
+                    { time: "18:00", description: "返回札幌市區飯店辦理入住，晚餐自理。", query: "札幌市區飯店", jpName: "札幌市内ホテル", address: "札幌市中心", hours: "入住 15:00 後" }
+                ],
+                breakfast: "飯店內早餐", lunch: "豪華蟹腳干貝端爐燒套餐", dinner: "札幌市區自理", lodging: "札幌蒙特利埃德爾霍夫酒店"
+            },
+            {
+                id: 4, title: "02/23：小樽運河．音樂盒堂 🔔", subtitle: "【自由散策】搭乘 JR 前往，盡情享受小樽的浪漫氛圍。", location: "小樽, 日本", 
+                details: [
+                    { time: "10:00", description: "從札幌搭乘 JR 前往小樽。", query: "小樽 JR 站", jpName: "小樽駅", address: "小樽市稻穗2丁目", hours: "05:30-23:30" },
+                    { time: "11:00", description: "**小樽運河**：沿著運河邊散步，拍攝經典倉庫群。", query: "小樽運河", jpName: "小樽運河", address: "北海道小樽市港町", hours: "全天開放" },
+                    { time: "12:30", description: "午餐：小樽壽司或自理。", query: "小樽壽司店", jpName: "小樽寿司屋通り", address: "小樽寿司屋通り", hours: "11:00-21:00" },
+                    { time: "14:00", description: "參觀**北一硝子館**與**音樂盒博物館**，感受懷舊氣息。", query: "小樽音樂盒博物館 北一硝子館", jpName: "北一硝子・小樽オルゴール堂", address: "小樽市住吉町4-1", hours: "09:00-18:00" },
+                    { time: "16:00", description: "別忘了在 **LeTAO 總店**享受下午茶。", query: "小樽 LeTAO 總店", jpName: "小樽洋菓子舗ルタオ本店", address: "北海道小樽市堺町7-16", hours: "09:00-18:00" },
+                    { time: "18:30", description: "晚餐：返回札幌後，建議前往札幌拉麵共和國 (自理)。", query: "札幌拉麵共和國", jpName: "札幌ら～めん共和国", address: "札幌市中央区 (ESTA關閉，可至周邊)", hours: "11:00-22:00" }
+                ],
+                breakfast: "飯店內早餐", lunch: "小樽壽司或自理", dinner: "札幌拉麵共和國 (自理)", lodging: "札幌蒙特利埃德爾霍夫酒店"
+            },
+            {
+                id: 5, title: "02/24：海鮮購物．三大蟹宴 🛍️", subtitle: "【美食天堂】一整天獻給北海道的美味與購物。", location: "札幌, 日本", 
+                details: [
+                    { time: "09:30", description: "上午：參拜**北海道神宮**。", query: "北海道神宮", jpName: "北海道神宮", address: "北海道札幌市中央区宮ヶ丘474", hours: "冬季: 07:00-16:00" },
+                    { time: "11:00", description: "前往**札幌場外市場**，享用超新鮮海鮮丼 (自理)。", query: "札幌場外市場", jpName: "札幌場外市場", address: "札幌市中央区北11条西21丁目", hours: "06:00-17:00" },
+                    { time: "14:00", description: "下午：在**狸小路商店街**或**大通公園**周邊進行補貨購物。", query: "狸小路商店街 大通公園", jpName: "狸小路商店街・大通公園", address: "札幌市中央区", hours: "全天開放" },
+                    { time: "19:00", description: "晚餐：建議享受經典的**三大蟹吃到飽** (帝王蟹、松葉蟹、毛蟹) (自理)。", query: "札幌三大蟹吃到飽", jpName: "三大カニ食べ放題", address: "札幌市區", hours: "晚餐時段" }
+                ],
+                breakfast: "飯店內早餐", lunch: "場外市場海鮮丼 (自理)", dinner: "三大蟹吃到飽 (自理)", lodging: "札幌蒙特利埃德爾霍夫酒店"
+            },
+            {
+                id: 6, title: "02/25：最終採買．返家 🏠", subtitle: "【完美句點】輕鬆血拚後，帶著滿滿回憶踏上歸途。", location: "新千歲機場, 日本", 
+                details: [
+                    { time: "10:00", description: "退房後，前往**三井OUTLET購物中心**或 Rera Outlet。", query: "札幌三井OUTLET購物中心", jpName: "三井アウトレットパーク 札幌北広島", address: "北海道北廣島市大曲幸町3-7-6", hours: "10:00-20:00" },
+                    { time: "12:00", description: "在 OUTLET 內享用午餐。", query: "OUTLET 餐廳", jpName: "レストラン", address: "Outlet 美食街", hours: "10:30-21:00" },
+                    { time: "13:30", description: "集合前往新千歲機場。", query: "新千歲機場", jpName: "新千歳空港", address: "Bibi, Chitose", hours: "24小時" },
+                    { time: "14:40", description: "搭乘華航 CI 131 班機返回台北。", query: "新千歲機場", jpName: "新千歳空港 国際線ターミナル", address: "國際線航廈", hours: "航班時間" },
+                    { time: "18:15", description: "抵達桃園國際機場，溫暖的家。", query: "桃園國際機場", jpName: "桃園空港", address: "桃園市", hours: "24小時開放" }
+                ],
+                breakfast: "飯店內早餐", lunch: "OUTLET 簡餐 (自理)", dinner: "機上簡餐", lodging: "溫暖的家"
+            },
+        ];
+
+        /* --- 7. 初始化 --- */
         document.addEventListener('DOMContentLoaded', () => {
             renderMainTabs();
             renderDayTabs();
