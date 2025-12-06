@@ -4,138 +4,85 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>北海道六日遊</title>
-    <!-- 引入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- 設定字體與樣式 -->
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;500;700;900&family=Noto+Sans+JP:wght@400;700&display=swap');
-        body {
-            font-family: 'Noto Sans TC', sans-serif;
-            background-color: #f8fafc;
-        }
-        .header-bg {
-            /* 冰雪漸層色 */
-            background-image: linear-gradient(135deg, #2E4057 0%, #748DA6 100%); 
-        }
-        /* 主強調色：深青藍色 */
-        .accent-color {
-            color: #00A8A0; 
-        }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; }
+        .header-bg { background-image: linear-gradient(135deg, #2E4057 0%, #748DA6 100%); }
+        .accent-color { color: #00A8A0; }
         
-        /* 導覽列 Tab 樣式基底 */
+        /* [核心修正] 導覽列容器與項目樣式 */
         .tab-item {
             padding: 12px 20px;
             cursor: pointer;
             border-bottom: 3px solid transparent;
             font-weight: 500;
             transition: all 0.2s;
-            flex-shrink: 0;
+            flex-shrink: 0; /* 防止擠壓 */
             display: flex;
             align-items: center;
+            white-space: nowrap; /* 強制不換行 */
         }
-        /* 頂層 Tab 活躍樣式 */
+        .tab-item:hover { color: #00A8A0; }
+        
+        /* 主選單活躍狀態 */
         .main-tab.active {
             border-bottom-color: #00A8A0;
             color: #00A8A0;
             font-weight: 700;
             background-color: #fff;
         }
-        /* 次層 Day Tab 活躍樣式 */
+        
+        /* Day Tabs 活躍狀態 (改回底部線條樣式，避免跑版) */
         .day-tab.active {
-            border-bottom-color: #3C79D5; /* 使用不同的顏色區分層級 */
+            border-bottom-color: #3C79D5;
             color: #3C79D5;
             font-weight: 700;
             background-color: #f0f4f8;
         }
 
-        .content-area {
-            animation: fadeIn 0.4s ease-in-out;
-            min-height: 500px;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .meal-summary {
-            background-color: #F8F9FA;
-            border-left: 3px solid #748DA6;
-        }
-        /* 隱藏輸入框的上下箭頭 */
-        input[type=number]::-webkit-inner-spin-button, 
-        input[type=number]::-webkit-outer-spin-button { 
-            -webkit-appearance: none; 
-            margin: 0; 
-        }
-        input[type=number] {
-            -moz-appearance: textfield;
-        }
-
-        /* Modal 彈窗樣式 */
-        #location-modal, #settings-modal {
-            transition: opacity 0.2s ease-in-out;
-        }
-        #location-modal.hidden, #settings-modal.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-        #location-modal:not(.hidden), #settings-modal:not(.hidden) {
-            opacity: 1;
-            pointer-events: auto;
-        }
+        .content-area { animation: fadeIn 0.4s ease-in-out; min-height: 500px; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .meal-summary { background-color: #F8F9FA; border-left: 3px solid #748DA6; }
         
-        /* 詳細行程的可點擊文字樣式 (深藍色、有底線) */
-        .highlight-text-clickable {
-            font-weight: 700;
-            color: #0369a1; 
-            background-color: #e0f2fe; 
-            padding: 0 4px;
-            border-radius: 2px;
-            cursor: pointer;
-            text-decoration: underline;
-            text-decoration-color: #7dd3fc;
-            text-decoration-thickness: 2px;
-        }
+        /* Modal & Helpers */
+        #location-modal, #settings-modal { transition: opacity 0.2s ease-in-out; }
+        #location-modal.hidden, #settings-modal.hidden { opacity: 0; pointer-events: none; }
+        #location-modal:not(.hidden), #settings-modal:not(.hidden) { opacity: 1; pointer-events: auto; }
         
-        /* 首頁的高亮樣式 - 活動 (粉紅色) */
-        .highlight-text-activity {
-            font-weight: 700;
-            color: #be185d; /* pink-700 */
-            background-color: #fce7f3; /* pink-100 */
-            padding: 0 4px;
-            border-radius: 2px;
-        }
-        /* 首頁的高亮樣式 - 地點 (深灰色) */
-        .highlight-text-location {
-            font-weight: 700;
-            color: #334155; /* slate-700 */
-            background-color: #e2e8f0; /* slate-200 */
-            padding: 0 4px;
-            border-radius: 2px;
-        }
+        .highlight-text-clickable { font-weight: 700; color: #0369a1; background-color: #e0f2fe; padding: 0 4px; border-radius: 2px; cursor: pointer; text-decoration: underline; text-decoration-color: #7dd3fc; text-decoration-thickness: 2px; }
+        .highlight-text-activity { font-weight: 700; color: #be185d; background-color: #fce7f3; padding: 0 4px; border-radius: 2px; }
+        .highlight-text-location { font-weight: 700; color: #334155; background-color: #e2e8f0; padding: 0 4px; border-radius: 2px; }
+        .location-text-static { font-weight: 700; color: #334155; background-color: #e2e8f0; padding: 0 4px; border-radius: 2px; }
 
-        /* 隱藏提醒 */
+        /* 時間軸 */
+        .timeline-item { position: relative; padding-left: 2rem; padding-bottom: 2rem; }
+        .timeline-item:last-child { padding-bottom: 0; }
+        .timeline-item::before { content: ''; position: absolute; top: 0.6rem; left: 0.5rem; width: 2px; height: 100%; background-color: #e5e7eb; z-index: 0; }
+        .timeline-item:last-child::before { display: none; }
+        .timeline-item-dot { position: absolute; top: 0.4rem; left: 0.1rem; width: 1rem; height: 1rem; background-color: #00A8A0; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 0 2px #00A8A0; z-index: 10; }
+        
         .api-key-reminder { display: none; }
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
     </style>
 </head>
 <body class="min-h-screen">
 
     <div id="app" class="max-w-6xl mx-auto bg-white shadow-2xl relative">
         
-        <!-- 設定 Modal (輸入 API Key 用) -->
+        <!-- 設定 Modal -->
         <div id="settings-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden p-4">
             <div class="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 relative transform transition-all scale-100">
                 <button onclick="closeSettingsModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
                 <h3 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">⚙️ 應用程式設定</h3>
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Google Gemini API Key</label>
                         <input type="password" id="api-key-input" placeholder="貼上您的 API Key" class="w-full p-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-[#00A8A0] focus:border-transparent outline-none">
-                        <p class="text-xs text-gray-500 mt-1">Key 將儲存在您的瀏覽器中 (LocalStorage)，不會上傳。</p>
+                        <p class="text-xs text-gray-500 mt-1">Key 將儲存在您的瀏覽器中 (LocalStorage)。</p>
                     </div>
                     <div class="flex space-x-2 pt-2">
                         <button onclick="saveApiKeyFromModal()" class="flex-1 bg-[#00A8A0] text-white py-2 rounded-lg font-bold hover:bg-[#008F87] transition text-sm">儲存並重試</button>
@@ -146,68 +93,45 @@
             </div>
         </div>
 
-        <!-- Modal 地點小卡 -->
+        <!-- 地點小卡 Modal -->
         <div id="location-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden p-4">
             <div class="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 relative transform transition-all scale-100">
                 <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
-                
                 <div class="mb-4 border-b pb-3 pr-8">
                     <h3 id="modal-title" class="text-2xl font-bold text-gray-800 leading-tight">地點名稱</h3>
                     <p id="modal-jp-name" class="text-sm text-sky-600 font-medium font-['Noto_Sans_JP'] mt-1">Japanese Name</p>
                 </div>
-
                 <div class="space-y-4">
-                    <div class="flex items-start">
-                        <span class="text-xl mr-3 mt-0.5">📍</span>
-                        <div>
-                            <p class="text-xs font-bold text-gray-400 uppercase tracking-wide">地址</p>
-                            <p id="modal-address" class="text-gray-700 text-sm leading-relaxed font-medium">地址載入中...</p>
-                        </div>
-                    </div>
-                    <div class="flex items-start">
-                        <span class="text-xl mr-3 mt-0.5">🕒</span>
-                        <div>
-                            <p class="text-xs font-bold text-gray-400 uppercase tracking-wide">營業時間</p>
-                            <p id="modal-hours" class="text-gray-700 text-sm leading-relaxed font-medium">營業時間載入中...</p>
-                        </div>
-                    </div>
+                    <div class="flex items-start"><span class="text-xl mr-3 mt-0.5">📍</span><div><p class="text-xs font-bold text-gray-400 uppercase tracking-wide">地址</p><p id="modal-address" class="text-gray-700 text-sm leading-relaxed font-medium">地址載入中...</p></div></div>
+                    <div class="flex items-start"><span class="text-xl mr-3 mt-0.5">🕒</span><div><p class="text-xs font-bold text-gray-400 uppercase tracking-wide">營業時間</p><p id="modal-hours" class="text-gray-700 text-sm leading-relaxed font-medium">營業時間載入中...</p></div></div>
                 </div>
                 <div class="mt-6 pt-4 border-t border-gray-100">
                     <button id="modal-map-btn" class="w-full bg-[#00A8A0] text-white py-2.5 rounded-lg font-bold hover:bg-[#008F87] transition flex items-center justify-center shadow-md">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
-                        </svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /></svg>
                         開啟 Google Maps
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- Header -->
+        <!-- Header (還原：只有標題) -->
         <header class="header-bg p-6 sm:p-10 text-white text-center rounded-b-xl relative">
-            <button onclick="openSettingsModal()" class="absolute top-4 right-4 p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition" title="設定 API Key">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
+            <button onclick="openSettingsModal()" class="absolute top-4 right-4 p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition" title="設定">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
             </button>
-            <h1 class="text-3xl sm:text-4xl font-extrabold opacity-95 mb-2">
-                ✈️ 2026 冬季限定 | 北海道六天五夜之旅
-            </h1>
+            <h1 class="text-3xl sm:text-4xl font-extrabold opacity-95 mb-2">✈️ 2026 冬季限定 | 北海道六天五夜之旅</h1>
             <p class="text-lg font-light tracking-widest">破冰船．雪上活動．小樽散策</p>
         </header>
 
         <!-- 導覽列容器 (Sticky) -->
         <div class="sticky top-0 z-10 bg-white shadow-md">
-            <!-- 1. 頂層主導覽列 -->
+            <!-- 1. 頂層主選單 -->
             <div id="main-tabs" class="flex overflow-x-auto whitespace-nowrap px-4 sm:px-6 border-b border-gray-300">
                 <!-- JS Rendered -->
             </div>
-            <!-- 2. 次層日期導覽列 -->
+            <!-- 2. 次層天數選單 (修正樣式) -->
             <div id="day-tabs" class="flex overflow-x-auto whitespace-nowrap px-4 sm:px-6 border-b border-gray-200 bg-gray-50" style="display: none;">
                 <!-- JS Rendered -->
             </div>
@@ -221,335 +145,31 @@
         <!-- Footer -->
         <footer class="header-bg p-4 text-center text-white text-sm mt-8">
             <p>※ 本行程為建議草稿，請留意圖片皆為示意圖，實際餐食/住宿以最終行程為準。</p>
+            <p id="db-status" class="text-xs opacity-70 mt-1"></p>
         </footer>
     </div>
 
-    <!-- ================= 邏輯程式碼 ================= -->
-    <script>
-        /* --- 1. 設定與工具 --- */
+    <!-- Firebase SDK (使用 Module 載入) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, getDocs, addDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- 全域變數 ---
         let API_KEY = localStorage.getItem('GEMINI_API_KEY') || ""; 
         const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent";
-        const MAX_RETRIES = 3;
         const WEATHER_DISPLAY_ID = "weather-display-home"; 
-        const RATE_LIMIT_MS = 43200000; 
-        const LAST_RATE_UPDATE_KEY = 'lastExchangeRateUpdate';
         const FALLBACK_RATE = 0.22; 
+        
         let currentExchangeRate = FALLBACK_RATE; 
         let activeMainTab = 'home'; 
         let activeDayId = 'day-1'; 
+        let db = null;
+        let auth = null;
+        let user = null;
 
-        // 關鍵字設定
-        const ACTIVITY_KEYWORDS = ["虎航 IT 234", "華航 CI 131", "刺激雪上活動", "破冰船", "三大蟹吃到飽"];
-        const LOCATION_KEYWORDS = ["旭山動物園", "小樽運河", "LeTAO 總店", "札幌電視塔", "狸小路商店街", "銀河流星瀑布", "旭川男山酒造", "北一硝子館", "音樂盒博物館", "北海道神宮", "札幌場外市場", "三井OUTLET購物中心", "大通公園", "層雲峽溫泉飯店", "音樂盒堂"];
-
-        // 核心：文字高亮與點擊事件
-        const highlightText = (text, item, isClickable = false) => {
-            return text.replace(/\*\*(.*?)\*\*/g, (match, p1) => {
-                if (isClickable && item) {
-                    const safeTitle = p1.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                    const safeAddress = (item.address || "地址詳情請查詢").replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                    const safeHours = (item.hours || "營業時間請查詢").replace(/"/g, '&quot;');
-                    const safeQuery = (item.query || p1).replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                    const safeJpTitle = (item.jpName || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                    return `<span class="highlight-text-clickable" onclick="openModal('${safeTitle}', '${safeAddress}', '${safeHours}', '${safeQuery}', '${safeJpTitle}')">${p1}</span>`;
-                } else {
-                    const isActivity = ACTIVITY_KEYWORDS.some(keyword => p1.includes(keyword));
-                    const isLocation = LOCATION_KEYWORDS.some(keyword => p1.includes(keyword));
-                    let className = "location-text-static"; 
-                    if (isActivity) className = "highlight-text-activity";
-                    else if (isLocation) className = "highlight-text-location";
-                    return `<span class="${className}">${p1}</span>`;
-                }
-            });
-        };
-
-        /* --- 2. Modal 互動邏輯 --- */
-        window.openSettingsModal = function() {
-            const input = document.getElementById('api-key-input');
-            if (input) input.value = API_KEY; 
-            document.getElementById('settings-modal').classList.remove('hidden');
-        }
-        window.closeSettingsModal = function() {
-            document.getElementById('settings-modal').classList.add('hidden');
-            document.getElementById('settings-status').textContent = '';
-        }
-        window.saveApiKeyFromModal = function() {
-            const input = document.getElementById('api-key-input');
-            const status = document.getElementById('settings-status');
-            if (input) {
-                API_KEY = input.value.trim();
-                localStorage.setItem('GEMINI_API_KEY', API_KEY);
-                status.textContent = '儲存成功！重試中...';
-                status.className = 'text-xs text-center h-4 text-green-600';
-                getDynamicWeather();
-                setTimeout(() => closeSettingsModal(), 1000);
-            }
-        }
-        window.clearApiKey = function() {
-            localStorage.removeItem('GEMINI_API_KEY');
-            API_KEY = "";
-            document.getElementById('api-key-input').value = "";
-            document.getElementById('settings-status').textContent = '已清除';
-            getDynamicWeather();
-        }
-        window.openModal = function(title, address, hours, query, jpTitle) {
-            document.getElementById('modal-title').textContent = title;
-            document.getElementById('modal-jp-name').textContent = jpTitle || ""; 
-            document.getElementById('modal-address').textContent = address;
-            document.getElementById('modal-hours').textContent = hours;
-            document.getElementById('modal-map-btn').onclick = function() { window.openInGoogleMaps(query); };
-            document.getElementById('location-modal').classList.remove('hidden');
-        };
-        window.closeModal = function() { document.getElementById('location-modal').classList.add('hidden'); };
-        window.openInGoogleMaps = function(query) {
-            if (query) window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`, '_blank'); 
-        }
-        window.addEventListener('click', function(e) {
-            if (e.target === document.getElementById('location-modal')) closeModal();
-            if (e.target === document.getElementById('settings-modal')) closeSettingsModal();
-        });
-
-        /* --- 3. 視圖渲染 --- */
-        function renderMainTabs() {
-            const container = document.getElementById('main-tabs');
-            container.innerHTML = '';
-            // 主頁按鈕
-            const homeButton = createMainTab('主頁', 'home', `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l-2-2m2 2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>`);
-            homeButton.onclick = () => switchMainView('home');
-            container.appendChild(homeButton);
-            
-            // 詳細行程按鈕
-            const itineraryButton = createMainTab('詳細行程', 'itinerary-group', `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h.01M7 12h.01M6 16h.01M9 16h.01M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>`);
-            itineraryButton.onclick = () => switchMainView('itinerary-group');
-            container.appendChild(itineraryButton);
-        }
-        
-        function createMainTab(text, viewId, iconHtml) {
-            const button = document.createElement('button');
-            button.className = 'tab-item main-tab text-gray-700';
-            button.innerHTML = iconHtml + text; // 加入 iconHtml
-            button.setAttribute('data-view', viewId);
-            return button;
-        }
-
-        function renderDayTabs() {
-            const container = document.getElementById('day-tabs');
-            container.innerHTML = '';
-            itineraryData.forEach(day => {
-                const button = document.createElement('button');
-                button.className = 'tab-item day-tab text-gray-600';
-                button.textContent = `Day ${day.id}`;
-                button.setAttribute('data-day-id', `day-${day.id}`);
-                button.onclick = () => switchDayView(`day-${day.id}`);
-                container.appendChild(button);
-            });
-        }
-
-        function switchMainView(viewId) {
-            activeMainTab = viewId;
-            document.querySelectorAll('.main-tab').forEach(tab => {
-                tab.classList.remove('active');
-                if (tab.getAttribute('data-view') === viewId) tab.classList.add('active');
-            });
-            const contentContainer = document.getElementById('dynamic-content');
-            const dayTabsContainer = document.getElementById('day-tabs');
-            const baseClasses = 'content-area bg-gray-50 px-4 sm:px-6';
-            
-            if (viewId === 'home') {
-                contentContainer.className = baseClasses + ' py-8 sm:py-12';
-                dayTabsContainer.style.display = 'none';
-                contentContainer.innerHTML = renderHomeContent();
-                getDynamicWeather();
-            } else if (viewId === 'itinerary-group') {
-                contentContainer.className = baseClasses + ' pt-0 pb-8 sm:pb-12';
-                dayTabsContainer.style.display = 'flex';
-                switchDayView(activeDayId);
-            }
-        }
-
-        function switchDayView(dayId) {
-            activeDayId = dayId;
-            document.querySelectorAll('.day-tab').forEach(tab => {
-                tab.classList.remove('active');
-                if (tab.getAttribute('data-day-id') === dayId) tab.classList.add('active');
-            });
-            const dayNumber = parseInt(dayId.split('-')[1]);
-            const dayData = itineraryData.find(d => d.id === dayNumber);
-            if (dayData) document.getElementById('dynamic-content').innerHTML = renderDayContent(dayData);
-        }
-
-        /* --- 4. 內容生成函式 --- */
-        function renderHomeContent() {
-            return `
-                <div class="day-content p-8 sm:p-10 bg-white rounded-xl shadow-lg border border-gray-100 space-y-8">
-                    <div class="p-4 bg-sky-50 rounded-xl border border-sky-200 mb-6 shadow-sm">
-                        <h3 class="text-xl font-bold text-sky-700 mb-2 flex items-center">當地天氣概況 (預設：札幌)</h3>
-                        <div id="${WEATHER_DISPLAY_ID}" class="mt-2"></div>
-                        <p id="weather-last-updated" class="text-xs text-right text-gray-400 mt-2">...</p>
-                    </div>
-                    <div>
-                        <h3 class="text-2xl font-bold accent-color mb-3 border-b pb-2">✈️ 航班/集合資訊</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm font-medium p-4 bg-gray-100 rounded-xl shadow-inner">
-                            <p class="text-gray-700">去程：${highlightText('**虎航 IT 234**', {}, false)} (06:20 - 10:55)</p>
-                            <p class="text-gray-700">回程：${highlightText('**華航 CI 131**', {}, false)} (14:40 - 18:15)</p>
-                        </div>
-                    </div>
-                    <div class="max-w-xs mx-auto p-2 my-2 bg-transparent">
-                        <p class="text-sm font-semibold text-gray-600 mb-2 text-center">💵 JPY ⇌ TWD 快速試算</p>
-                        <div class="flex space-x-2">
-                            <div class="flex-1"><input type="number" id="jpy-input" oninput="convertCurrency()" placeholder="日幣" class="w-full py-2 px-3 border border-gray-300 rounded-lg text-sm shadow-sm focus:ring-sky-500"></div>
-                            <div id="twd-output" class="flex-1 flex items-center justify-end py-2 px-3 border border-gray-300 rounded-lg bg-gray-100 text-sm font-bold text-gray-700 text-right">0 TWD</div>
-                        </div>
-                        <div class="text-right text-xs text-gray-400 mt-1">參考匯率: 0.22</div>
-                    </div>
-                    <div>
-                        <h3 class="text-2xl font-bold accent-color mb-3 border-b pb-2">🎯 行程亮點</h3>
-                        <ul class="space-y-3 pl-4 list-disc text-gray-700">
-                            <li><strong class="text-sky-700">雪地奇觀：</strong>搭乘紋別${highlightText('**破冰船**', {}, false)}，近距離感受鄂霍次克海的流冰震撼。</li>
-                            <li><strong class="text-sky-700">動物明星：</strong>前往${highlightText('**旭山動物園**', {}, false)}，觀賞冬季限定的企鵝雪地散步。</li>
-                            <li><strong class="text-sky-700">溫泉療癒：</strong>入住${highlightText('**層雲峽溫泉飯店**', {}, false)}，享受日式豪華會席料理與天然溫泉。</li>
-                            <li><strong class="text-sky-700">浪漫散策：</strong>在${highlightText('**小樽運河**', {}, false)}、${highlightText('**音樂盒堂**', {}, false)}享受浪漫的自由時光與精緻甜點。</li>
-                            <li><strong class="text-sky-700">美食天堂：</strong>特別安排蟹腳海鮮陶板燒、並建議體驗${highlightText('**三大蟹吃到飽**', {}, false)}。</li>
-                        </ul>
-                    </div>
-                </div>
-            `;
-        }
-
-        // [回復] 卡片式排版 (白底、陰影、圓角)，包含時間計算條
-        function renderDayContent(day) {
-            const timeToMinutes = (timeStr) => {
-                const [hours, minutes] = timeStr.split(':').map(Number);
-                return hours * 60 + minutes;
-            };
-            
-            const detailsHtml = day.details.map((item, index) => {
-                let durationHtml = '';
-                if (index < day.details.length - 1) {
-                    const currentTime = timeToMinutes(item.time);
-                    const nextTime = timeToMinutes(day.details[index + 1].time);
-                    let diffMinutes = nextTime - currentTime;
-                    if (diffMinutes < 0) diffMinutes += 24 * 60; 
-                    const diffHours = Math.floor(diffMinutes / 60);
-                    const remainingMinutes = diffMinutes % 60;
-                    let durationText = '';
-                    if (diffHours > 0) durationText += `${diffHours}小時`;
-                    if (remainingMinutes > 0 || diffHours === 0) durationText += `${remainingMinutes}分鐘`;
-                    
-                    // 連接線與時間計算
-                    durationHtml = `
-                        <div class="flex flex-col items-start ml-5 sm:ml-6 mt-1 mb-1">
-                            <div class="w-0.5 h-6 bg-gray-300 ml-3"></div>
-                            <div class="relative text-gray-600 px-3 py-1 text-xs font-medium flex items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1 text-gray-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l3 3a1 1 0 001.414-1.414L11 9.586V6z" clip-rule="evenodd" /></svg>
-                                預計花費：${durationText}
-                            </div>
-                            <div class="w-0.5 h-6 bg-gray-300 ml-3"></div>
-                        </div>
-                    `;
-                }
-
-                // 卡片式結構
-                const activityBlock = `
-                    <div class="bg-white p-4 rounded-xl shadow border border-gray-200 transition duration-300 hover:shadow-lg flex justify-between items-start">
-                        <div class="flex-grow">
-                            <p class="text-sm font-bold text-gray-500 mb-1 flex items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-[#748DA6]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                ${item.time}
-                            </p>
-                            <p class="text-gray-800 text-base font-medium leading-normal">
-                                ${highlightText(item.description, item, true)}
-                            </p>
-                        </div>
-                        
-                        ${item.query ? `
-                            <button 
-                                class="p-2 ml-4 bg-sky-500 text-white rounded-full hover:bg-sky-600 transition duration-150 shadow-md flex-shrink-0"
-                                title="在地圖上開啟 ${item.description.replace(/<[^>]*>/g, '').replace(/\*\*/g, '')}"
-                                onclick="openInGoogleMaps('${item.query.replace(/'/g, "\\'")}')"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
-                                </svg>
-                            </button>
-                        ` : ''}
-                    </div>
-                `;
-                
-                return activityBlock + durationHtml;
-            }).join('');
-            
-            const lodgingHtml = highlightText(day.lodging, {}, false);
-            
-            return `
-                <div class="day-content p-8 sm:p-10 bg-white rounded-xl shadow-lg border border-gray-100">
-                    <h3 class="text-4xl font-black accent-color mb-3 border-b-2 pb-1">${day.title}</h3>
-                    <p class="text-red-600 font-semibold mb-4 text-lg">${day.warning ? `⚠️ ${day.warning}` : ''}</p>
-                    <p class="text-gray-700 mb-6 font-medium text-xl leading-relaxed">${day.subtitle}</p>
-                    ${detailsHtml}
-                    <!-- 餐食四欄 -->
-                    <div class="meal-summary p-4 mt-8 rounded-lg text-base font-semibold grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <div><span class="text-[#2E4057]">🍳 早餐：</span> ${day.breakfast}</div>
-                        <div><span class="text-[#2E4057]">🍜 午餐：</span> ${day.lunch}</div>
-                        <div><span class="text-[#2E4057]">🥩 晚餐：</span> ${day.dinner}</div>
-                        <div><span class="text-[#2E4057]">🏨 住宿：</span> ${lodgingHtml}</div>
-                    </div>
-                </div>
-            `;
-        }
-
-        /* --- 5. 工具函式 (API & Mock) --- */
-        async function fetchWithRetry(url, options) {
-            if (!API_KEY) throw new Error("No API Key");
-            return fetch(url, options); // 若有 Key 則正常 Fetch
-        }
-        
-        async function getDynamicWeather() {
-            const container = document.getElementById('weather-result');
-            const updated = document.getElementById('weather-last-updated');
-            if (!container) return;
-            
-            // 嘗試使用 API (若有 Key)
-            if (API_KEY) {
-                container.innerHTML = `<div class="flex items-center text-sm text-gray-500 animate-pulse mt-2">查詢中...</div>`;
-                try {
-                    const response = await fetchWithRetry(`${API_URL}?key=${API_KEY}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ contents: [{ parts: [{ text: "Current weather in Sapporo. Summarize in Traditional Chinese." }] }] })
-                    });
-                    const result = await response.json();
-                    const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
-                    if(text) {
-                        container.innerHTML = `<div class="flex items-start mt-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 mt-0.5 text-sky-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.975 4 4 0 10-7.432-1.761l-1.63 1.63a.1.1 0 01-.108.025l-2.923-1.125A3 3 0 003 15z" /></svg><p class="text-sm text-gray-800 font-medium">${text}</p></div>`;
-                        if (updated) updated.textContent = `更新: ${new Date().toLocaleTimeString('zh-TW')}`;
-                        return;
-                    }
-                } catch (e) { console.log("Fallback to mock"); }
-            }
-            // 預設模擬顯示
-            container.innerHTML = `<div class="flex items-start mt-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 mt-0.5 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.975 4 4 0 10-7.432-1.761l-1.63 1.63a.1.1 0 01-.108.025l-2.923-1.125A3 3 0 003 15z" /></svg><p class="text-sm text-gray-500 font-medium">札幌 -2°C ❄️ 小雪 (展示模式)</p></div>`;
-            if (updated) updated.textContent = '';
-        }
-
-        window.convertCurrency = function() {
-            const input = document.getElementById('jpy-input');
-            const output = document.getElementById('twd-output');
-            if (input && output) {
-                const val = parseFloat(input.value);
-                if (!isNaN(val)) {
-                    output.textContent = `${Math.round(val * FALLBACK_RATE)} TWD`;
-                    output.className = output.className.replace('text-gray-700', 'text-pink-700');
-                } else {
-                    output.textContent = '0 TWD';
-                }
-            }
-        }
-
-        /* --- 6. 資料區 (Data) --- */
-        const itineraryData = [
+        // --- 行程資料 (含 Day 1 修正與四欄餐食) ---
+        const DEFAULT_ITINERARY_DATA = [
             {
                 id: 1, title: "02/20：札幌啟程 ✈️", subtitle: "【初識札幌】從機場直奔市區，展開悠閒的冬季漫步。", location: "札幌, 日本", 
                 details: [
@@ -618,14 +238,320 @@
                 breakfast: "飯店內早餐", lunch: "OUTLET 簡餐 (自理)", dinner: "機上簡餐", lodging: "溫暖的家"
             },
         ];
+        
+        let appItineraryData = [...DEFAULT_ITINERARY_DATA];
 
-        /* --- 7. 初始化 --- */
-        document.addEventListener('DOMContentLoaded', () => {
+        // --- 核心邏輯 ---
+        
+        async function initApp() {
             renderMainTabs();
             renderDayTabs();
-            switchMainView('home'); 
+            switchMainView('home');
+
+            // Firebase 連線 (自動切換模式)
+            try {
+                const firebaseConfigStr = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'demo-app';
+                
+                if (firebaseConfigStr) {
+                    const firebaseConfig = JSON.parse(firebaseConfigStr);
+                    const app = initializeApp(firebaseConfig);
+                    auth = getAuth(app);
+                    db = getFirestore(app);
+                    await signInAnonymously(auth);
+                    user = auth.currentUser;
+                    if (user) {
+                        document.getElementById('db-status').textContent = '🟢 已連線至雲端資料庫';
+                        await loadItineraryData(appId, user.uid);
+                    }
+                } else {
+                    document.getElementById('db-status').textContent = '⚪ 本機預覽模式';
+                }
+            } catch (e) {
+                document.getElementById('db-status').textContent = '🔴 使用預設資料';
+            }
+        }
+
+        async function loadItineraryData(appId, userId) {
+            try {
+                const itineraryRef = collection(db, 'artifacts', appId, 'users', userId, 'itinerary');
+                const snapshot = await getDocs(itineraryRef);
+                if (snapshot.empty) {
+                    for (const day of DEFAULT_ITINERARY_DATA) {
+                        await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'itinerary', `day-${day.id}`), day);
+                    }
+                } else {
+                    const loadedData = [];
+                    snapshot.forEach(doc => loadedData.push(doc.data()));
+                    loadedData.sort((a, b) => a.id - b.id);
+                    appItineraryData = loadedData; 
+                    if (activeMainTab === 'itinerary-group') switchDayView(activeDayId);
+                }
+            } catch (e) { console.error("Data load error:", e); }
+        }
+
+        // --- UI Logic ---
+        
+        const ACTIVITY_KEYWORDS = ["虎航 IT 234", "華航 CI 131", "刺激雪上活動", "破冰船", "三大蟹吃到飽"];
+        const LOCATION_KEYWORDS = ["旭山動物園", "小樽運河", "LeTAO 總店", "札幌電視塔", "狸小路商店街", "銀河流星瀑布", "旭川男山酒造", "北一硝子館", "音樂盒博物館", "北海道神宮", "札幌場外市場", "三井OUTLET購物中心", "大通公園", "層雲峽溫泉飯店", "音樂盒堂"];
+
+        const highlightText = (text, item, isClickable = false) => {
+            return text.replace(/\*\*(.*?)\*\*/g, (match, p1) => {
+                if (isClickable && item) {
+                    const safeTitle = p1.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    const safeAddress = (item.address || "地址詳情請查詢").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    const safeHours = (item.hours || "營業時間請查詢").replace(/"/g, '&quot;');
+                    const safeQuery = (item.query || p1).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    const safeJpTitle = (item.jpName || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    return `<span class="highlight-text-clickable" onclick="openModal('${safeTitle}', '${safeAddress}', '${safeHours}', '${safeQuery}', '${safeJpTitle}')">${p1}</span>`;
+                } else {
+                    const isActivity = ACTIVITY_KEYWORDS.some(keyword => p1.includes(keyword));
+                    const isLocation = LOCATION_KEYWORDS.some(keyword => p1.includes(keyword));
+                    let className = "location-text-static"; 
+                    if (isActivity) className = "highlight-text-activity";
+                    else if (isLocation) className = "highlight-text-location";
+                    return `<span class="${className}">${p1}</span>`;
+                }
+            });
+        };
+
+        // Modal Controls
+        window.openSettingsModal = function() {
+            const input = document.getElementById('api-key-input');
+            if (input) input.value = API_KEY; 
+            document.getElementById('settings-modal').classList.remove('hidden');
+        }
+        window.closeSettingsModal = function() {
+            document.getElementById('settings-modal').classList.add('hidden');
+            document.getElementById('settings-status').textContent = '';
+        }
+        window.saveApiKeyFromModal = function() {
+            const input = document.getElementById('api-key-input');
+            const status = document.getElementById('settings-status');
+            if (input) {
+                API_KEY = input.value.trim();
+                localStorage.setItem('GEMINI_API_KEY', API_KEY);
+                status.textContent = '儲存成功！';
+                status.className = 'text-xs text-center h-4 text-green-600';
+                getDynamicWeather();
+                setTimeout(() => closeSettingsModal(), 1000);
+            }
+        }
+        window.clearApiKey = function() {
+            localStorage.removeItem('GEMINI_API_KEY');
+            API_KEY = "";
+            document.getElementById('api-key-input').value = "";
+            document.getElementById('settings-status').textContent = '已清除';
+            getDynamicWeather();
+        }
+        window.openModal = function(title, address, hours, query, jpTitle) {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-jp-name').textContent = jpTitle || ""; 
+            document.getElementById('modal-address').textContent = address;
+            document.getElementById('modal-hours').textContent = hours;
+            document.getElementById('modal-map-btn').onclick = function() { window.openInGoogleMaps(query); };
+            document.getElementById('location-modal').classList.remove('hidden');
+        };
+        window.closeModal = function() { document.getElementById('location-modal').classList.add('hidden'); };
+        window.openInGoogleMaps = function(query) {
+            if (query) window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`, '_blank'); 
+        }
+        window.addEventListener('click', function(e) {
+            if (e.target === document.getElementById('location-modal')) closeModal();
+            if (e.target === document.getElementById('settings-modal')) closeSettingsModal();
         });
 
+        // View Renders
+        function renderMainTabs() {
+            const container = document.getElementById('main-tabs');
+            container.innerHTML = '';
+            container.appendChild(createMainTab('主頁', 'home', `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l-2-2m2 2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>`));
+            container.appendChild(createMainTab('詳細行程', 'itinerary-group', `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h.01M7 12h.01M6 16h.01M9 16h.01M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>`));
+        }
+        function createMainTab(text, viewId, iconHtml) {
+            const button = document.createElement('button');
+            button.className = 'tab-item main-tab text-gray-700';
+            button.innerHTML = iconHtml + text;
+            button.onclick = () => switchMainView(viewId);
+            button.setAttribute('data-view', viewId);
+            return button;
+        }
+        function renderDayTabs() {
+            const container = document.getElementById('day-tabs');
+            container.innerHTML = '';
+            appItineraryData.forEach(day => {
+                const button = document.createElement('button');
+                button.className = 'tab-item day-tab text-gray-600'; // 修正樣式，使用 tab-item 保持橫向
+                button.textContent = `Day ${day.id}`;
+                button.setAttribute('data-day-id', `day-${day.id}`);
+                button.onclick = () => switchDayView(`day-${day.id}`);
+                container.appendChild(button);
+            });
+        }
+        function switchMainView(viewId) {
+            activeMainTab = viewId;
+            document.querySelectorAll('.main-tab').forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.getAttribute('data-view') === viewId) tab.classList.add('active');
+            });
+            const contentContainer = document.getElementById('dynamic-content');
+            const dayTabsContainer = document.getElementById('day-tabs');
+            const baseClasses = 'content-area bg-gray-50 px-4 sm:px-6';
+            if (viewId === 'home') {
+                contentContainer.className = baseClasses + ' py-8 sm:py-12';
+                dayTabsContainer.style.display = 'none';
+                contentContainer.innerHTML = renderHomeContent();
+                getDynamicWeather();
+            } else if (viewId === 'itinerary-group') {
+                contentContainer.className = baseClasses + ' pt-0 pb-8 sm:pb-12';
+                dayTabsContainer.style.display = 'flex';
+                switchDayView(activeDayId);
+            }
+        }
+        function switchDayView(dayId) {
+            activeDayId = dayId;
+            document.querySelectorAll('.day-tab').forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.getAttribute('data-day-id') === dayId) tab.classList.add('active');
+            });
+            const dayNumber = parseInt(dayId.split('-')[1]);
+            const dayData = appItineraryData.find(d => d.id === dayNumber);
+            if (dayData) document.getElementById('dynamic-content').innerHTML = renderDayContent(dayData);
+        }
+
+        // Feature Renders
+        async function fetchWithRetry(url, options) {
+            if (!API_KEY) throw new Error("No API Key");
+            return fetch(url, options);
+        }
+        
+        async function getDynamicWeather() {
+            const container = document.getElementById('weather-result');
+            const updated = document.getElementById('weather-last-updated');
+            if (!container) return;
+            if (API_KEY) {
+                container.innerHTML = `<div class="flex items-center text-sm text-gray-500 animate-pulse mt-2">查詢中...</div>`;
+                try {
+                    const response = await fetchWithRetry(`${API_URL}?key=${API_KEY}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: "Current weather in Sapporo. Summarize in Traditional Chinese." }] }] }) });
+                    const result = await response.json();
+                    const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if(text) {
+                        container.innerHTML = `<div class="flex items-start mt-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 mt-0.5 text-sky-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.975 4 4 0 10-7.432-1.761l-1.63 1.63a.1.1 0 01-.108.025l-2.923-1.125A3 3 0 003 15z" /></svg><p class="text-sm text-gray-800 font-medium">${text}</p></div>`;
+                        if (updated) updated.textContent = `更新: ${new Date().toLocaleTimeString('zh-TW')}`;
+                        return;
+                    }
+                } catch (e) { console.log("Fallback to mock"); }
+            }
+            container.innerHTML = `<div class="flex items-start mt-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 mt-0.5 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.975 4 4 0 10-7.432-1.761l-1.63 1.63a.1.1 0 01-.108.025l-2.923-1.125A3 3 0 003 15z" /></svg><p class="text-sm text-gray-500 font-medium">札幌 -2°C ❄️ 小雪 (展示模式)</p></div>`;
+            if (updated) updated.textContent = '';
+        }
+
+        window.convertCurrency = function() {
+            const input = document.getElementById('jpy-input');
+            const output = document.getElementById('twd-output');
+            if (input && output) {
+                const val = parseFloat(input.value);
+                if (!isNaN(val)) {
+                    output.textContent = `${Math.round(val * FALLBACK_RATE)} TWD`;
+                    output.className = output.className.replace('text-gray-700', 'text-pink-700');
+                } else {
+                    output.textContent = '0 TWD';
+                }
+            }
+        }
+
+        function renderExchangeRateBlock() {
+            return `<div id="exchange-rate-block" class="max-w-xs mx-auto p-2 my-2 bg-transparent"><p class="text-sm font-semibold text-gray-600 mb-2 text-center">💵 JPY ⇌ TWD 快速試算</p><div class="flex space-x-2"><div class="flex-1"><input type="number" id="jpy-input" oninput="convertCurrency()" placeholder="日幣" class="w-full py-2 px-3 border border-gray-300 rounded-lg text-sm shadow-sm focus:ring-sky-500"></div><div id="twd-output" class="flex-1 flex items-center justify-end py-2 px-3 border border-gray-300 rounded-lg bg-gray-100 text-sm font-bold text-gray-700 text-right">0 TWD</div></div><div class="text-right text-xs text-gray-400 mt-1">參考匯率: 0.22</div></div>`;
+        }
+
+        function renderCurrentWeatherBlock() {
+            return `<div class="p-4 bg-sky-50 rounded-xl border border-sky-200 mb-6 shadow-sm"><h3 class="text-xl font-bold text-sky-700 mb-2 flex items-center">當地天氣概況 (預設：札幌)</h3><div id="${WEATHER_DISPLAY_ID}" class="mt-2"></div><p id="weather-last-updated" class="text-xs text-right text-gray-400 mt-2">...</p></div>`;
+        }
+
+        function renderHomeContent() {
+            return `
+                <div class="day-content p-8 sm:p-10 bg-white rounded-xl shadow-lg border border-gray-100 space-y-8">
+                    ${renderCurrentWeatherBlock()} 
+                    <div>
+                        <h3 class="text-2xl font-bold accent-color mb-3 border-b pb-2">✈️ 航班/集合資訊</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm font-medium p-4 bg-gray-100 rounded-xl shadow-inner">
+                            <p class="text-gray-700">去程：${highlightText('**虎航 IT 234**', {}, false)} (06:20 - 10:55)</p>
+                            <p class="text-gray-700">回程：${highlightText('**華航 CI 131**', {}, false)} (14:40 - 18:15)</p>
+                        </div>
+                    </div>
+                    ${renderExchangeRateBlock()} 
+                    <div>
+                        <h3 class="text-2xl font-bold accent-color mb-3 border-b pb-2">🎯 行程亮點</h3>
+                        <ul class="space-y-3 pl-4 list-disc text-gray-700">
+                            <li><strong class="text-sky-700">雪地奇觀：</strong>搭乘紋別${highlightText('**破冰船**', {}, false)}，近距離感受鄂霍次克海的流冰震撼。</li>
+                            <li><strong class="text-sky-700">動物明星：</strong>前往${highlightText('**旭山動物園**', {}, false)}，觀賞冬季限定的企鵝雪地散步。</li>
+                            <li><strong class="text-sky-700">溫泉療癒：</strong>入住${highlightText('**層雲峽溫泉飯店**', {}, false)}，享受日式豪華會席料理與天然溫泉。</li>
+                            <li><strong class="text-sky-700">浪漫散策：</strong>在${highlightText('**小樽運河**', {}, false)}、${highlightText('**音樂盒堂**', {}, false)}享受浪漫的自由時光與精緻甜點。</li>
+                            <li><strong class="text-sky-700">美食天堂：</strong>特別安排蟹腳海鮮陶板燒、並建議體驗${highlightText('**三大蟹吃到飽**', {}, false)}。</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderDayContent(day) {
+            const timeToMinutes = (timeStr) => {
+                const [hours, minutes] = timeStr.split(':').map(Number);
+                return hours * 60 + minutes;
+            };
+            
+            const detailsHtml = day.details.map((item, index) => {
+                let durationHtml = '';
+                if (index < day.details.length - 1) {
+                    const currentTime = timeToMinutes(item.time);
+                    const nextTime = timeToMinutes(day.details[index + 1].time);
+                    let diffMinutes = nextTime - currentTime;
+                    if (diffMinutes < 0) diffMinutes += 24 * 60; 
+                    const diffHours = Math.floor(diffMinutes / 60);
+                    const remainingMinutes = diffMinutes % 60;
+                    let durationText = '';
+                    if (diffHours > 0) durationText += `${diffHours}小時`;
+                    if (remainingMinutes > 0 || diffHours === 0) durationText += `${remainingMinutes}分鐘`;
+                    
+                    durationHtml = `<div class="flex flex-col items-start ml-5 sm:ml-6 mt-1 mb-1"><div class="w-0.5 h-6 bg-gray-300 ml-3"></div><div class="relative text-gray-600 px-3 py-1 text-xs font-medium flex items-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1 text-gray-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l3 3a1 1 0 001.414-1.414L11 9.586V6z" clip-rule="evenodd" /></svg>預計花費：${durationText}</div><div class="w-0.5 h-6 bg-gray-300 ml-3"></div></div>`;
+                }
+
+                const activityBlock = `
+                    <div class="bg-white p-4 rounded-xl shadow border border-gray-200 transition duration-300 hover:shadow-lg flex justify-between items-start">
+                        <div class="flex-grow">
+                            <p class="text-sm font-bold text-gray-500 mb-1 flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-[#748DA6]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                ${item.time}
+                            </p>
+                            <p class="text-gray-800 text-base font-medium leading-normal">${highlightText(item.description, item, true)}</p>
+                        </div>
+                        ${item.query ? `<button class="p-2 ml-4 bg-sky-500 text-white rounded-full hover:bg-sky-600 transition duration-150 shadow-md flex-shrink-0" title="在地圖上開啟" onclick="openInGoogleMaps('${item.query.replace(/'/g, "\\'")}')"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /></svg></button>` : ''}
+                    </div>
+                `;
+                return activityBlock + durationHtml;
+            }).join('');
+            
+            const lodgingHtml = highlightText(day.lodging, {}, false);
+            
+            return `
+                <div class="day-content p-8 sm:p-10 bg-white rounded-xl shadow-lg border border-gray-100">
+                    <h3 class="text-4xl font-black accent-color mb-3 border-b-2 pb-1">${day.title}</h3>
+                    <p class="text-red-600 font-semibold mb-4 text-lg">${day.warning ? `⚠️ ${day.warning}` : ''}</p>
+                    <p class="text-gray-700 mb-6 font-medium text-xl leading-relaxed">${day.subtitle}</p>
+                    ${detailsHtml}
+                    <div class="meal-summary p-4 mt-8 rounded-lg text-base font-semibold grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div><span class="text-[#2E4057]">🍳 早餐：</span> ${day.breakfast}</div>
+                        <div><span class="text-[#2E4057]">🍜 午餐：</span> ${day.lunch}</div>
+                        <div><span class="text-[#2E4057]">🥩 晚餐：</span> ${day.dinner}</div>
+                        <div><span class="text-[#2E4057]">🏨 住宿：</span> ${lodgingHtml}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initApp();
+        });
     </script>
 </body>
 </html>
