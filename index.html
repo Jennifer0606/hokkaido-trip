@@ -187,7 +187,7 @@
             </div>
         </div>
 
-        <!-- Header (還原結構：移除 Nav，保留純 Header) -->
+        <!-- Header -->
         <header class="header-bg p-6 sm:p-10 text-white text-center rounded-b-xl relative">
             <button onclick="openSettingsModal()" class="absolute top-4 right-4 p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition" title="設定 API Key">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -201,9 +201,9 @@
             <p class="text-lg font-light tracking-widest">破冰船．雪上活動．小樽散策</p>
         </header>
 
-        <!-- 導覽列容器 (還原 Sticky 結構) -->
+        <!-- 導覽列容器 (Sticky) -->
         <div class="sticky top-0 z-10 bg-white shadow-md">
-            <!-- 1. 頂層主導覽列 (移回這裡) -->
+            <!-- 1. 頂層主導覽列 -->
             <div id="main-tabs" class="flex overflow-x-auto whitespace-nowrap px-4 sm:px-6 border-b border-gray-300">
                 <!-- JS Rendered -->
             </div>
@@ -313,12 +313,12 @@
         function renderMainTabs() {
             const container = document.getElementById('main-tabs');
             container.innerHTML = '';
-            // 主頁按鈕 (還原樣式)
+            // 主頁按鈕
             const homeButton = createMainTab('主頁', 'home', `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l-2-2m2 2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>`);
             homeButton.onclick = () => switchMainView('home');
             container.appendChild(homeButton);
             
-            // 詳細行程按鈕 (還原樣式)
+            // 詳細行程按鈕
             const itineraryButton = createMainTab('詳細行程', 'itinerary-group', `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h.01M7 12h.01M6 16h.01M9 16h.01M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>`);
             itineraryButton.onclick = () => switchMainView('itinerary-group');
             container.appendChild(itineraryButton);
@@ -416,24 +416,81 @@
             `;
         }
 
+        // [回復] 卡片式排版 (白底、陰影、圓角)，包含時間計算條
         function renderDayContent(day) {
-            const detailsHtml = day.details.map((item, index) => `
-                <div class="timeline-item">
-                    <div class="timeline-item-dot"></div>
-                    <div class="pl-2">
-                        <span class="text-xl font-bold text-gray-800 font-mono">${item.time}</span>
-                        <p class="mt-1 text-lg text-gray-700 leading-relaxed">${highlightText(item.description, item, true)}</p>
+            const timeToMinutes = (timeStr) => {
+                const [hours, minutes] = timeStr.split(':').map(Number);
+                return hours * 60 + minutes;
+            };
+            
+            const detailsHtml = day.details.map((item, index) => {
+                let durationHtml = '';
+                if (index < day.details.length - 1) {
+                    const currentTime = timeToMinutes(item.time);
+                    const nextTime = timeToMinutes(day.details[index + 1].time);
+                    let diffMinutes = nextTime - currentTime;
+                    if (diffMinutes < 0) diffMinutes += 24 * 60; 
+                    const diffHours = Math.floor(diffMinutes / 60);
+                    const remainingMinutes = diffMinutes % 60;
+                    let durationText = '';
+                    if (diffHours > 0) durationText += `${diffHours}小時`;
+                    if (remainingMinutes > 0 || diffHours === 0) durationText += `${remainingMinutes}分鐘`;
+                    
+                    // 連接線與時間計算
+                    durationHtml = `
+                        <div class="flex flex-col items-start ml-5 sm:ml-6 mt-1 mb-1">
+                            <div class="w-0.5 h-6 bg-gray-300 ml-3"></div>
+                            <div class="relative text-gray-600 px-3 py-1 text-xs font-medium flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1 text-gray-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l3 3a1 1 0 001.414-1.414L11 9.586V6z" clip-rule="evenodd" /></svg>
+                                預計花費：${durationText}
+                            </div>
+                            <div class="w-0.5 h-6 bg-gray-300 ml-3"></div>
+                        </div>
+                    `;
+                }
+
+                // 卡片式結構
+                const activityBlock = `
+                    <div class="bg-white p-4 rounded-xl shadow border border-gray-200 transition duration-300 hover:shadow-lg flex justify-between items-start">
+                        <div class="flex-grow">
+                            <p class="text-sm font-bold text-gray-500 mb-1 flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-[#748DA6]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                ${item.time}
+                            </p>
+                            <p class="text-gray-800 text-base font-medium leading-normal">
+                                ${highlightText(item.description, item, true)}
+                            </p>
+                        </div>
+                        
+                        ${item.query ? `
+                            <button 
+                                class="p-2 ml-4 bg-sky-500 text-white rounded-full hover:bg-sky-600 transition duration-150 shadow-md flex-shrink-0"
+                                title="在地圖上開啟 ${item.description.replace(/<[^>]*>/g, '').replace(/\*\*/g, '')}"
+                                onclick="openInGoogleMaps('${item.query.replace(/'/g, "\\'")}')"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        ` : ''}
                     </div>
-                </div>
-            `).join('');
+                `;
+                
+                return activityBlock + durationHtml;
+            }).join('');
+            
             const lodgingHtml = highlightText(day.lodging, {}, false);
+            
             return `
                 <div class="day-content p-8 sm:p-10 bg-white rounded-xl shadow-lg border border-gray-100">
                     <h3 class="text-4xl font-black accent-color mb-3 border-b-2 pb-1">${day.title}</h3>
                     <p class="text-red-600 font-semibold mb-4 text-lg">${day.warning ? `⚠️ ${day.warning}` : ''}</p>
                     <p class="text-gray-700 mb-6 font-medium text-xl leading-relaxed">${day.subtitle}</p>
                     ${detailsHtml}
-                    <div class="meal-summary p-4 mt-8 rounded-lg text-base font-semibold grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <!-- 餐食四欄 -->
+                    <div class="meal-summary p-4 mt-8 rounded-lg text-base font-semibold grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <div><span class="text-[#2E4057]">🍳 早餐：</span> ${day.breakfast}</div>
                         <div><span class="text-[#2E4057]">🍜 午餐：</span> ${day.lunch}</div>
                         <div><span class="text-[#2E4057]">🥩 晚餐：</span> ${day.dinner}</div>
