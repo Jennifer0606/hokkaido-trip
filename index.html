@@ -15,23 +15,52 @@
         .accent-color { color: #00A8A0; }
         
         /* 導覽列 Tab 樣式 */
-        .tab-item { padding: 12px 20px; cursor: pointer; border-bottom: 3px solid transparent; font-weight: 500; transition: all 0.2s; flex-shrink: 0; display: flex; align-items: center; white-space: nowrap; }
-        .tab-item:hover { color: #00A8A0; border-bottom-color: #00A8A0; }
-        .main-tab.active { border-bottom-color: #00A8A0; color: #00A8A0; font-weight: 700; background-color: #fff; }
+        .tab-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            font-weight: 500;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+            border-radius: 0;
+        }
         
-        /* Day Tabs (修正樣式：底部線條) */
-        .day-tab { padding: 8px 16px; cursor: pointer; font-size: 0.9rem; color: #64748b; background-color: transparent; border-bottom: 3px solid transparent; }
-        .day-tab:hover { color: #3C79D5; background-color: #f8fafc; }
-        .day-tab.active { border-bottom-color: #3C79D5; color: #3C79D5; font-weight: 700; background-color: #f0f4f8; }
+        /* 主選單 */
+        .main-tab:hover { color: #00A8A0; border-bottom-color: #00A8A0; }
+        .main-tab.active {
+            border-bottom-color: #00A8A0;
+            color: #00A8A0;
+            font-weight: 700;
+            background-color: #fff;
+        }
+        
+        /* Day Tabs (維持文字+底線) */
+        .day-tab {
+            color: #64748b; 
+            background-color: transparent;
+        }
+        .day-tab:hover {
+            color: #3C79D5;
+            background-color: #f8fafc;
+        }
+        .day-tab.active {
+            border-bottom-color: #3C79D5;
+            color: #3C79D5;
+            font-weight: 700;
+            background-color: #f0f4f8;
+        }
 
         .content-area { animation: fadeIn 0.4s ease-in-out; min-height: 500px; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .meal-summary { background-color: #F8F9FA; border-left: 3px solid #748DA6; }
         
-        /* Modal 樣式 */
-        #location-modal, #settings-modal { transition: opacity 0.2s ease-in-out; }
-        #location-modal.hidden, #settings-modal.hidden { opacity: 0; pointer-events: none; }
-        #location-modal:not(.hidden), #settings-modal:not(.hidden) { opacity: 1; pointer-events: auto; }
+        /* Modal */
+        #location-modal { transition: opacity 0.2s ease-in-out; }
+        #location-modal.hidden { opacity: 0; pointer-events: none; }
+        #location-modal:not(.hidden) { opacity: 1; pointer-events: auto; }
         
         /* Highlight Styles */
         .highlight-text-clickable { font-weight: 700; color: #0369a1; background-color: #e0f2fe; padding: 0 4px; border-radius: 2px; cursor: pointer; text-decoration: underline; text-decoration-color: #7dd3fc; text-decoration-thickness: 2px; }
@@ -39,38 +68,17 @@
         .highlight-text-location { font-weight: 700; color: #334155; background-color: #e2e8f0; padding: 0 4px; border-radius: 2px; }
         .location-text-static { font-weight: 700; color: #334155; background-color: #e2e8f0; padding: 0 4px; border-radius: 2px; }
 
-        .api-key-reminder { display: none; }
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         input[type=number] { -moz-appearance: textfield; }
+        
+        .api-key-reminder { display: none; }
     </style>
 </head>
 <body class="min-h-screen">
 
     <div id="app" class="max-w-6xl mx-auto bg-white shadow-2xl relative">
         
-        <!-- Settings Modal -->
-        <div id="settings-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden p-4">
-            <div class="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 relative transform transition-all scale-100">
-                <button onclick="closeSettingsModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
-                <h3 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">⚙️ 應用程式設定</h3>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Google Gemini API Key</label>
-                        <input type="password" id="api-key-input" placeholder="貼上您的 API Key" class="w-full p-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-[#00A8A0] focus:border-transparent outline-none">
-                        <p class="text-xs text-gray-500 mt-1">Key 將儲存在您的瀏覽器中 (LocalStorage)。</p>
-                    </div>
-                    <div class="flex space-x-2 pt-2">
-                        <button onclick="saveApiKeyFromModal()" class="flex-1 bg-[#00A8A0] text-white py-2 rounded-lg font-bold hover:bg-[#008F87] transition text-sm">儲存並重試</button>
-                        <button onclick="clearApiKey()" class="px-3 py-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition text-sm">清除</button>
-                    </div>
-                    <div id="settings-status" class="text-xs text-center h-4"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Location Modal -->
+        <!-- Modal 地點小卡 -->
         <div id="location-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden p-4">
             <div class="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 relative transform transition-all scale-100">
                 <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
@@ -97,9 +105,6 @@
 
         <!-- Header -->
         <header class="header-bg p-6 sm:p-10 text-white text-center rounded-b-xl relative">
-            <button onclick="openSettingsModal()" class="absolute top-4 right-4 p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition" title="設定">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-            </button>
             <h1 class="text-3xl sm:text-4xl font-extrabold opacity-95 mb-2">✈️ 2026 冬季限定 | 北海道六天五夜之旅</h1>
             <p class="text-lg font-light tracking-widest">破冰船．雪上活動．小樽散策</p>
         </header>
@@ -117,33 +122,24 @@
 
         <footer class="header-bg p-4 text-center text-white text-sm mt-8">
             <p>※ 本行程為建議草稿，請留意圖片皆為示意圖，實際餐食/住宿以最終行程為準。</p>
-            <p id="db-status" class="text-xs opacity-70 mt-1"></p>
         </footer>
     </div>
 
     <!-- Logic -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, getDocs, addDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        let API_KEY = localStorage.getItem('GEMINI_API_KEY') || ""; 
-        const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent";
-        const WEATHER_DISPLAY_ID = "weather-display-home"; 
+    <script>
+        // --- 全域變數 ---
         const FALLBACK_RATE = 0.22; 
-        
         let currentExchangeRate = FALLBACK_RATE; 
         let activeMainTab = 'home'; 
         let activeDayId = 'day-1'; 
-        let db = null;
-        let auth = null;
-        let user = null;
-
+        
+        // --- 行程資料 ---
         const DEFAULT_ITINERARY_DATA = [
             {
                 id: 1, title: "02/20：札幌啟程 ✈️", subtitle: "【初識札幌】從機場直奔市區，展開悠閒的冬季漫步。", location: "札幌, 日本", 
                 details: [
                     { time: "04:00", description: "桃園機場 Terminal 1 辦理報到手續與行李托運。", query: "桃園機場 Terminal 1", jpName: "台湾桃園国際空港 第1ターミナル", address: "桃園市大園區航站南路15號", hours: "24小時開放" },
+                    // [樣式修正] 飛行時間無外框 (純文字)
                     { time: "06:20", description: "搭乘**虎航 IT 234** 航班 (06:20) 飛往北海道新千歲機場。", query: "桃園國際機場", jpName: "台湾桃園国際空港", address: "桃園市大園區航站南路15號", hours: "航班時間依航空公司公告", flight: "飛行時間 3小時35分" },
                     { time: "10:55", description: "抵達**北海道新千歲機場**，準備辦理入境手續 (平均約需 1 小時)。", query: "新千歲機場", jpName: "新千歳空港", address: "Bibi, Chitose, Hokkaido 066-0012, Japan", hours: "國內線 6:20-23:00" },
                     { time: "12:00", description: "入境手續與領取行李完成後，搭乘交通工具前往札幌市區。", query: "新千歲機場", jpName: "新千歳空港", address: "Bibi, Chitose, Hokkaido 066-0012, Japan", hours: "JR快速Airport號每12分鐘一班" },
@@ -194,6 +190,7 @@
                 details: [
                     { time: "09:00", description: "上午：參拜**北海道神宮**。", query: "北海道神宮", jpName: "北海道神宮", address: "北海道札幌市中央区宮ヶ丘474", hours: "冬季: 07:00-16:00" },
                     { time: "10:30", description: "前往夢幻的**白色戀人公園**，參觀工廠與拍照。", query: "白色戀人公園", jpName: "白い恋人パーク", address: "北海道札幌市西区宮の沢2-2-11-36", hours: "10:00-17:00", ticket: "付費區 大人 ¥800" },
+                    // [修正] 午餐改為湯咖哩
                     { time: "12:30", description: "前往**札幌湯咖哩名店 Suage+**，享用北海道特色午餐。", query: "Suage+", jpName: "スープカレー Suage+ (すあげプラス)", address: "北海道札幌市中央区南4条西5丁目都志松ビル2F", hours: "11:30-21:30" },
                     { time: "14:30", description: "前往**札幌啤酒博物館**，欣賞美麗的紅磚建築與啤酒歷史。", query: "札幌啤酒博物館", jpName: "サッポロビール博物館", address: "北海道札幌市東区北7条東9丁目1-1", hours: "11:00-18:00 (週一休)", ticket: "入館免費 (試飲付費)" },
                     { time: "16:00", description: "前往位於 Norbesa 的 **Gashapon Bandai 官方商店**，這裡有豐富的萬代正版扭蛋！", query: "Gashapon Bandai Official Shop Sapporo Norbesa", jpName: "ガシャポンバンダイオフィシャルショップ 札幌ノルベサ店", address: "北海道札幌市中央区南3条西5-1-1 ノルベサ 1F", hours: "11:00-23:00" },
@@ -217,65 +214,18 @@
         let appItineraryData = [...DEFAULT_ITINERARY_DATA];
 
         // --- 核心邏輯 ---
-        async function initApp() {
+        function initApp() {
             // 掛載全域函式
-            window.openSettingsModal = openSettingsModal;
-            window.closeSettingsModal = closeSettingsModal;
-            window.saveApiKeyFromModal = saveApiKeyFromModal;
-            window.clearApiKey = clearApiKey;
             window.openModal = openModal;
             window.closeModal = closeModal;
             window.openInGoogleMaps = openInGoogleMaps;
             window.switchMainView = switchMainView;
             window.switchDayView = switchDayView;
             window.convertCurrency = convertCurrency;
-            window.requestUserLocation = requestUserLocation;
-            window.fetchExchangeRate = fetchExchangeRate;
 
             renderMainTabs();
             renderDayTabs();
             switchMainView('home');
-
-            // Firebase 連線
-            try {
-                const firebaseConfigStr = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
-                const appId = typeof __app_id !== 'undefined' ? __app_id : 'demo-app';
-                
-                if (firebaseConfigStr) {
-                    const firebaseConfig = JSON.parse(firebaseConfigStr);
-                    const app = initializeApp(firebaseConfig);
-                    auth = getAuth(app);
-                    db = getFirestore(app);
-                    await signInAnonymously(auth);
-                    user = auth.currentUser;
-                    if (user) {
-                        document.getElementById('db-status').textContent = '🟢 已連線至雲端資料庫';
-                        await loadItineraryData(appId, user.uid);
-                    }
-                } else {
-                    document.getElementById('db-status').textContent = '⚪ 本機預覽模式';
-                }
-            } catch (e) {
-                document.getElementById('db-status').textContent = '🔴 使用預設資料';
-            }
-        }
-
-        async function loadItineraryData(appId, userId) {
-            try {
-                const itineraryRef = collection(db, 'artifacts', appId, 'users', userId, 'itinerary');
-                const snapshot = await getDocs(itineraryRef);
-                if (snapshot.empty) {
-                    for (const day of DEFAULT_ITINERARY_DATA) {
-                        await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'itinerary', `day-${day.id}`), day);
-                    }
-                } else {
-                    const loadedData = [];
-                    snapshot.forEach(doc => loadedData.push(doc.data()));
-                    loadedData.sort((a, b) => a.id - b.id);
-                    appItineraryData = loadedData; 
-                    if (activeMainTab === 'itinerary-group') switchDayView(activeDayId);
-                }
-            } catch (e) { console.error("Data load error:", e); }
         }
 
         const ACTIVITY_KEYWORDS = ["虎航 IT 234", "華航 CI 131", "刺激雪上活動", "破冰船", "三大蟹吃到飽", "天狗山纜車", "白色戀人公園"];
@@ -286,7 +236,7 @@
                 if (isClickable && item) {
                     const safeTitle = p1.replace(/'/g, "\\'").replace(/"/g, '&quot;');
                     const safeAddress = (item.address || "地址詳情請查詢").replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                    const safeHours = (item.hours || "營業時間請查詢").replace(/"/g, '&quot;');
+                    const safeHours = (item.hours || "營業時間請查詢").replace(/'/g, "\\'").replace(/"/g, '&quot;');
                     const safeQuery = (item.query || p1).replace(/'/g, "\\'").replace(/"/g, '&quot;');
                     const safeJpTitle = (item.jpName || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
                     const safeTicket = (item.ticket || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
@@ -302,37 +252,7 @@
             });
         };
 
-        // Modal Controls
-        function openSettingsModal() {
-            const input = document.getElementById('api-key-input');
-            if (input) input.value = API_KEY; 
-            document.getElementById('settings-modal').classList.remove('hidden');
-        }
-        function closeSettingsModal() {
-            document.getElementById('settings-modal').classList.add('hidden');
-            document.getElementById('settings-status').textContent = '';
-        }
-        function saveApiKeyFromModal() {
-            const input = document.getElementById('api-key-input');
-            const status = document.getElementById('settings-status');
-            if (input) {
-                API_KEY = input.value.trim();
-                localStorage.setItem('GEMINI_API_KEY', API_KEY);
-                status.textContent = '儲存成功！';
-                status.className = 'text-xs text-center h-4 text-green-600';
-                getDynamicWeather();
-                setTimeout(() => closeSettingsModal(), 1000);
-            }
-        }
-        function clearApiKey() {
-            localStorage.removeItem('GEMINI_API_KEY');
-            API_KEY = "";
-            document.getElementById('api-key-input').value = "";
-            document.getElementById('settings-status').textContent = '已清除';
-            getDynamicWeather();
-        }
-        
-        function openModal(title, address, hours, ticket, query, jpTitle) {
+        window.openModal = function(title, address, hours, ticket, query, jpTitle) {
             document.getElementById('modal-title').textContent = title;
             document.getElementById('modal-jp-name').textContent = jpTitle || ""; 
             document.getElementById('modal-address').textContent = address;
@@ -351,16 +271,14 @@
             document.getElementById('modal-map-btn').onclick = function() { window.openInGoogleMaps(query); };
             document.getElementById('location-modal').classList.remove('hidden');
         };
-        function closeModal() { document.getElementById('location-modal').classList.add('hidden'); };
-        function openInGoogleMaps(query) {
+        window.closeModal = function() { document.getElementById('location-modal').classList.add('hidden'); };
+        window.openInGoogleMaps = function(query) {
             if (query) window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`, '_blank'); 
         }
         window.addEventListener('click', function(e) {
             if (e.target === document.getElementById('location-modal')) closeModal();
-            if (e.target === document.getElementById('settings-modal')) closeSettingsModal();
         });
 
-        // View Renders
         function renderMainTabs() {
             const container = document.getElementById('main-tabs');
             container.innerHTML = '';
@@ -382,7 +300,7 @@
             container.innerHTML = '';
             appItineraryData.forEach(day => {
                 const button = document.createElement('button');
-                // [確保] 使用 tab-item 樣式
+                // [確保] 使用 tab-item + day-tab 樣式
                 button.className = 'tab-item day-tab text-gray-600'; 
                 button.textContent = `Day ${day.id}`;
                 button.setAttribute('data-day-id', `day-${day.id}`);
@@ -404,7 +322,6 @@
                 contentContainer.className = baseClasses + ' py-8 sm:py-12';
                 dayTabsContainer.style.display = 'none';
                 contentContainer.innerHTML = renderHomeContent();
-                getDynamicWeather();
             } else if (viewId === 'itinerary-group') {
                 contentContainer.className = baseClasses + ' pt-0 pb-8 sm:pb-12';
                 dayTabsContainer.style.display = 'flex';
@@ -421,58 +338,6 @@
             const dayNumber = parseInt(dayId.split('-')[1]);
             const dayData = appItineraryData.find(d => d.id === dayNumber);
             if (dayData) document.getElementById('dynamic-content').innerHTML = renderDayContent(dayData);
-        }
-
-        // [補回] 解決 ReferenceError
-        function requestUserLocation() {
-            if (navigator.geolocation) {
-                document.getElementById('weather-result').innerHTML = '<div class="text-sm text-gray-500 animate-pulse">正在嘗試定位...</div>';
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                         alert("定位成功！(功能演示)");
-                         getDynamicWeather();
-                    },
-                    (error) => {
-                        alert("無法取得位置，已切回預設地點。");
-                        getDynamicWeather();
-                    },
-                    { timeout: 5000 }
-                );
-            } else {
-                alert("您的瀏覽器不支援定位功能。");
-            }
-        };
-
-        // [補回] 解決 ReferenceError
-        async function fetchExchangeRate() {
-             const twdOutput = document.getElementById('twd-output');
-             if(!twdOutput) return;
-        }
-
-        async function fetchWithRetry(url, options) {
-            if (!API_KEY) throw new Error("No API Key");
-            return fetch(url, options);
-        }
-        
-        async function getDynamicWeather() {
-            const container = document.getElementById('weather-result');
-            const updated = document.getElementById('weather-last-updated');
-            if (!container) return;
-            if (API_KEY) {
-                container.innerHTML = `<div class="flex items-center text-sm text-gray-500 animate-pulse mt-2">查詢中...</div>`;
-                try {
-                    const response = await fetchWithRetry(`${API_URL}?key=${API_KEY}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: "Current weather in Sapporo. Summarize in Traditional Chinese." }] }] }) });
-                    const result = await response.json();
-                    const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
-                    if(text) {
-                        container.innerHTML = `<div class="flex items-start mt-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 mt-0.5 text-sky-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.975 4 4 0 10-7.432-1.761l-1.63 1.63a.1.1 0 01-.108.025l-2.923-1.125A3 3 0 003 15z" /></svg><p class="text-sm text-gray-800 font-medium">${text}</p></div>`;
-                        if (updated) updated.textContent = `更新: ${new Date().toLocaleTimeString('zh-TW')}`;
-                        return;
-                    }
-                } catch (e) { console.log("Fallback to mock"); }
-            }
-            container.innerHTML = `<div class="flex items-start mt-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 mt-0.5 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.975 4 4 0 10-7.432-1.761l-1.63 1.63a.1.1 0 01-.108.025l-2.923-1.125A3 3 0 003 15z" /></svg><p class="text-sm text-gray-500 font-medium">札幌 -2°C ❄️ 小雪 (展示模式)</p></div>`;
-            if (updated) updated.textContent = '';
         }
 
         function convertCurrency() {
@@ -493,14 +358,9 @@
             return `<div id="exchange-rate-block" class="max-w-xs mx-auto p-2 my-2 bg-transparent"><p class="text-sm font-semibold text-gray-600 mb-2 text-center">💵 JPY ⇌ TWD 快速試算</p><div class="flex space-x-2"><div class="flex-1"><input type="number" id="jpy-input" oninput="convertCurrency()" placeholder="日幣" class="w-full py-2 px-3 border border-gray-300 rounded-lg text-sm shadow-sm focus:ring-sky-500"></div><div id="twd-output" class="flex-1 flex items-center justify-end py-2 px-3 border border-gray-300 rounded-lg bg-gray-100 text-sm font-bold text-gray-700 text-right">0 TWD</div></div><div class="text-right text-xs text-gray-400 mt-1">參考匯率: 0.22</div></div>`;
         }
 
-        function renderCurrentWeatherBlock() {
-            return `<div class="p-4 bg-sky-50 rounded-xl border border-sky-200 mb-6 shadow-sm"><h3 class="text-xl font-bold text-sky-700 mb-2 flex items-center">當地天氣概況 (預設：札幌)</h3><div id="${WEATHER_DISPLAY_ID}" class="mt-2"></div><p id="weather-last-updated" class="text-xs text-right text-gray-400 mt-2">...</p></div>`;
-        }
-
         function renderHomeContent() {
             return `
                 <div class="day-content p-8 sm:p-10 bg-white rounded-xl shadow-lg border border-gray-100 space-y-8">
-                    ${renderCurrentWeatherBlock()} 
                     <div>
                         <h3 class="text-2xl font-bold accent-color mb-3 border-b pb-2">✈️ 航班/集合資訊</h3>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm font-medium p-4 bg-gray-100 rounded-xl shadow-inner">
@@ -547,7 +407,7 @@
                     let lineStyle = 'w-0.5 h-6 bg-gray-300';
                     
                     if (item.flight) {
-                        lineStyle = 'w-0.5 h-6 border-l-2 border-dashed border-gray-400'; // 虛線
+                        lineStyle = 'w-0.5 h-6 border-l-2 border-dashed border-gray-400';
                         connectorContent = `
                              <div class="flex items-center text-sky-600 text-xs font-bold my-1">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>
@@ -572,6 +432,7 @@
                     `;
                 }
 
+                // [修正] 移除行程卡片右上角的 ticketInfo (因為已經在小卡裡顯示)
                 const activityBlock = `
                     <div class="bg-white p-4 rounded-xl shadow border border-gray-200 transition duration-300 hover:shadow-lg flex justify-between items-start relative">
                         <div class="flex-grow">
