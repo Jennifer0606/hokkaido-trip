@@ -121,7 +121,7 @@
         <!-- 導覽列 (Sticky) -->
         <div class="sticky top-0 z-10 bg-white shadow-md">
             <div id="main-tabs" class="flex overflow-x-auto whitespace-nowrap px-4 sm:px-6 border-b border-gray-300"></div>
-            <!-- Day Tabs 容器：使用 hidden class 控制，避免 inline style 殘留 -->
+            <!-- Day Tabs 容器：預設隱藏 -->
             <div id="day-tabs" class="hidden overflow-x-auto whitespace-nowrap px-4 sm:px-6 border-b border-gray-200 bg-gray-50"></div>
         </div>
 
@@ -584,19 +584,20 @@
             const dayTabsContainer = document.getElementById('day-tabs');
             const baseClasses = 'content-area bg-gray-50 px-4 sm:px-6';
             if (viewId === 'home') {
-                // [修正] 改用 pt-2 (8px) 極小留白，讓白色區塊大幅往上提，靠近導航列
                 contentContainer.className = baseClasses + ' pt-2 pb-8 sm:pb-12';
+                dayTabsContainer.style.display = 'none'; // [修正] 強制隱藏
                 dayTabsContainer.classList.add('hidden'); 
                 dayTabsContainer.classList.remove('flex');
                 contentContainer.innerHTML = renderHomeContent();
             } else if (viewId === 'itinerary-group') {
                 contentContainer.className = baseClasses + ' pt-0 pb-8 sm:pb-12';
+                dayTabsContainer.style.display = 'flex'; // [修正] 恢復顯示
                 dayTabsContainer.classList.remove('hidden');
                 dayTabsContainer.classList.add('flex');
                 switchDayView(activeDayId);
             } else if (viewId === 'preparation') {
-                // [修正] 行前準備也同步調整，往上提
                 contentContainer.className = baseClasses + ' pt-2 pb-8 sm:pb-12';
+                dayTabsContainer.style.display = 'none'; // [修正] 強制隱藏
                 dayTabsContainer.classList.add('hidden'); 
                 dayTabsContainer.classList.remove('flex');
                 contentContainer.innerHTML = renderPreparationContent();
@@ -806,6 +807,7 @@
                     `;
                 }
 
+                // [修正] 徹底移除右側 Google Map 按鈕
                 const activityBlock = `
                     <div class="bg-white p-4 rounded-xl shadow border border-gray-200 transition duration-300 hover:shadow-lg flex justify-between items-start relative">
                         <div class="flex-grow">
@@ -819,17 +821,6 @@
                                 ${highlightText(item.description, item, true)}
                             </p>
                         </div>
-                        ${item.query ? `
-                            <button 
-                                class="p-2 ml-4 bg-sky-500 text-white rounded-full hover:bg-sky-600 transition duration-150 shadow-md flex-shrink-0"
-                                title="在地圖上開啟 ${item.description.replace(/<[^>]*>/g, '').replace(/\*\*/g, '')}"
-                                onclick="openInGoogleMaps('${item.query.replace(/'/g, "\\'")}')"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
-                                </svg>
-                            </button>
-                        ` : ''}
                     </div>
                 `;
                 
@@ -838,24 +829,35 @@
             
             const lodgingHtml = highlightText(day.lodging, {}, false);
             
+            // [修正] 移除原本擁擠的 Flexbox，改為上下排列
+            // 標題 (text-2xl) -> 副標題 (text-lg) -> 資訊標籤列 (mt-3)
             return `
                 <div class="day-content p-8 sm:p-10 bg-white rounded-xl shadow-lg border border-gray-100">
-                    <h3 class="text-2xl font-bold accent-color mb-3 border-b pb-2">${day.title}</h3>
-                    <p class="text-red-600 font-semibold mb-4 text-lg">${day.warning ? `⚠️ ${day.warning}` : ''}</p>
+                    <div class="flex items-start justify-between border-b-2 pb-2 mb-4 border-gray-100">
+                         <h3 class="text-2xl font-black accent-color">${day.title}</h3>
+                    </div>
                     
-                    <div class="flex items-center mb-6 text-gray-500 text-sm font-medium flex-wrap gap-2">
-                        <p class="text-gray-700 text-xl leading-relaxed mr-4 w-full sm:w-auto">${day.subtitle}</p>
-                        ${day.sunrise ? `
-                            <div class="ml-auto flex items-center bg-orange-50 px-3 py-1 rounded-full border border-orange-100 shadow-sm whitespace-nowrap">
-                                <span class="mr-3 text-orange-600">🌅 日出 ${day.sunrise}</span>
-                                <span class="text-indigo-600">🌇 日落 ${day.sunset}</span>
-                            </div>
-                        ` : ''}
+                    ${day.warning ? `<p class="text-red-600 font-semibold mb-4 text-base bg-red-50 p-3 rounded-lg border border-red-100">⚠️ ${day.warning}</p>` : ''}
+                    
+                    <div class="mb-8">
+                        <p class="text-gray-700 text-lg leading-relaxed font-medium">${day.subtitle}</p>
                         
-                        ${day.jmaUrl ? `
-                            <a href="${day.jmaUrl}" target="_blank" class="flex items-center bg-sky-50 px-3 py-1 rounded-full border border-sky-100 shadow-sm whitespace-nowrap hover:bg-sky-100 transition-colors cursor-pointer text-sky-700 no-underline">
-                                🌤️ 日本氣象廳預報
-                            </a>
+                        ${(day.sunrise || day.jmaUrl) ? `
+                            <div class="mt-3 flex flex-wrap gap-3">
+                                ${day.sunrise ? `
+                                    <div class="inline-flex items-center text-xs font-semibold text-gray-500 bg-gray-100 px-3 py-1.5 rounded-full">
+                                        <span class="mr-3 flex items-center"><span class="mr-1 text-orange-500">🌅</span> ${day.sunrise}</span>
+                                        <span class="flex items-center"><span class="mr-1 text-indigo-500">🌇</span> ${day.sunset}</span>
+                                    </div>
+                                ` : ''}
+                                
+                                ${day.jmaUrl ? `
+                                    <a href="${day.jmaUrl}" target="_blank" class="inline-flex items-center text-xs font-semibold text-sky-600 bg-sky-50 px-3 py-1.5 rounded-full hover:bg-sky-100 transition-colors no-underline border border-sky-100">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>
+                                        日本氣象廳預報
+                                    </a>
+                                ` : ''}
+                            </div>
                         ` : ''}
                     </div>
 
