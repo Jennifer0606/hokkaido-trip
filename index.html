@@ -71,6 +71,12 @@
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         input[type=number] { -moz-appearance: textfield; }
         
+        /* Checklist Styles */
+        .checklist-item { cursor: pointer; transition: all 0.2s; }
+        .checklist-item:hover { background-color: #f0f9ff; }
+        .checklist-checkbox { accent-color: #00A8A0; width: 1.25rem; height: 1.25rem; }
+        .checked-text { text-decoration: line-through; color: #9ca3af; }
+        
         .api-key-reminder { display: none; }
     </style>
 </head>
@@ -255,6 +261,58 @@
         
         let appItineraryData = [...DEFAULT_ITINERARY_DATA];
 
+        // --- 清單資料 ---
+        const PREPARATION_LIST = {
+            "🪪 重要證件": [
+                "護照 (有效期限需6個月以上)",
+                "VJW (Visit Japan Web) QR Code 截圖",
+                "日幣現鈔 (建議多換小額，如千圓鈔)",
+                "信用卡 (JCB/Visa/Master)",
+                "旅遊平安險保單",
+                "台灣身分證影本 (備用)"
+            ],
+            "🔌 電子產品": [
+                "網卡/eSIM (確認開通日期)",
+                "行動電源 (低溫耗電快，建議帶2顆)",
+                "充電器/傳輸線",
+                "轉接頭 (日本為雙孔扁插，台灣通用)",
+                "相機/底片 (低溫需注意電池保暖)",
+                "取卡針"
+            ],
+            "🧣 冬季保暖 (重點)": [
+                "防風防水羽絨外套 (洋蔥式穿法)",
+                "發熱衣/褲 (Heatech 極暖/超極暖)",
+                "防滑雪靴 (非常重要！要有深刻紋)",
+                "雪地防滑鞋套 (若無雪靴，建議準備方便穿脫款)",
+                "厚毛襪/羊毛襪 (建議多帶)",
+                "毛帽 (需能蓋住耳朵)",
+                "圍巾/脖圍",
+                "防潑水手套 (玩雪/滑手機方便)"
+            ],
+            "🧴 盥洗/保養": [
+                "牙刷/牙膏 (日本提倡環保，部分飯店不提供)",
+                "高保濕乳液/護手霜 (日本極乾)",
+                "護唇膏",
+                "卸妝/洗面乳",
+                "隱形眼鏡/藥水"
+            ],
+            "💊 常備藥品": [
+                "感冒藥 (含退燒)",
+                "腸胃藥",
+                "止痛藥",
+                "暈車藥 (搭巴士/破冰船必備)",
+                "OK繃/外傷藥膏"
+            ],
+            "🎒 其他必備": [
+                "暖暖包 (貼式/手握多準備)",
+                "墨鏡 (雪地反光強，防雪盲)",
+                "摺疊傘 (以防濕雪/暴風雪)",
+                "購物袋 (環保袋)",
+                "衣物壓縮袋 (厚重衣物好收納)",
+                "濕紙巾/酒精棉片"
+            ]
+        };
+
         // --- 核心邏輯 ---
         function initApp() {
             // 掛載全域函式
@@ -264,6 +322,7 @@
             window.switchMainView = switchMainView;
             window.switchDayView = switchDayView;
             window.convertCurrency = convertCurrency;
+            window.toggleCheck = toggleCheck; // 新增勾選切換功能
 
             renderMainTabs();
             renderDayTabs();
@@ -340,6 +399,8 @@
             container.innerHTML = '';
             container.appendChild(createMainTab('主頁', 'home', `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l-2-2m2 2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 01-1 1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>`));
             container.appendChild(createMainTab('詳細行程', 'itinerary-group', `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h.01M7 12h.01M6 16h.01M9 16h.01M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>`));
+            // 新增行前準備 Tab
+            container.appendChild(createMainTab('行前準備', 'preparation', `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>`));
         }
         
         function createMainTab(text, viewId, iconHtml) {
@@ -382,6 +443,10 @@
                 contentContainer.className = baseClasses + ' pt-0 pb-8 sm:pb-12';
                 dayTabsContainer.style.display = 'flex';
                 switchDayView(activeDayId);
+            } else if (viewId === 'preparation') {
+                contentContainer.className = baseClasses + ' py-8 sm:py-12';
+                dayTabsContainer.style.display = 'none';
+                contentContainer.innerHTML = renderPreparationContent();
             }
         }
 
@@ -492,6 +557,51 @@
                     </div>
                 </div>
             `;
+        }
+
+        // --- 新增行前準備渲染函式 ---
+        function renderPreparationContent() {
+            let html = `
+                <div class="day-content p-8 sm:p-10 bg-white rounded-xl shadow-lg border border-gray-100">
+                    <h3 class="text-4xl font-black accent-color mb-3 border-b-2 pb-1">🎒 行前準備清單</h3>
+                    <p class="text-gray-600 mb-6 text-lg">針對 2 月北海道雪季優化，請務必確認以下物品是否備齊。</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            `;
+
+            for (const category in PREPARATION_LIST) {
+                html += `
+                    <div class="bg-gray-50 p-5 rounded-xl border border-gray-200">
+                        <h4 class="font-bold text-xl text-sky-800 mb-3 pb-2 border-b border-gray-300">${category}</h4>
+                        <ul class="space-y-2">
+                `;
+                PREPARATION_LIST[category].forEach((item, index) => {
+                    const uniqueId = `${category}-${index}`;
+                    html += `
+                        <li class="checklist-item flex items-start" onclick="toggleCheck('${uniqueId}')">
+                            <input type="checkbox" id="${uniqueId}" class="checklist-checkbox mt-1 mr-3 flex-shrink-0 cursor-pointer pointer-events-none">
+                            <span id="text-${uniqueId}" class="text-gray-700 font-medium leading-relaxed">${item}</span>
+                        </li>
+                    `;
+                });
+                html += `</ul></div>`;
+            }
+
+            html += `</div></div>`;
+            return html;
+        }
+
+        function toggleCheck(id) {
+            const checkbox = document.getElementById(id);
+            const text = document.getElementById(`text-${id}`);
+            if (checkbox && text) {
+                checkbox.checked = !checkbox.checked;
+                if (checkbox.checked) {
+                    text.classList.add('checked-text');
+                } else {
+                    text.classList.remove('checked-text');
+                }
+            }
         }
 
         function renderDayContent(day) {
