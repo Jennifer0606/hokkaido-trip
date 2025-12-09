@@ -98,7 +98,7 @@
                     <div class="flex items-start"><span class="text-xl mr-3 mt-0.5">📍</span><div><p class="text-xs font-bold text-gray-400 uppercase tracking-wide">地址</p><p id="modal-address" class="text-gray-700 text-sm leading-relaxed font-medium">地址載入中...</p></div></div>
                     <div class="flex items-start"><span class="text-xl mr-3 mt-0.5">🕒</span><div><p class="text-xs font-bold text-gray-400 uppercase tracking-wide">營業時間</p><p id="modal-hours" class="text-gray-700 text-sm leading-relaxed font-medium">營業時間載入中...</p></div></div>
                     <!-- 門票資訊 -->
-                    <div id="modal-ticket-row" class="flex items-start hidden"><span class="text-xl mr-3 mt-0.5">🎟️</span><div><p class="text-xs font-bold text-gray-400 uppercase tracking-wide">門票費用</p><p id="modal-ticket" class="text-orange-600 text-sm leading-relaxed font-bold">無資訊</p></div></div>
+                    <div id="modal-ticket-row" class="flex items-start hidden"><span class="text-xl mr-3 mt-0.5">🎟️</span><div><p class="text-xs font-bold text-gray-400 uppercase tracking-wide">費用 / 票價</p><p id="modal-ticket" class="text-orange-600 text-sm leading-relaxed font-bold">無資訊</p></div></div>
                     <!-- 機型資訊 (新增) -->
                     <div id="modal-aircraft-row" class="flex items-start hidden"><span class="text-xl mr-3 mt-0.5">✈️</span><div><p class="text-xs font-bold text-gray-400 uppercase tracking-wide">機型</p><p id="modal-aircraft" class="text-slate-600 text-sm leading-relaxed font-bold">載入中...</p></div></div>
                 </div>
@@ -175,7 +175,30 @@
                         jpName: "新千歳空港駅 / 空港連絡バス", 
                         address: "JR: B1F | 巴士: 1F 乘車處", 
                         hours: "JR: 每12分一班 | 巴士: 每小時1-2班", 
-                        ticket: "JR: ¥1,150 | 巴士: ¥1,300" 
+                        ticket: "JR: ¥1,150 | 巴士: ¥1,300",
+                        highlights: {
+                            "JR 快速 Airport": {
+                                query: "JR 新千歲機場站",
+                                jpName: "JR 新千歳空港駅",
+                                address: "新千歲機場 B1F",
+                                hours: "每 12 分鐘一班",
+                                ticket: "¥1,150 (自由席)"
+                            },
+                            "地鐵南北線": {
+                                query: "札幌市營地鐵",
+                                jpName: "札幌市営地下鉄南北線",
+                                address: "札幌站 (需出站轉乘)",
+                                hours: "06:00-00:00",
+                                ticket: "¥210"
+                            },
+                            "機場巴士": {
+                                query: "新千歲機場巴士",
+                                jpName: "新千歳空港連絡バス (中島公園行)",
+                                address: "新千歲機場 1F 巴士乘車處",
+                                hours: "依班次時刻表 (約每小時1-2班)",
+                                ticket: "¥1,300 (直達)"
+                            }
+                        }
                     },
                     
                     { time: "15:00", description: "抵達 **Vessel Inn 札幌中島公園飯店** 辦理 Check-in (剛好是入住時間)。", query: "Vessel Inn 札幌中島公園", jpName: "ベッセルイン札幌中島公園", address: "北海道札幌市中央区南九条西4-1-2", hours: "Check-in: 14:00" },
@@ -183,7 +206,33 @@
                     { time: "17:00", description: "登上地標**札幌電視塔**展望台，俯瞰札幌市區夜景。", query: "札幌電視塔", jpName: "さっぽろテレビ塔", address: "札幌市中央区大通西1丁目", hours: "09:00-22:00", ticket: "大人 ¥1,000" },
                     { time: "18:00", description: "自由逛街時間：前往**札幌地下街** (Aurora Town/Pole Town) 或 Parco 百貨。", query: "札幌地下街", jpName: "さっぽろ地下街", address: "札幌市中央区大通", hours: "10:00-20:00" },
                     { time: "19:00", description: "在美食與購物天堂**狸小路商店街**自由活動，享受日式晚餐。", query: "札幌狸小路商店街", jpName: "狸小路商店街", address: "札幌市中央区南2・3条西1～7丁目", hours: "大部分店家 10:00-20:00" },
-                    { time: "20:30", description: "前往 **#C-pla 狸小路5丁目店** 盡情扭蛋！(北海道最大級扭蛋專賣店)", query: "#C-pla 狸小路5丁目店", jpName: "#C-pla 狸小路5丁目店", address: "北海道札幌市中央区南3条西5丁目27", hours: "11:00-23:00" }
+                    { time: "20:30", description: "前往 **#C-pla 狸小路5丁目店** 盡情扭蛋！(北海道最大級扭蛋專賣店)", query: "#C-pla 狸小路5丁目店", jpName: "#C-pla 狸小路5丁目店", address: "北海道札幌市中央区南3条西5丁目27", hours: "11:00-23:00" },
+                    
+                    // [新增] 返回飯店路線
+                    {
+                        time: "21:30",
+                        description: "帶著戰利品返回飯店：<br>1. **步行回飯店** (約12分)：沿著站前通直走 850m。<br>2. **地鐵回飯店** (1站)：薄野站 ➔ 中島公園站。",
+                        query: "Vessel Inn 札幌中島公園",
+                        jpName: "ベッセルイン札幌中島公園",
+                        address: "南9西4",
+                        hours: "24小時",
+                        highlights: {
+                            "步行回飯店": {
+                                query: "Vessel Inn Sapporo Nakajima Park",
+                                jpName: "徒歩ルート (約850m)",
+                                address: "沿著札幌站前通向南走",
+                                hours: "約 12-15 分鐘",
+                                ticket: "免費 (雪地請小心)"
+                            },
+                            "地鐵回飯店": {
+                                query: "Susukino Station",
+                                jpName: "地下鉄すすきの駅 (N08)",
+                                address: "薄野站 (N08) ➔ 中島公園站 (N09)",
+                                hours: "乘車約 2 分鐘",
+                                ticket: "¥210"
+                            }
+                        }
+                    }
                 ],
                 breakfast: "溫暖的家 / 機上自理", lunch: "機場國內線美食 (拉麵/豚丼)", dinner: "狸小路自理", lodging: "Vessel Inn札幌中島公園飯店"
             },
@@ -344,14 +393,20 @@
         const highlightText = (text, item, isClickable = false) => {
             return text.replace(/\*\*(.*?)\*\*/g, (match, p1) => {
                 if (isClickable && item) {
+                    // [修正] 檢查是否有針對該關鍵字的獨立資料 (item.highlights)
+                    let data = item;
+                    if (item.highlights && item.highlights[p1]) {
+                        data = item.highlights[p1];
+                    }
+
                     const safeTitle = p1.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                    const safeAddress = (item.address || "地址詳情請查詢").replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                    const safeHours = (item.hours || "營業時間請查詢").replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                    const safeQuery = (item.query || p1).replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                    const safeJpTitle = (item.jpName || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                    const safeTicket = (item.ticket || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                    // [新增] 安全處理機型欄位
-                    const safeAircraft = (item.aircraft || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    // 使用 data (可能是獨立資料，也可能是原本的 item)
+                    const safeAddress = (data.address || item.address || "地址詳情請查詢").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    const safeHours = (data.hours || item.hours || "營業時間請查詢").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    const safeQuery = (data.query || item.query || p1).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    const safeJpTitle = (data.jpName || item.jpName || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    const safeTicket = (data.ticket || item.ticket || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    const safeAircraft = (data.aircraft || item.aircraft || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
                     
                     return `<span class="highlight-text-clickable" onclick="openModal('${safeTitle}', '${safeAddress}', '${safeHours}', '${safeTicket}', '${safeQuery}', '${safeJpTitle}', '${safeAircraft}')">${p1}</span>`;
                 } else {
