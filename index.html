@@ -93,6 +93,8 @@
                     <div class="flex items-start"><span class="text-xl mr-3 mt-0.5">🕒</span><div><p class="text-xs font-bold text-gray-400 uppercase tracking-wide">營業時間</p><p id="modal-hours" class="text-gray-700 text-sm leading-relaxed font-medium">營業時間載入中...</p></div></div>
                     <!-- 門票資訊 -->
                     <div id="modal-ticket-row" class="flex items-start hidden"><span class="text-xl mr-3 mt-0.5">🎟️</span><div><p class="text-xs font-bold text-gray-400 uppercase tracking-wide">門票費用</p><p id="modal-ticket" class="text-orange-600 text-sm leading-relaxed font-bold">無資訊</p></div></div>
+                    <!-- 機型資訊 (新增) -->
+                    <div id="modal-aircraft-row" class="flex items-start hidden"><span class="text-xl mr-3 mt-0.5">✈️</span><div><p class="text-xs font-bold text-gray-400 uppercase tracking-wide">機型</p><p id="modal-aircraft" class="text-slate-600 text-sm leading-relaxed font-bold">載入中...</p></div></div>
                 </div>
                 <div class="mt-6 pt-4 border-t border-gray-100">
                     <button id="modal-map-btn" class="w-full bg-[#00A8A0] text-white py-2.5 rounded-lg font-bold hover:bg-[#008F87] transition flex items-center justify-center shadow-md">
@@ -136,21 +138,50 @@
         // --- 行程資料 ---
         const DEFAULT_ITINERARY_DATA = [
             {
-                id: 1, title: "02/20：札幌啟程 ✈️", subtitle: "【初識札幌】從機場直奔市區，展開悠閒的冬季漫步。", location: "札幌, 日本", 
+                id: 1, title: "02/20：札幌啟程 ✈️", subtitle: "【初識札幌】機場美食開場，隨後直奔市區。", location: "札幌, 日本", 
                 details: [
                     { time: "04:00", description: "桃園機場 Terminal 1 辦理報到手續與行李托運。", query: "桃園機場 Terminal 1", jpName: "台湾桃園国際空港 第1ターミナル", address: "桃園市大園區航站南路15號", hours: "24小時開放" },
-                    // [樣式修正] 飛行時間無外框 (純文字)
-                    { time: "06:20", description: "搭乘**虎航 IT 234** 航班 (06:20) 飛往北海道新千歲機場。", query: "桃園國際機場", jpName: "台湾桃園国際空港", address: "桃園市大園區航站南路15號", hours: "航班時間依航空公司公告", flight: "飛行時間 3小時35分" },
-                    { time: "10:55", description: "抵達**北海道新千歲機場**，準備辦理入境手續 (平均約需 1 小時)。", query: "新千歲機場", jpName: "新千歳空港", address: "Bibi, Chitose, Hokkaido 066-0012, Japan", hours: "國內線 6:20-23:00" },
-                    { time: "12:00", description: "入境手續與領取行李完成後，搭乘交通工具前往札幌市區。", query: "新千歲機場", jpName: "新千歳空港", address: "Bibi, Chitose, Hokkaido 066-0012, Japan", hours: "JR快速Airport號每12分鐘一班" },
-                    { time: "13:30", description: "前往 **Vessel Inn 札幌中島公園飯店** 辦理 Check-in 手續或寄放行李。", query: "Vessel Inn 札幌中島公園", jpName: "ベッセルイン札幌中島公園", address: "北海道札幌市中央区南九条西4-1-2", hours: "Check-in: 14:00" },
-                    { time: "15:00", description: "漫步於雪白的**大通公園**，欣賞冬季景色。", query: "札幌大通公園", jpName: "大通公園", address: "札幌市中央区大通西1～12丁目", hours: "全天開放" },
-                    { time: "16:30", description: "登上地標**札幌電視塔**展望台，俯瞰札幌市區美景。", query: "札幌電視塔", jpName: "さっぽろテレビ塔", address: "札幌市中央区大通西1丁目", hours: "09:00-22:00", ticket: "大人 ¥1,000" },
-                    { time: "17:30", description: "自由逛街時間：前往**札幌地下街** (Aurora Town/Pole Town) 或 Parco 百貨享受溫暖的室內逛街。", query: "札幌地下街", jpName: "さっぽろ地下街", address: "札幌市中央区大通", hours: "10:00-20:00" },
-                    { time: "18:30", description: "在美食與購物天堂**狸小路商店街**自由活動，享受日式晚餐。", query: "札幌狸小路商店街", jpName: "狸小路商店街", address: "札幌市中央区南2・3条西1～7丁目", hours: "大部分店家 10:00-20:00" },
-                    { time: "20:00", description: "前往 **#C-pla 狸小路5丁目店** 盡情扭蛋！(北海道最大級扭蛋專賣店)", query: "#C-pla 狸小路5丁目店", jpName: "#C-pla 狸小路5丁目店", address: "北海道札幌市中央区南3条西5丁目27", hours: "11:00-23:00" }
+                    // [更新] 加上第一航廈資訊
+                    { 
+                        time: "06:20", 
+                        description: "從桃園機場第一航廈 (T1) 搭乘**虎航 IT 234** 飛往北海道新千歲機場。", 
+                        query: "桃園國際機場第一航廈", 
+                        jpName: "台湾桃園国際空港 第1ターミナル", 
+                        address: "桃園市大園區航站南路15號 (第一航廈)", 
+                        hours: "航班時間依航空公司公告", 
+                        flight: "飛行時間 3小時35分",
+                        aircraft: "Airbus A320 / A320neo (單走道)"
+                    },
+                    { time: "10:55", description: "抵達**北海道新千歲機場**，辦理入境手續。", query: "新千歲機場", jpName: "新千歳空港", address: "Bibi, Chitose, Hokkaido 066-0012, Japan", hours: "國內線 6:20-23:00" },
+                    
+                    // [保持 Day 1 的優化]
+                    { 
+                        time: "12:00", 
+                        description: "步行至國內線航廈 3F **北海道拉麵道場** 或美食街享用午餐 (推薦：一幻拉麵、十勝豚丼)。", 
+                        query: "北海道拉麵道場", 
+                        jpName: "北海道ラーメン道場", 
+                        address: "新千歲機場國內線航廈 3F", 
+                        hours: "10:00-21:00"
+                    },
+
+                    { 
+                        time: "13:30", 
+                        description: "吃飽後前往飯店：<br>1. **JR 快速 Airport** (約37分)<br>2. **機場巴士** (約80分，直達中島公園)。", 
+                        query: "JR 新千歲機場站", 
+                        jpName: "新千歳空港駅 / 空港連絡バス", 
+                        address: "JR: B1F | 巴士: 1F 乘車處", 
+                        hours: "JR: 每12分一班 | 巴士: 每小時1-2班", 
+                        ticket: "JR: ¥1,150 | 巴士: ¥1,300" 
+                    },
+                    
+                    { time: "15:00", description: "抵達 **Vessel Inn 札幌中島公園飯店** 辦理 Check-in (剛好是入住時間)。", query: "Vessel Inn 札幌中島公園", jpName: "ベッセルイン札幌中島公園", address: "北海道札幌市中央区南九条西4-1-2", hours: "Check-in: 14:00" },
+                    { time: "16:00", description: "放好行李後，前往雪白的**大通公園**散步拍照。", query: "札幌大通公園", jpName: "大通公園", address: "札幌市中央区大通西1～12丁目", hours: "全天開放" },
+                    { time: "17:00", description: "登上地標**札幌電視塔**展望台，俯瞰札幌市區夜景。", query: "札幌電視塔", jpName: "さっぽろテレビ塔", address: "札幌市中央区大通西1丁目", hours: "09:00-22:00", ticket: "大人 ¥1,000" },
+                    { time: "18:00", description: "自由逛街時間：前往**札幌地下街** (Aurora Town/Pole Town) 或 Parco 百貨。", query: "札幌地下街", jpName: "さっぽろ地下街", address: "札幌市中央区大通", hours: "10:00-20:00" },
+                    { time: "19:00", description: "在美食與購物天堂**狸小路商店街**自由活動，享受日式晚餐。", query: "札幌狸小路商店街", jpName: "狸小路商店街", address: "札幌市中央区南2・3条西1～7丁目", hours: "大部分店家 10:00-20:00" },
+                    { time: "20:30", description: "前往 **#C-pla 狸小路5丁目店** 盡情扭蛋！(北海道最大級扭蛋專賣店)", query: "#C-pla 狸小路5丁目店", jpName: "#C-pla 狸小路5丁目店", address: "北海道札幌市中央区南3条西5丁目27", hours: "11:00-23:00" }
                 ],
-                breakfast: "溫暖的家 / 機上自理", lunch: "機場自理", dinner: "狸小路自理", lodging: "Vessel Inn札幌中島公園飯店"
+                breakfast: "溫暖的家 / 機上自理", lunch: "機場國內線美食 (拉麵/豚丼)", dinner: "狸小路自理", lodging: "Vessel Inn札幌中島公園飯店"
             },
             {
                 id: 2, title: "02/21：企鵝．雪上活動．溫泉 🐧", subtitle: "【冰雪樂園】整日精彩活動，以溫泉解除疲勞。", warning: "團體巴士行程：07:40JR札幌北口集合，每人限帶一件大型行李。<br>⚠️ 日本司機工時控管嚴格,切勿遲到, 以免被丟包", location: "旭川, 日本", 
@@ -204,7 +235,18 @@
                     { time: "10:00", description: "退房後，前往**三井OUTLET購物中心**或 Rera Outlet。", query: "札幌三井OUTLET購物中心", jpName: "三井アウトレットパーク 札幌北広島", address: "北海道北廣島市大曲幸町3-7-6", hours: "10:00-20:00" },
                     { time: "12:00", description: "在 OUTLET 內享用午餐。", query: "OUTLET 餐廳", jpName: "レストラン", address: "Outlet 美食街", hours: "10:30-21:00" },
                     { time: "13:30", description: "集合前往新千歲機場。", query: "新千歲機場", jpName: "新千歳空港", address: "Bibi, Chitose", hours: "24小時" },
-                    { time: "14:40", description: "搭乘華航 CI 131 班機返回台北。", query: "新千歲機場", jpName: "新千歳空港 国際線ターミナル", address: "國際線航廈", hours: "航班時間", flight: "飛行時間 4小時10分" },
+                    
+                    // [新增機型資訊與航廈]
+                    { 
+                        time: "14:40", 
+                        description: "搭乘**華航 CI 131** 班機返回台北 (抵達 T2)。", 
+                        query: "新千歲機場", 
+                        jpName: "新千歳空港 国際線ターミナル", 
+                        address: "國際線航廈 (抵達桃園第一航廈)", 
+                        hours: "航班時間", 
+                        flight: "飛行時間 4小時10分",
+                        aircraft: "Boeing 777-300ER (廣體客機)"
+                    },
                     { time: "18:15", description: "抵達桃園國際機場，溫暖的家。", query: "桃園國際機場", jpName: "桃園空港", address: "桃園市", hours: "24小時開放" }
                 ],
                 breakfast: "飯店內早餐", lunch: "OUTLET 簡餐 (自理)", dinner: "機上簡餐", lodging: "溫暖的家"
@@ -240,7 +282,10 @@
                     const safeQuery = (item.query || p1).replace(/'/g, "\\'").replace(/"/g, '&quot;');
                     const safeJpTitle = (item.jpName || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
                     const safeTicket = (item.ticket || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                    return `<span class="highlight-text-clickable" onclick="openModal('${safeTitle}', '${safeAddress}', '${safeHours}', '${safeTicket}', '${safeQuery}', '${safeJpTitle}')">${p1}</span>`;
+                    // [新增] 安全處理機型欄位
+                    const safeAircraft = (item.aircraft || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    
+                    return `<span class="highlight-text-clickable" onclick="openModal('${safeTitle}', '${safeAddress}', '${safeHours}', '${safeTicket}', '${safeQuery}', '${safeJpTitle}', '${safeAircraft}')">${p1}</span>`;
                 } else {
                     const isActivity = ACTIVITY_KEYWORDS.some(keyword => p1.includes(keyword));
                     const isLocation = LOCATION_KEYWORDS.some(keyword => p1.includes(keyword));
@@ -252,7 +297,8 @@
             });
         };
 
-        window.openModal = function(title, address, hours, ticket, query, jpTitle) {
+        // [更新] openModal 增加 aircraft 參數
+        window.openModal = function(title, address, hours, ticket, query, jpTitle, aircraft) {
             document.getElementById('modal-title').textContent = title;
             document.getElementById('modal-jp-name').textContent = jpTitle || ""; 
             document.getElementById('modal-address').textContent = address;
@@ -266,6 +312,16 @@
                 ticketRow.classList.remove('hidden');
             } else {
                 ticketRow.classList.add('hidden');
+            }
+
+            // [新增] 處理機型顯示
+            const aircraftRow = document.getElementById('modal-aircraft-row');
+            const aircraftText = document.getElementById('modal-aircraft');
+            if (aircraft && aircraft !== 'undefined' && aircraft !== '') {
+                aircraftText.textContent = aircraft;
+                aircraftRow.classList.remove('hidden');
+            } else {
+                aircraftRow.classList.add('hidden');
             }
 
             document.getElementById('modal-map-btn').onclick = function() { window.openInGoogleMaps(query); };
@@ -362,11 +418,66 @@
             return `
                 <div class="day-content p-8 sm:p-10 bg-white rounded-xl shadow-lg border border-gray-100 space-y-8">
                     <div>
-                        <h3 class="text-2xl font-bold accent-color mb-3 border-b pb-2">✈️ 航班/集合資訊</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm font-medium p-4 bg-gray-100 rounded-xl shadow-inner">
-                            <p class="text-gray-700">去程：${highlightText('**虎航 IT 234**', {}, false)} (06:20 - 10:55)</p>
-                            <p class="text-gray-700">回程：${highlightText('**華航 CI 131**', {}, false)} (14:40 - 18:15)</p>
+                        <h3 class="text-2xl font-bold accent-color mb-3 border-b pb-2">✈️ 航班資訊</h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm font-medium p-2">
+                            <!-- Outbound -->
+                            <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 shadow-sm">
+                                <div class="font-bold text-lg text-[#2E4057] mb-3 flex items-center">
+                                    <span class="mr-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plane-takeoff-icon lucide-plane-takeoff"><path d="M2 22h20"/><path d="M6.36 17.4 4 17l-2-4 1.1-.55a2 2 0 0 1 1.8 0l.17.1a2 2 0 0 0 1.8 0L8 12 5 6l.9-.45a2 2 0 0 1 2.09.2l4.02 3a2 2 0 0 0 2.1.2l4.19-2.06a2.41 2.41 0 0 1 1.73-.17L21 7a1.4 1.4 0 0 1 .87 1.99l-.38.76c-.23.46-.6.84-1.07 1.08L7.58 17.2a2 2 0 0 1-1.22.18Z"/></svg>
+                                    </span> 
+                                    去程：台北 ➔ 札幌
+                                </div>
+                                <div class="text-gray-700 space-y-2">
+                                    <p class="flex justify-between border-b border-blue-100 pb-1">
+                                        <span class="font-semibold text-gray-500">航班</span>
+                                        <span class="font-bold text-gray-800">虎航 IT 234</span>
+                                    </p>
+                                    <p class="flex justify-between border-b border-blue-100 pb-1">
+                                        <span class="font-semibold text-gray-500">時間</span>
+                                        <span>06:20 - 10:55 (3h 35m)</span>
+                                    </p>
+                                    <p class="flex justify-between border-b border-blue-100 pb-1">
+                                        <span class="font-semibold text-gray-500">航廈</span>
+                                        <span class="font-bold text-red-600">桃園機場第一航廈 (T1)</span>
+                                    </p>
+                                    <p class="flex justify-between items-start">
+                                        <span class="font-semibold text-gray-500 whitespace-nowrap mr-2">機型</span>
+                                        <span class="text-right text-slate-600">Airbus A320 / A320neo<br><span class="text-xs text-gray-400">(單走道)</span></span>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Inbound -->
+                            <div class="bg-orange-50 p-4 rounded-lg border border-orange-100 shadow-sm">
+                                <div class="font-bold text-lg text-[#2E4057] mb-3 flex items-center">
+                                    <span class="mr-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plane-landing-icon lucide-plane-landing"><path d="M2 22h20"/><path d="M3.77 10.77 2 9l2-4.5 1.1.55c.55.28.9.84.9 1.45s.35 1.17.9 1.45L8 8.5l3-6 1.05.53a2 2 0 0 1 1.09 1.52l.72 5.4a2 2 0 0 0 1.09 1.52l4.4 2.2c.42.22.78.55 1.01.96l.6 1.03c.49.88-.06 1.98-1.06 2.1l-1.18.15c-.47.06-.95-.02-1.37-.24L4.29 11.15a2 2 0 0 1-.52-.38Z"/></svg>
+                                    </span> 
+                                    回程：札幌 ➔ 台北
+                                </div>
+                                <div class="text-gray-700 space-y-2">
+                                    <p class="flex justify-between border-b border-orange-100 pb-1">
+                                        <span class="font-semibold text-gray-500">航班</span>
+                                        <span class="font-bold text-gray-800">華航 CI 131</span>
+                                    </p>
+                                    <p class="flex justify-between border-b border-orange-100 pb-1">
+                                        <span class="font-semibold text-gray-500">時間</span>
+                                        <span>14:40 - 18:15 (4h 10m)</span>
+                                    </p>
+                                    <p class="flex justify-between border-b border-orange-100 pb-1">
+                                        <span class="font-semibold text-gray-500">航廈</span>
+                                        <span class="font-bold text-red-600">新千歲機場第一航廈 (T1)</span>
+                                    </p>
+                                    <p class="flex justify-between items-start">
+                                        <span class="font-semibold text-gray-500 whitespace-nowrap mr-2">機型</span>
+                                        <span class="text-right text-slate-600">Boeing 777-300ER<br><span class="text-xs text-gray-400">(廣體客機)</span></span>
+                                    </p>
+                                </div>
+                            </div>
                         </div>
+
                     </div>
                     ${renderExchangeRateBlock()} 
                     <div>
@@ -432,7 +543,7 @@
                     `;
                 }
 
-                // [修正] 移除行程卡片右上角的 ticketInfo (因為已經在小卡裡顯示)
+                // [修正] 移除行程卡片右上角的 ticketInfo，也移除右側的地圖按鈕
                 const activityBlock = `
                     <div class="bg-white p-4 rounded-xl shadow border border-gray-200 transition duration-300 hover:shadow-lg flex justify-between items-start relative">
                         <div class="flex-grow">
@@ -446,17 +557,6 @@
                                 ${highlightText(item.description, item, true)}
                             </p>
                         </div>
-                        ${item.query ? `
-                            <button 
-                                class="p-2 ml-4 bg-sky-500 text-white rounded-full hover:bg-sky-600 transition duration-150 shadow-md flex-shrink-0"
-                                title="在地圖上開啟 ${item.description.replace(/<[^>]*>/g, '').replace(/\*\*/g, '')}"
-                                onclick="openInGoogleMaps('${item.query.replace(/'/g, "\\'")}')"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
-                                </svg>
-                            </button>
-                        ` : ''}
                     </div>
                 `;
                 
