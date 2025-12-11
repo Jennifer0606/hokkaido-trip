@@ -45,7 +45,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            width: 3.5rem;       
+            width: 3rem;  /* [設定] 時間軸寬度窄一點，靠左 */     
             flex-shrink: 0;
         }
         
@@ -156,8 +156,8 @@
         // 2. 函式定義
         // ==========================================
         
-        function getCategoryTag(text) {
-            // [優化] 重新調整判斷順序，解決「交通」被「住宿」吃掉，以及「美食」被「交通」吃掉的問題
+        function getCategoryTag(title, desc) {
+            const text = title + (desc ? " " + desc : "");
             
             // 1. 先判斷購物
             if (text.includes("買") || text.includes("逛") || text.includes("OUTLET") || text.includes("UNIQLO") || text.includes("Lawson") || text.includes("扭蛋")) return { text: "購物", color: "bg-pink-400" };
@@ -165,8 +165,8 @@
             // 2. 判斷美食 (拉麵、丼、咖哩、蟹、一幻、湯咖哩)
             if (text.includes("餐") || text.includes("拉麵") || text.includes("丼") || text.includes("咖哩") || text.includes("蟹") || text.includes("一幻")) return { text: "美食", color: "bg-orange-400" };
             
-            // 3. 判斷交通 (增加更多交通動詞)
-            if (text.includes("JR") || text.includes("巴士") || text.includes("地鐵") || text.includes("市電") || text.includes("航班") || text.includes("交通") || text.includes("搭乘") || text.includes("步行")) return { text: "交通", color: "bg-blue-400" };
+            // 3. 判斷交通 (增加更多交通動詞與航空公司)
+            if (text.includes("JR") || text.includes("巴士") || text.includes("地鐵") || text.includes("市電") || text.includes("航班") || text.includes("交通") || text.includes("搭乘") || text.includes("步行") || text.includes("虎航") || text.includes("華航")) return { text: "交通", color: "bg-blue-400" };
             
             // 4. 最後判斷住宿
             if (text.includes("飯店") || text.includes("住宿") || text.includes("Check-in")) return { text: "住宿", color: "bg-indigo-400" };
@@ -291,10 +291,13 @@
                     { time: "12:00", description: "步行至國內線 3F **北海道拉麵道場** 或美食街享用午餐 (推薦：一幻拉麵、十勝豚丼)。", query: "北海道拉麵道場", jpName: "北海道ラーメン道場", address: "新千歲機場國內線航廈 3F", hours: "10:00-21:00" },
                     { 
                         time: "13:30", 
-                        description: "**交通移動：新千歲機場 ➔ 飯店** (二選一)\n1. **JR 快速 Airport** (最快，需轉車)\n2. **機場巴士** (直達中島公園，免搬行李)", 
-                        query: "JR 新千歲機場站", jpName: "新千歳空港駅 / 空港連絡バス", address: "JR: B1F | 巴士: 1F 乘車處", hours: "JR: 每12分一班 | 巴士: 約每小時一班", ticket: "JR: ¥1,150 | 巴士: ¥1,300",
+                        description: "**交通移動：新千歲機場 ➔ 飯店** (二選一)\n1. **JR 快速 Airport**：搭至**札幌站**，轉乘 **地下鐵南北線** 至 **中島公園站** (2號出口)。\n2. **機場巴士**：直達中島公園 (免搬行李，但在路面可能受雪況影響)。", 
+                        query: "JR 新千歲機場站", jpName: "新千歳空港駅 / 空港連絡バス", address: "JR: B1F | 巴士: 1F 乘車處", hours: "JR: 每12分一班 | 巴士: 約每小時一班", ticket: "JR: ¥1,150 + 地鐵 ¥210 | 巴士: ¥1,300",
                         highlights: { 
                             "JR 快速 Airport": { query: "JR 新千歲機場站", jpName: "JR 新千歳空港駅", address: "新千歲機場 B1F", hours: "每 12-15 分鐘一班 (最快 37 分)", ticket: "¥1,150 (需轉乘地鐵)" },
+                            "札幌站": { query: "Sapporo Station", jpName: "JR 札幌駅", address: "北海道札幌市北区北6条西4丁目", hours: "05:00-24:00" },
+                            "地下鐵南北線": { query: "Sapporo Subway Namboku Line", jpName: "札幌市営地下鉄南北線", address: "札幌站 ➔ 中島公園站", hours: "約 6 分鐘一班", ticket: "¥210" },
+                            "中島公園站": { query: "Nakajima Koen Station", jpName: "中島公園駅 (N09)", address: "札幌市中央区南9条西4丁目", hours: "06:00-24:00", ticket: "2號出口離飯店最近" },
                             "機場巴士": { query: "New Chitose Airport Bus Stop", jpName: "空港連絡バス (中島公園行)", address: "國內線 14/22 號乘車處 (直達中島公園)", hours: "約 12:00 / 14:00 / 16:00 / 19:00 (班次較少)", ticket: "¥1,300 / 車程約 80 分鐘 (免轉車)" }
                         }
                     },
@@ -311,7 +314,7 @@
                         query: "UNIQLO Sapporo Parco", jpName: "ユニクロ 札幌パルコ店", address: "札幌市中央區南1條西3-3 (Parco 8F)", hours: "10:00-20:00"
                     },
                     { time: "17:00", description: "換上新買的保暖衣物，前往旁邊的 **大通公園** 散步，欣賞雪景。", query: "札幌大通公園", jpName: "大通公園", address: "札幌市中央区大通西1～12丁目", hours: "全天開放" },
-                    { time: "17:30", description: "登上 **札幌電視塔** 展望台，俯瞰札幌市區夜景。", query: "札幌電視塔", jpName: "さっぽろテレビ塔", address: "札幌市中央区大通西1丁目", hours: "09:00-22:00", ticket: "¥1,000 / 大人" },
+                    { time: "17:30", description: "登上 **札幌電視塔** 展望台，俯瞰札幌市區夜景。", query: "札幌電視塔", jpName: "さっぽろテレビ塔", address: "札幌市中央区大通西1丁目", hours: "9:00 ～ 22:00 （展望最終入場 21:50）", ticket: "¥1,000" },
                     { time: "18:30", description: "自由逛街時間：前往 **札幌地下街** (Aurora Town/Pole Town) 或 Parco 百貨。", query: "札幌地下街", jpName: "さっぽろ地下街", address: "札幌市中央区大通", hours: "10:00-20:00" },
                     { time: "19:30", description: "前往 **#C-pla 狸小路5丁目店** 盡情扭蛋！", query: "#C-pla 狸小路5丁目店", jpName: "#C-pla 狸小路5丁目店", address: "北海道札幌市中央区南3条西5丁目27", hours: "11:00-23:00" },
                     {
@@ -586,8 +589,9 @@
 
                 if (isTraffic) {
                     // [交通/移動樣式] - 虛線過場，簡單文字，點標題可看詳情
+                    // [調整] gap-4 -> gap-3，讓內容更靠近時間軸
                     return `
-                    <div class="flex gap-4 relative pb-6 ${lastItemClass} ${firstItemClass}">
+                    <div class="flex gap-3 relative pb-6 ${lastItemClass} ${firstItemClass}">
                         <div class="timeline-col"> 
                              <div class="${lineClass}"></div>
                              <div class="w-7 h-7 rounded-full ${iconBg} flex items-center justify-center shadow-sm z-10 relative mt-1">
@@ -609,8 +613,9 @@
                     `;
                 } else {
                     // [一般樣式] - 白色卡片，實線
+                    // [調整] gap-4 -> gap-3
                     return `
-                    <div class="flex gap-4 relative pb-8 ${lastItemClass} ${firstItemClass}">
+                    <div class="flex gap-3 relative pb-8 ${lastItemClass} ${firstItemClass}">
                         <div class="timeline-col"> 
                              <div class="timeline-line-solid"></div>
                              <div class="w-8 h-8 rounded-full ${iconBg} flex items-center justify-center text-white shadow-md z-10 relative mt-1">
@@ -619,7 +624,8 @@
                         </div>
                         <div class="flex-grow bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-all relative">
                             <div class="flex justify-between items-start mb-2">
-                                <span class="text-blue-600 font-bold font-['Noto_Sans_JP'] text-sm tracking-wide bg-slate-100 px-2 py-0.5 rounded">${item.time}</span>
+                                <!-- [修正] 將 text-blue-600 改為 text-slate-500，與交通行程的時間顏色統一 -->
+                                <span class="text-slate-500 font-bold font-['Noto_Sans_JP'] text-sm tracking-wide bg-slate-100 px-2 py-0.5 rounded">${item.time}</span>
                                 ${priceDisplay ? `<span class="bg-gray-100 text-gray-600 text-xs font-bold px-2 py-1 rounded border border-gray-200">${priceDisplay}</span>` : '' }
                             </div>
                             <h4 class="text-lg font-bold text-sky-600 mb-1 leading-snug cursor-pointer hover:underline" onclick="openModal('${dataStr}')">${title}</h4>
@@ -636,7 +642,7 @@
             }).join('');
 
             return `
-                <div class="max-w-3xl mx-auto px-2">
+                <div class="w-full px-1"> <!-- [調整] 移除 max-w-3xl 和 mx-auto，改為 w-full，讓區塊變大 -->
                     <div class="mb-6 pl-2">
                         <h2 class="text-2xl font-black text-slate-800 mb-2">${day.title}</h2>
                         <div class="flex flex-col sm:flex-row sm:items-center gap-3">
