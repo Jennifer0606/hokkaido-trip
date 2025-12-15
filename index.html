@@ -45,14 +45,28 @@
         <div id="location-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm hidden p-4">
             <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 relative transform transition-all scale-100 border border-gray-100">
                 <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 bg-gray-100 rounded-full p-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
-                <div class="mb-5 border-b border-gray-100 pb-4 pr-8"><h3 id="modal-title" class="text-2xl font-bold text-gray-800 leading-tight"></h3><p id="modal-jp-name" class="text-sm text-sky-600 font-medium font-['Noto_Sans_JP'] mt-1">Japanese Name</p></div>
+                <div class="mb-5 border-b border-gray-100 pb-4 pr-8">
+                    <h3 id="modal-title" class="text-2xl font-bold text-gray-800 leading-tight"></h3>
+                    <p id="modal-jp-name" class="text-sm text-sky-600 font-medium font-['Noto_Sans_JP'] mt-1">Japanese Name</p>
+                    
+                    <div id="modal-desc-wrapper" class="mt-3 hidden bg-slate-50 p-3 rounded-lg border border-slate-100">
+                        <p id="modal-desc" class="text-sm text-gray-700 leading-relaxed whitespace-pre-line"></p>
+                    </div>
+                </div>
+                
                 <div class="space-y-4">
-                    <div class="flex items-start"><span class="text-xl mr-3 mt-0.5 text-gray-400">📍</span><div><p class="text-xs font-bold text-gray-400 uppercase tracking-wide">地址</p><p id="modal-address" class="text-gray-700 text-sm leading-relaxed font-medium">地址載入中...</p></div></div>
-                    <div class="flex items-start"><span class="text-xl mr-3 mt-0.5 text-gray-400">🕒</span><div><p class="text-xs font-bold text-gray-400 uppercase tracking-wide">營業時間</p><p id="modal-hours" class="text-gray-700 text-sm leading-relaxed font-medium">營業時間載入中...</p></div></div>
+                    <div id="modal-address-row" class="flex items-start"><span class="text-xl mr-3 mt-0.5 text-gray-400">📍</span><div><p class="text-xs font-bold text-gray-400 uppercase tracking-wide">地址</p><p id="modal-address" class="text-gray-700 text-sm leading-relaxed font-medium">地址載入中...</p></div></div>
+                    <div id="modal-hours-row" class="flex items-start"><span class="text-xl mr-3 mt-0.5 text-gray-400">🕒</span><div><p class="text-xs font-bold text-gray-400 uppercase tracking-wide">營業時間</p><p id="modal-hours" class="text-gray-700 text-sm leading-relaxed font-medium">營業時間載入中...</p></div></div>
+                    
                     <div id="modal-ticket-row" class="flex items-start hidden"><span class="text-xl mr-3 mt-0.5 text-gray-400">🎫</span><div><p class="text-xs font-bold text-gray-400 uppercase tracking-wide">費用 / 票價</p><p id="modal-ticket" class="text-orange-600 text-sm leading-relaxed font-bold">無資訊</p></div></div>
                     <div id="modal-aircraft-row" class="flex items-start hidden"><span class="text-xl mr-3 mt-0.5 text-gray-400">✈️</span><div><p class="text-xs font-bold text-gray-400 uppercase tracking-wide">機型</p><p id="modal-aircraft" class="text-slate-600 text-sm leading-relaxed font-bold">載入中...</p></div></div>
                 </div>
-                <div class="mt-6 pt-4 border-t border-gray-100"><button id="modal-map-btn" class="w-full bg-sky-600 text-white py-3 rounded-xl font-bold hover:bg-sky-700 transition flex items-center justify-center shadow-lg shadow-sky-200"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /></svg>開啟 Google Maps</button></div>
+                
+                <div id="modal-map-btn-container" class="mt-6 pt-4 border-t border-gray-100">
+                    <button id="modal-map-btn" class="w-full bg-sky-600 text-white py-3 rounded-xl font-bold hover:bg-sky-700 transition flex items-center justify-center shadow-lg shadow-sky-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /></svg>開啟 Google Maps
+                    </button>
+                </div>
             </div>
         </div>
         <!-- Banner -->
@@ -62,7 +76,6 @@
         </header>
         
         <!-- Nav (Sticky Container) -->
-        <!-- 修改重點：加上 sticky top-0 z-40，並修改背景樣式為半透明毛玻璃 -->
         <div class="sticky top-0 z-40 mx-4 -mt-6 transition-all duration-300">
             <div class="bg-white/95 backdrop-blur-md rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
                  <div id="main-tabs" class="flex overflow-x-auto whitespace-nowrap border-b border-gray-100 no-scrollbar"></div>
@@ -144,7 +157,10 @@
                     const safeTicket = (data.ticket || item.ticket || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
                     const safeAircraft = (data.aircraft || item.aircraft || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
                     
-                    const clickData = { title: safeTitle, address: safeAddress, hours: safeHours, query: safeQuery, jpName: safeJpTitle, ticket: safeTicket, aircraft: safeAircraft };
+                    // 確保這裡抓得到 desc 並進行編碼
+                    const safeDesc = (data.desc || item.desc || "").replace(/'/g, "\\'").replace(/"/g, '&quot;'); 
+                    
+                    const clickData = { title: safeTitle, address: safeAddress, hours: safeHours, query: safeQuery, jpName: safeJpTitle, ticket: safeTicket, aircraft: safeAircraft, desc: safeDesc };
                     const dataStr = encodeURIComponent(JSON.stringify(clickData)).replace(/'/g, "%27");
                     
                     if (item.highlights && item.highlights[p1]) {
@@ -157,37 +173,75 @@
             });
         };
 
-        window.openModal = function(arg1, address, hours, ticket, query, jpTitle, aircraft) {
+        window.openModal = function(arg1, address, hours, ticket, query, jpTitle, aircraft, desc) {
             let data = {};
             if (typeof arg1 === 'string' && (arg1.startsWith('%7B') || arg1.startsWith('{'))) {
                 try { data = JSON.parse(decodeURIComponent(arg1)); } catch (e) { data = { title: arg1 }; }
             } else {
-                data = { title: arg1, address: address, hours: hours, ticket: ticket, query: query, jpName: jpTitle, aircraft: aircraft };
+                data = { title: arg1, address: address, hours: hours, ticket: ticket, query: query, jpName: jpTitle, aircraft: aircraft, desc: desc };
             }
             document.getElementById('modal-title').textContent = data.title || "";
             document.getElementById('modal-jp-name').textContent = data.jpName || ""; 
-            document.getElementById('modal-address').textContent = data.address || "無資訊";
-            document.getElementById('modal-hours').textContent = data.hours || "依現場為準";
             
+            // ★★★ 說明文字邏輯 ★★★
+            const descEl = document.getElementById('modal-desc');
+            const descWrapper = document.getElementById('modal-desc-wrapper');
+            if (data.desc) {
+                descEl.textContent = data.desc;
+                descWrapper.classList.remove('hidden');
+            } else {
+                descWrapper.classList.add('hidden');
+            }
+
+            // ★★★ 地址邏輯：有資料才顯示 ★★★
+            const addressRow = document.getElementById('modal-address-row');
+            if (data.address && data.address !== "") {
+                document.getElementById('modal-address').textContent = data.address;
+                addressRow.classList.remove('hidden');
+            } else {
+                addressRow.classList.add('hidden');
+            }
+
+            // ★★★ 營業時間邏輯：有資料才顯示 ★★★
+            const hoursRow = document.getElementById('modal-hours-row');
+            if (data.hours && data.hours !== "") {
+                document.getElementById('modal-hours').textContent = data.hours;
+                hoursRow.classList.remove('hidden');
+            } else {
+                hoursRow.classList.add('hidden');
+            }
+            
+            // ★★★ 費用/票價邏輯 ★★★
             const ticketRow = document.getElementById('modal-ticket-row');
             const ticketText = document.getElementById('modal-ticket');
-            if (data.ticket && data.ticket !== 'undefined') {
+            if (data.ticket && data.ticket !== 'undefined' && data.ticket !== "") {
                 ticketText.textContent = data.ticket;
                 ticketRow.classList.remove('hidden');
             } else {
                 ticketRow.classList.add('hidden');
             }
+
+            // ★★★ 機型邏輯 ★★★
             const aircraftRow = document.getElementById('modal-aircraft-row');
             const aircraftText = document.getElementById('modal-aircraft');
-            if (data.aircraft) {
+            if (data.aircraft && data.aircraft !== "") {
                 aircraftText.textContent = data.aircraft;
                 aircraftRow.classList.remove('hidden');
             } else {
                 aircraftRow.classList.add('hidden');
             }
-            document.getElementById('modal-map-btn').onclick = function() { 
-                if(data.query) window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.query)}`, '_blank'); 
-            };
+
+            // ★★★ 地圖按鈕邏輯：沒 query 就隱藏 ★★★
+            const mapBtnContainer = document.getElementById('modal-map-btn-container');
+            if (data.query && data.query !== "") {
+                document.getElementById('modal-map-btn').onclick = function() { 
+                    window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.query)}`, '_blank'); 
+                };
+                mapBtnContainer.classList.remove('hidden');
+            } else {
+                mapBtnContainer.classList.add('hidden');
+            }
+
             document.getElementById('location-modal').classList.remove('hidden');
         };
 
@@ -203,7 +257,28 @@
                     "id": 1, "date": "02/20 (五)", "title": "札幌啟程", "subtitle": "機場美食 ➔ 市區補貨 ➔ 浪漫夜景", "theme": "美食/夜景", "transport_mode": "Public", "location": "札幌, 日本", "sunrise": "06:28", "sunset": "17:12", "jmaUrl": "https://www.jma.go.jp/bosai/forecast/#area_type=class20s&area_code=0110000", "summary": "桃園機場 -> 新千歲機場 -> 飯店Check-in -> 札幌夜景", "breakfast": "溫暖的家 / 機上自理", "lunch": "一幻拉麵 (新千歲機場)", "dinner": "根室花丸迴轉壽司", "lodging": "Vessel Inn札幌中島公園飯店",
                     "details": [
                         { "time": "04:00", "name": "桃園機場第一航廈", "type": "airport", "desc": "辦理報到手續與行李托運。", "query": "桃園機場 Terminal 1", "jpName": "台湾桃園国際空港 第1ターミナル", "address": "桃園市大園區航站南路15號", "hours": "24小時開放" },
-                        { "time": "06:20", "name": "虎航 IT 234", "type": "flight", "desc": "搭乘 飛往北海道新千歲機場。", "query": "桃園國際機場第一航廈", "jpName": "台湾桃園国際空港 第1ターミナル", "address": "桃園市大園區航站南路15號 (第一航廈)", "hours": "航班時間依航空公司公告", "flight": "飛行時間 3小時35分", "aircraft": "Airbus A320 / A320neo (單走道)" },
+                        { 
+                            "time": "06:20", 
+                            "name": "虎航 IT 234", 
+                            "type": "flight", 
+                            "desc": "搭乘 飛往北海道新千歲機場。(點擊查看行李資訊)", 
+                            "highlights": {
+                                "虎航 IT 234": {
+                                    "desc": "托運1件 20 公斤\n\n每位旅客僅可攜帶一件手提行李〔尺寸小於54cm x 38cm x 23cm（上述尺寸包含輪子及手把等外部突出物）〕與一件個人隨身物品(如手提包、電腦包或免稅商品)，合計二件總重不得超過 10 公斤。",
+                                    "address": "",
+                                    "hours": "",
+                                    "query": "",
+                                    "jpName": "",
+                                    "aircraft": ""
+                                }
+                            },
+                            "query": "桃園國際機場第一航廈", 
+                            "jpName": "台湾桃園国際空港 第1ターミナル", 
+                            "address": "桃園市大園區航站南路15號 (第一航廈)", 
+                            "hours": "航班時間依航空公司公告", 
+                            "flight": "飛行時間 3小時35分", 
+                            "aircraft": "Airbus A320 / A320neo (單走道)" 
+                        },
                         { "time": "10:55", "name": "北海道新千歲機場", "type": "airport", "desc": "抵達，辦理入境手續。", "query": "新千歲機場", "jpName": "新千歳空港", "address": "日本、〒066-0012 北海道千歳市美々", "hours": "國內線 6:20-23:00" },
                         { "time": "12:00", "name": "一幻拉麵 新千歲機場店", "type": "food", "desc": "步行至國內線 3F **北海道拉麵道場**，享用超人氣濃郁鮮蝦湯頭拉麵。", "query": "一幻拉麵 新千歲機場店", "jpName": "えびそば一幻 新千歳空港店", "address": "新千歲機場國內線航廈 3F", "hours": "10:00-21:00", "ticket": "招牌：鮮蝦鹽味拉麵 / 需排隊" },
                         { "time": "13:10", "name": "交通：步行前往車站/巴士站", "type": "walking", "desc": "從國內線 3F 移動至 B1F 或 1F。", "query": "New Chitose Airport", "jpName": "空港内移動", "address": "國內線航廈", "hours": "約 10-15 分鐘" },
@@ -267,13 +342,140 @@
                     "details": [
                         { "time": "10:00", "name": "前往三井 OUTLET", "type": "shopping", "desc": "前往 **三井 OUTLET 購物中心**", "query": "札幌三井OUTLET" },
                         { "time": "13:30", "name": "抵達新千歲機場", "type": "airport", "desc": "抵達 **新千歲機場** 報到", "query": "新千歲機場" },
-                        { "time": "14:40", "name": "搭乘華航 CI 131", "type": "flight", "desc": "搭乘 **華航 CI 131** 返台", "query": "新千歲機場" }
+                        { 
+                            "time": "14:40", 
+                            "name": "搭乘華航 CI 131", 
+                            "type": "flight", 
+                            "desc": "搭乘 **華航 CI 131** 返台。(點擊查看行李資訊)", 
+                            "highlights": {
+                                "搭乘華航 CI 131": {
+                                    "desc": "托運：2件 各23公斤\n\n手提：經濟艙旅客每位可攜帶1件手提行李\n任何艙等手提行李體積均不可超過56X36X23公分(22X14X9英吋)，重量不可超過7公斤(15英磅)",
+                                    "address": "",
+                                    "hours": "",
+                                    "query": "",
+                                    "jpName": "",
+                                    "aircraft": ""
+                                }
+                            },
+                            "query": "新千歲機場", 
+                            "address": "新千歲機場", 
+                            "hours": "航班時間" 
+                        }
                     ]
                 }
             ]
         };
         
         let appItineraryData = DEFAULT_ITINERARY_DATA; 
+
+        // ★★★ 新增：動態行前準備清單資料 ★★★
+        const PREPARATION_LIST = {
+            "🪪 重要證件": [
+                "護照 (有效期限需6個月以上)",
+                "VJW (Visit Japan Web) QR Code 截圖",
+                "日幣現鈔 (建議多換小額，如千圓鈔)",
+                "信用卡 (若有事先買JR要帶同張卡)",
+                "交通 IC 卡 (Suica/PASMO/Kitaca) - 幾乎全北海道交通通用",
+                "旅遊平安險保單",
+                "台灣身分證影本 (備用)"
+            ],
+            "🔌 電子產品": [
+                "網卡/eSIM (確認開通日期)",
+                "行動電源 (低溫耗電快，建議帶2顆)",
+                "充電器/傳輸線",
+                "轉接頭 (日本為雙孔扁插，台灣通用)",
+                "相機/底片 (低溫需注意電池保暖)",
+                "取卡針"
+            ],
+            "👕 個人衣物 (含保暖)": [
+                "換洗衣物 (內衣褲/上衣/襪子)",
+                "睡衣 (雖然飯店有浴衣，但怕冷或不習慣可自備)",
+                "防風防水羽絨外套 (洋蔥式穿法)",
+                "發熱衣/褲 (Heatech 極暖/超極暖)",
+                "一般長褲/刷毛褲",
+                "防滑雪靴 (非常重要！要有深刻紋)",
+                "雪地防滑鞋套 (若無雪靴，建議準備方便穿脫款)",
+                "厚毛襪/羊毛襪 (建議多帶)",
+                "毛帽 (需能蓋住耳朵)",
+                "圍巾/脖圍",
+                "防潑水手套 (玩雪/滑手機方便)"
+            ],
+            "🧴 盥洗/保養/化妝": [
+                "化妝品 (底妝/彩妝)",
+                "保養品 (建議帶油類/霜類，日本極乾)",
+                "卸妝乳、油",
+                "洗面乳",
+                "牙刷/牙膏 (日本提倡環保，部分飯店不提供)",
+                "牙線棒/棉花棒",
+                "洗/潤髮乳 (飯店有，可自備慣用)",
+                "高保濕乳液/護手霜 (日本極乾)",
+                "護唇膏",
+                "隱形眼鏡/藥水"
+            ],
+            "💊 常備藥品": [
+                "感冒藥 (含退燒)",
+                "腸胃藥",
+                "止痛藥",
+                "暈車藥 (搭巴士/破冰船必備)",
+                "OK繃/外傷藥膏"
+            ],
+            "🎒 其他必備": [
+                "口罩 (機上/人多處防護)",
+                "髒衣袋/收納袋",
+                "空水壺 (日本水龍頭可生飲，但有瓶子方便)",
+                "暖暖包 (貼式/手握多準備)",
+                "墨鏡 (雪地反光強，防雪盲)",
+                "摺疊傘 (以防濕雪/暴風雪)",
+                "購物袋 (環保袋)",
+                "衣物壓縮袋 (厚重衣物好收納)",
+                "濕紙巾/酒精棉片"
+            ]
+        };
+
+        // ★★★ 修改：根據 PREPARATION_LIST 動態產生內容 ★★★
+        function renderPreparationContent() {
+            let listHtml = '';
+            let categoryIndex = 0;
+            
+            for (const [category, items] of Object.entries(PREPARATION_LIST)) {
+                listHtml += `<div class="mb-6">
+                    <h4 class="text-lg font-bold text-gray-700 mb-3 ml-1">${category}</h4>
+                    <div class="space-y-3">`;
+                
+                items.forEach((item, index) => {
+                    const id = `prep-${categoryIndex}-${index}`;
+                    listHtml += `
+                        <div class="checklist-item flex items-center p-3 rounded-lg border border-gray-100 bg-gray-50 hover:bg-sky-50 transition-colors" onclick="toggleCheck('${id}')">
+                            <input type="checkbox" id="${id}" class="checklist-checkbox mr-3 pointer-events-none">
+                            <span id="text-${id}" class="text-gray-700 font-medium text-sm">${item}</span>
+                        </div>`;
+                });
+
+                listHtml += `</div></div>`;
+                categoryIndex++;
+            }
+
+            return `
+                <div class="day-content p-4 sm:p-8 bg-white rounded-xl shadow-lg border border-gray-100 space-y-6">
+                    <h3 class="text-2xl font-bold accent-color mb-4 border-b pb-2">🧳 行前準備清單</h3>
+                    
+                    ${listHtml}
+                    
+                    <div class="mt-8 bg-blue-50 p-5 rounded-xl border border-blue-100">
+                        <h4 class="font-bold text-blue-800 mb-3 flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            冬季北海道 實用小貼士
+                        </h4>
+                        <ul class="list-disc list-inside text-sm text-blue-700 space-y-2 leading-relaxed">
+                            <li><strong>洋蔥式穿搭：</strong>室內暖氣非常強（約25度），建議穿脫方便的外套，裡面不要穿太厚的高領，以免室內中暑。</li>
+                            <li><strong>鞋子選擇：</strong>普通球鞋在雪地完全抓不住，務必準備雪靴或加裝防滑釘。</li>
+                            <li><strong>手機保暖：</strong>鋰電池在零下低溫耗電極快，不用時請放在貼身口袋保暖，並多備行動電源。</li>
+                            <li><strong>靜電：</strong>氣候乾燥容易有靜電，接觸金屬把手前可先摸牆壁放電。</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+        }
 
         function renderMainTabs() {
             const container = document.getElementById('main-tabs');
@@ -372,7 +574,8 @@
         }
 
         function renderHomeContent() {
-            const outboundFlight = { title: "虎航 IT 234", aircraft: 'Airbus A320 / A320neo (單走道)', query: "桃園國際機場第一航廈", jpName: "台湾桃園国際空港 第1ターミナル", address: "桃園市大園區航站南路15號 (第一航廈)", hours: "航班時間依航空公司公告" };
+            // Restore flight data
+             const outboundFlight = { title: "虎航 IT 234", aircraft: 'Airbus A320 / A320neo (單走道)', query: "桃園國際機場第一航廈", jpName: "台湾桃園国際空港 第1ターミナル", address: "桃園市大園區航站南路15號 (第一航廈)", hours: "航班時間依航空公司公告" };
             const inboundFlight = { title: "華航 CI 131", aircraft: 'Boeing 777-300ER (廣體客機)', query: "新千歲機場", jpName: "新千歳空港 国際線ターミナル", address: "國際線航廈 (抵達桃園第一航廈)", hours: "航班時間" };
 
             return `
@@ -380,7 +583,8 @@
                     <div>
                         <h3 class="text-2xl font-bold accent-color mb-3 border-b pb-2">✈️ 航班資訊</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm font-medium p-2">
-                             <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 shadow-sm cursor-pointer hover:bg-blue-100 transition" onclick="openModal('${encodeURIComponent(JSON.stringify(outboundFlight)).replace(/'/g, "%27")}')">
+                             <!-- 去程 - 移除 onclick 和 hover 效果 -->
+                             <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 shadow-sm">
                                 <div class="font-bold text-lg text-[#2E4057] mb-3 flex items-center"><span class="mr-2">🛫</span> 去程：台北 ➔ 札幌</div>
                                 <div class="text-gray-700 space-y-2">
                                     <p class="flex justify-between border-b border-blue-100 pb-1"><span class="font-semibold text-gray-500">航班</span><span class="font-bold text-gray-800">虎航 IT 234</span></p>
@@ -389,7 +593,8 @@
                                     <p class="flex justify-between items-start"><span class="font-semibold text-gray-500 whitespace-nowrap mr-2">機型</span><span class="text-right text-slate-600">Airbus A320<br><span class="text-xs text-gray-400">(單走道)</span></span></p>
                                 </div>
                             </div>
-                            <div class="bg-orange-50 p-4 rounded-lg border border-orange-100 shadow-sm cursor-pointer hover:bg-orange-100 transition" onclick="openModal('${encodeURIComponent(JSON.stringify(inboundFlight)).replace(/'/g, "%27")}')">
+                            <!-- 回程 - 移除 onclick 和 hover 效果 -->
+                            <div class="bg-orange-50 p-4 rounded-lg border border-orange-100 shadow-sm">
                                 <div class="font-bold text-lg text-[#2E4057] mb-3 flex items-center"><span class="mr-2">🛬</span> 回程：札幌 ➔ 台北</div>
                                 <div class="text-gray-700 space-y-2">
                                     <p class="flex justify-between border-b border-orange-100 pb-1"><span class="font-semibold text-gray-500">航班</span><span class="font-bold text-gray-800">華航 CI 131</span></p>
