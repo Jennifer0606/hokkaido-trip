@@ -10,211 +10,78 @@
         body { font-family: 'Noto Sans TC', sans-serif; background-color: #f1f5f9; }
         .header-bg { background-image: linear-gradient(135deg, #2E4057 0%, #748DA6 100%); }
         .accent-color { color: #0ea5e9; }
-        
-        .tab-item {
-            padding: 8px 12px;
-            cursor: pointer;
-            border-bottom: 3px solid transparent;
-            font-weight: 500;
-            transition: all 0.2s;
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            white-space: nowrap;
-            border-radius: 0;
-            font-size: 0.95rem;
-        }
-        
+        .tab-item { padding: 8px 12px; cursor: pointer; border-bottom: 3px solid transparent; font-weight: 500; transition: all 0.2s; flex-shrink: 0; display: flex; align-items: center; white-space: nowrap; border-radius: 0; font-size: 0.95rem; }
         .main-tab:hover { color: #0ea5e9; border-bottom-color: #0ea5e9; }
-        .main-tab.active { border-bottom-color: #0ea5e9; color: #0ea5e9; font-weight: 700; background-color: #fff; }
-        
+        .main-tab.active { border-bottom-color: #0ea5e9; color: #0ea5e9; font-weight: 700; background-color: transparent; }
         .day-tab { color: #64748b; background-color: transparent; }
         .day-tab:hover { color: #0284c7; background-color: #f8fafc; }
         .day-tab.active { border-bottom-color: #0284c7; color: #0284c7; font-weight: 700; background-color: #f0f9ff; }
-
         .content-area { animation: fadeIn 0.4s ease-in-out; min-height: 500px; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
         #location-modal { transition: opacity 0.2s ease-in-out; }
         #location-modal.hidden { opacity: 0; pointer-events: none; }
         #location-modal:not(.hidden) { opacity: 1; pointer-events: auto; }
-        
-        /* 時間軸容器 */
-        .timeline-col {
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 3rem;       
-            flex-shrink: 0;
-        }
-        
-        /* 實線 (一般行程) */
-        .timeline-line-solid {
-            position: absolute;
-            top: 0; 
-            bottom: -3rem; 
-            left: 50%; 
-            width: 2px;
-            transform: translateX(-50%);
-            background-color: #cbd5e1; /* slate-300 */
-            z-index: 0;
-        }
-
-        /* 虛線 (交通行程) */
-        .timeline-line-dashed {
-            position: absolute;
-            top: 0; 
-            bottom: -3rem; 
-            left: 50%; 
-            width: 0;
-            transform: translateX(-50%);
-            border-left: 2px dashed #94a3b8; /* slate-400 */
-            z-index: 0;
-        }
-
-        /* 首尾修正 */
+        .timeline-col { position: relative; display: flex; flex-direction: column; align-items: center; width: 3rem; flex-shrink: 0; }
+        .timeline-line-solid { position: absolute; top: 0; bottom: -3rem; left: 50%; width: 2px; transform: translateX(-50%); background-color: #cbd5e1; z-index: 0; }
+        .timeline-line-dashed { position: absolute; top: 0; bottom: -3rem; left: 50%; width: 0; transform: translateX(-50%); border-left: 2px dashed #94a3b8; z-index: 0; }
         .first-item .timeline-line-solid, .first-item .timeline-line-dashed { top: 1.5rem; }
         .last-item .timeline-line-solid, .last-item .timeline-line-dashed { bottom: auto; height: 1.5rem; }
-
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         input[type=number] { -moz-appearance: textfield; }
-        
         .checklist-item { cursor: pointer; transition: all 0.2s; }
         .checklist-item:hover { background-color: #f0f9ff; }
         .checklist-checkbox { accent-color: #00A8A0; width: 1.25rem; height: 1.25rem; }
         .checked-text { text-decoration: line-through; color: #9ca3af; opacity: 0.7; }
-        
         .highlight-text-clickable { font-weight: 700; color: #0284c7; background-color: #e0f2fe; padding: 0 2px; border-radius: 2px; cursor: pointer; text-decoration: underline; }
+        
+        /* 隱藏捲軸但保持功能 */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="min-h-screen">
-
     <div id="app" class="max-w-4xl mx-auto bg-gray-50 shadow-2xl relative min-h-screen">
-        
         <!-- Modal -->
         <div id="location-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm hidden p-4">
             <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 relative transform transition-all scale-100 border border-gray-100">
-                <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 bg-gray-100 rounded-full p-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
-                <div class="mb-5 border-b border-gray-100 pb-4 pr-8">
-                    <h3 id="modal-title" class="text-2xl font-bold text-gray-800 leading-tight"></h3>
-                    <p id="modal-jp-name" class="text-sm text-sky-600 font-medium font-['Noto_Sans_JP'] mt-1">Japanese Name</p>
-                </div>
+                <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 bg-gray-100 rounded-full p-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+                <div class="mb-5 border-b border-gray-100 pb-4 pr-8"><h3 id="modal-title" class="text-2xl font-bold text-gray-800 leading-tight"></h3><p id="modal-jp-name" class="text-sm text-sky-600 font-medium font-['Noto_Sans_JP'] mt-1">Japanese Name</p></div>
                 <div class="space-y-4">
                     <div class="flex items-start"><span class="text-xl mr-3 mt-0.5 text-gray-400">📍</span><div><p class="text-xs font-bold text-gray-400 uppercase tracking-wide">地址</p><p id="modal-address" class="text-gray-700 text-sm leading-relaxed font-medium">地址載入中...</p></div></div>
                     <div class="flex items-start"><span class="text-xl mr-3 mt-0.5 text-gray-400">🕒</span><div><p class="text-xs font-bold text-gray-400 uppercase tracking-wide">營業時間</p><p id="modal-hours" class="text-gray-700 text-sm leading-relaxed font-medium">營業時間載入中...</p></div></div>
                     <div id="modal-ticket-row" class="flex items-start hidden"><span class="text-xl mr-3 mt-0.5 text-gray-400">🎫</span><div><p class="text-xs font-bold text-gray-400 uppercase tracking-wide">費用 / 票價</p><p id="modal-ticket" class="text-orange-600 text-sm leading-relaxed font-bold">無資訊</p></div></div>
                     <div id="modal-aircraft-row" class="flex items-start hidden"><span class="text-xl mr-3 mt-0.5 text-gray-400">✈️</span><div><p class="text-xs font-bold text-gray-400 uppercase tracking-wide">機型</p><p id="modal-aircraft" class="text-slate-600 text-sm leading-relaxed font-bold">載入中...</p></div></div>
                 </div>
-                <div class="mt-6 pt-4 border-t border-gray-100">
-                    <button id="modal-map-btn" class="w-full bg-sky-600 text-white py-3 rounded-xl font-bold hover:bg-sky-700 transition flex items-center justify-center shadow-lg shadow-sky-200">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /></svg>
-                        開啟 Google Maps
-                    </button>
-                </div>
+                <div class="mt-6 pt-4 border-t border-gray-100"><button id="modal-map-btn" class="w-full bg-sky-600 text-white py-3 rounded-xl font-bold hover:bg-sky-700 transition flex items-center justify-center shadow-lg shadow-sky-200"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /></svg>開啟 Google Maps</button></div>
             </div>
         </div>
-
         <!-- Banner -->
         <header class="header-bg p-6 sm:p-10 text-white text-center rounded-b-xl relative shadow-md z-0">
             <h1 id="header-title" class="text-3xl sm:text-4xl font-extrabold opacity-95 mb-2">旅程載入中...</h1>
             <p id="header-subtitle" class="text-sm font-light tracking-widest">載入中...</p>
         </header>
-
-        <!-- 導覽列 Card -->
-        <div class="mx-4 -mt-6 relative z-10">
-            <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-                 <div id="main-tabs" class="flex overflow-x-auto whitespace-nowrap border-b border-gray-100"></div>
-                 <div id="day-tabs" class="hidden overflow-x-auto whitespace-nowrap bg-slate-50/50"></div>
+        
+        <!-- Nav (Sticky Container) -->
+        <!-- 修改重點：加上 sticky top-0 z-40，並修改背景樣式為半透明毛玻璃 -->
+        <div class="sticky top-0 z-40 mx-4 -mt-6 transition-all duration-300">
+            <div class="bg-white/95 backdrop-blur-md rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                 <div id="main-tabs" class="flex overflow-x-auto whitespace-nowrap border-b border-gray-100 no-scrollbar"></div>
+                 <div id="day-tabs" class="hidden overflow-x-auto whitespace-nowrap bg-slate-50/50 no-scrollbar"></div>
             </div>
         </div>
 
-        <div id="dynamic-content" class="content-area px-4 pb-12 pt-6">
-            <div class="text-center text-gray-500 py-16">載入中...</div>
-        </div>
-
-        <footer class="text-center text-gray-400 text-xs py-6">
-            <p>Designed for your trip.</p>
-        </footer>
+        <!-- Content -->
+        <div id="dynamic-content" class="content-area px-4 pb-12 pt-6"><div class="text-center text-gray-500 py-16">載入中...</div></div>
+        <footer class="text-center text-gray-400 text-xs py-6"><p>Designed for your trip.</p></footer>
     </div>
 
-    <!-- Logic -->
     <script>
         const FALLBACK_RATE = 0.20; 
         let currentExchangeRate = FALLBACK_RATE; 
         let activeMainTab = 'home'; 
         let activeDayId = 'day-1';
 
-        // 樣式輔助函式
-        function getStyleByType(type) {
-            const styles = {
-                "flight": { // 飛行 (虎航, 華航) -> 交通樣式, 飛機圖示, 灰色
-                    isTraffic: true, 
-                    iconName: "flight",
-                    bgColor: "bg-white border-2 border-slate-300", 
-                    iconColor: "text-slate-500" 
-                },
-                "transport": { // 一般交通 -> 交通樣式, 車子圖示, 灰色
-                    isTraffic: true,
-                    iconName: "transport",
-                    bgColor: "bg-white border-2 border-slate-300",
-                    iconColor: "text-slate-500"
-                },
-                "airport": { // 機場地點 -> 卡片樣式, 塔台圖示, 藍色
-                    isTraffic: false,
-                    iconName: "airport",
-                    bgColor: "bg-sky-500",
-                    iconColor: "text-white"
-                },
-                "food": {
-                    isTraffic: false,
-                    iconName: "food",
-                    bgColor: "bg-orange-400",
-                    iconColor: "text-white"
-                },
-                "shopping": {
-                    isTraffic: false,
-                    iconName: "shopping",
-                    bgColor: "bg-pink-400",
-                    iconColor: "text-white"
-                },
-                "hotel": {
-                    isTraffic: false,
-                    iconName: "hotel",
-                    bgColor: "bg-indigo-400",
-                    iconColor: "text-white"
-                },
-                "sight": {
-                    isTraffic: false,
-                    iconName: "sight",
-                    bgColor: "bg-emerald-400",
-                    iconColor: "text-white"
-                },
-                "culture": {
-                    isTraffic: false,
-                    iconName: "sight",
-                    bgColor: "bg-emerald-400",
-                    iconColor: "text-white"
-                }
-            };
-            return styles[type] || styles["sight"];
-        }
-
-        // SVG 圖示定義
-        function getIconSvg(name, colorClass) {
-            const icons = {
-                "transport": `<svg class="w-3.5 h-3.5 ${colorClass}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>`, 
-                "airport": `<svg class="w-4 h-4 ${colorClass}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.2 12.27 20 6H4l1.8 6.27a1 1 0 0 0 .95.73h10.5a1 1 0 0 0 .96-.73Z"/><path d="M8 13v9"/><path d="M16 22v-9"/><path d="m9 6 1 7"/><path d="m15 6-1 7"/><path d="M12 6V2"/><path d="M13 2h-2"/></svg>`, 
-                "flight": `<svg class="w-3.5 h-3.5 ${colorClass}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>`, 
-                "food": `<svg class="w-4 h-4 ${colorClass}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" /><path d="M7 2v20" /><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" /></svg>`,
-                "hotel": `<svg class="w-4 h-4 ${colorClass}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M2 4v16" /><path d="M2 8h18a2 2 0 0 1 2 2v10" /><path d="M2 17h20" /><path d="M6 8v9" /></svg>`,
-                "shopping": `<svg class="w-4 h-4 ${colorClass}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" /><path d="M3 6h18" /><path d="M16 10a4 4 0 0 1-8 0" /></svg>`,
-                "sight": `<svg class="w-4 h-4 ${colorClass}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" /><circle cx="12" cy="13" r="3" /></svg>`
-            };
-            return icons[name] || icons["sight"];
-        }
+        // --- Utility Functions ---
 
         function toggleCheck(id) {
             const checkbox = document.getElementById(id);
@@ -229,6 +96,67 @@
             }
         }
 
+        function getStyleByType(type) {
+            const styles = {
+                "flight": { isTraffic: true, iconName: "flight", bgColor: "bg-white border-2 border-slate-300", iconColor: "text-slate-500" },
+                "transport": { isTraffic: true, iconName: "transport", bgColor: "bg-white border-2 border-slate-300", iconColor: "text-slate-500" },
+                "walking": { isTraffic: true, iconName: "walking", bgColor: "bg-white border-2 border-slate-300", iconColor: "text-slate-500" },
+                "subway": { isTraffic: true, iconName: "subway", bgColor: "bg-white border-2 border-slate-300", iconColor: "text-slate-500" },
+                "airport": { isTraffic: false, iconName: "airport", bgColor: "bg-sky-500", iconColor: "text-white" },
+                "food": { isTraffic: false, iconName: "food", bgColor: "bg-orange-400", iconColor: "text-white" },
+                "shopping": { isTraffic: false, iconName: "shopping", bgColor: "bg-pink-400", iconColor: "text-white" },
+                "hotel": { isTraffic: false, iconName: "hotel", bgColor: "bg-indigo-400", iconColor: "text-white" },
+                "sight": { isTraffic: false, iconName: "sight", bgColor: "bg-emerald-400", iconColor: "text-white" },
+                "culture": { isTraffic: false, iconName: "sight", bgColor: "bg-emerald-400", iconColor: "text-white" }
+            };
+            return styles[type] || styles["sight"];
+        }
+
+        function getIconSvg(name, colorClass) {
+            const icons = {
+                "transport": `<svg class="w-3.5 h-3.5 ${colorClass}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>`, 
+                "airport": `<svg class="w-4 h-4 ${colorClass}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.2 12.27 20 6H4l1.8 6.27a1 1 0 0 0 .95.73h10.5a1 1 0 0 0 .96-.73Z"/><path d="M8 13v9"/><path d="M16 22v-9"/><path d="m9 6 1 7"/><path d="m15 6-1 7"/><path d="M12 6V2"/><path d="M13 2h-2"/></svg>`, 
+                "flight": `<svg class="w-3.5 h-3.5 ${colorClass}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>`, 
+                "walking": `<svg class="w-3.5 h-3.5 ${colorClass}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 11 3.8 11 8c0 1.25-1 2-1 2s0 2.15 2 3.65c1.4 1.05 2.2 1.93 2.2 3.35 0 2.82-2.18 5-4.85 5-2.67 0-5.35-3.37-5.35-6z"/><path d="M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 13 7.8 13 12c0 1.25 1 2 1 2s0 2.15-2 3.65c-1.4 1.05-2.2 1.93-2.2 3.35 0 2.82 2.18 5 4.85 5 2.67 0 5.35-3.37 5.35-6z"/></svg>`,
+                "subway": `<svg class="w-3.5 h-3.5 ${colorClass}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 22V12a10 10 0 1 1 20 0v10"/><path d="M15 6.8v1.4a3 2.8 0 1 1-6 0V6.8"/><path d="M10 15h.01"/><path d="M14 15h.01"/><path d="M10 19a4 4 0 0 1-4-4v-3a6 6 0 1 1 12 0v3a4 4 0 0 1-4 4Z"/><path d="m9 19-2 3"/><path d="m15 19 2 3"/></svg>`,
+                "food": `<svg class="w-4 h-4 ${colorClass}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" /><path d="M7 2v20" /><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" /></svg>`,
+                "hotel": `<svg class="w-4 h-4 ${colorClass}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M2 4v16" /><path d="M2 8h18a2 2 0 0 1 2 2v10" /><path d="M2 17h20" /><path d="M6 8v9" /></svg>`,
+                "shopping": `<svg class="w-4 h-4 ${colorClass}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" /><path d="M3 6h18" /><path d="M16 10a4 4 0 0 1-8 0" /></svg>`,
+                "sight": `<svg class="w-4 h-4 ${colorClass}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" /><circle cx="12" cy="13" r="3" /></svg>`
+            };
+            return icons[name] || icons["sight"];
+        }
+
+        const highlightText = (text, item, isClickable = false) => {
+            if (!text) return "";
+            return text.replace(/\*\*(.*?)\*\*/g, (match, p1) => {
+                if (isClickable && item) {
+                    let data = item;
+                    if (item.highlights && item.highlights[p1]) {
+                        data = item.highlights[p1];
+                        if (!data.title) data.title = p1; 
+                    }
+                    const safeTitle = (data.title || p1 || item.name).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    const safeAddress = (data.address || item.address || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    const safeHours = (data.hours || item.hours || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    const safeQuery = (data.query || item.query || p1).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    const safeJpTitle = (data.jpName || item.jpName || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    const safeTicket = (data.ticket || item.ticket || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    const safeAircraft = (data.aircraft || item.aircraft || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    
+                    const clickData = { title: safeTitle, address: safeAddress, hours: safeHours, query: safeQuery, jpName: safeJpTitle, ticket: safeTicket, aircraft: safeAircraft };
+                    const dataStr = encodeURIComponent(JSON.stringify(clickData)).replace(/'/g, "%27");
+                    
+                    if (item.highlights && item.highlights[p1]) {
+                        return `<span class="highlight-text-clickable" onclick="openModal('${dataStr}')">${p1}</span>`;
+                    }
+                    return `<span class="font-bold text-slate-600">${p1}</span>`;
+                } else {
+                    return `<span class="font-bold text-slate-600">${p1}</span>`;
+                }
+            });
+        };
+
         window.openModal = function(arg1, address, hours, ticket, query, jpTitle, aircraft) {
             let data = {};
             if (typeof arg1 === 'string' && (arg1.startsWith('%7B') || arg1.startsWith('{'))) {
@@ -240,6 +168,7 @@
             document.getElementById('modal-jp-name').textContent = data.jpName || ""; 
             document.getElementById('modal-address').textContent = data.address || "無資訊";
             document.getElementById('modal-hours').textContent = data.hours || "依現場為準";
+            
             const ticketRow = document.getElementById('modal-ticket-row');
             const ticketText = document.getElementById('modal-ticket');
             if (data.ticket && data.ticket !== 'undefined') {
@@ -267,358 +196,58 @@
             if (query) window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`, '_blank'); 
         }
 
-        const highlightText = (text, item, isClickable = false) => {
-            if (!text) return "";
-            return text.replace(/\*\*(.*?)\*\*/g, (match, p1) => {
-                if (isClickable && item) {
-                    let data = item;
-                    if (item.highlights && item.highlights[p1]) {
-                        data = item.highlights[p1];
-                        if (!data.title) data.title = p1; 
-                    }
-                    const safeTitle = (data.title || p1 || item.name).replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                    const safeAddress = (data.address || item.address || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                    const safeHours = (data.hours || item.hours || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                    const safeQuery = (data.query || item.query || p1).replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                    const safeJpTitle = (data.jpName || item.jpName || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                    const safeTicket = (data.ticket || item.ticket || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                    const safeAircraft = (data.aircraft || item.aircraft || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                    
-                    const clickData = {
-                        title: safeTitle,
-                        address: safeAddress,
-                        hours: safeHours,
-                        query: safeQuery,
-                        jpName: safeJpTitle,
-                        ticket: safeTicket,
-                        aircraft: safeAircraft
-                    };
-                    const dataStr = encodeURIComponent(JSON.stringify(clickData)).replace(/'/g, "%27");
-                    return `<span class="highlight-text-clickable" onclick="openModal('${dataStr}')">${p1}</span>`;
-                } else {
-                    return `<span class="font-bold text-gray-700">${p1}</span>`;
-                }
-            });
-        };
-
         const DEFAULT_ITINERARY_DATA = {
-            "meta": {
-                "title": "2026 冬季限定 | 北海道六天五夜之旅",
-                "subtitle": "破冰船．雪上活動．小樽散策",
-                "dates": "2026-02-20 ~ 2026-02-25",
-                "travelers": 2,
-                "budget_per_person": 45000,
-                "currency": "JPY"
-            },
+            "meta": { "title": "2026 冬季限定 | 北海道六天五夜之旅", "subtitle": "破冰船．雪上活動．小樽散策", "dates": "2026-02-20 ~ 2026-02-25", "travelers": 2, "budget_per_person": 45000, "currency": "JPY" },
             "days": [
                 {
-                    "id": 1,
-                    "date": "02/20 (五)",
-                    "title": "札幌啟程",
-                    "subtitle": "機場美食 ➔ 市區補貨 ➔ 浪漫夜景",
-                    "theme": "美食/夜景",
-                    "transport_mode": "Public",
-                    "location": "札幌, 日本",
-                    "sunrise": "06:28",
-                    "sunset": "17:12",
-                    "jmaUrl": "https://www.jma.go.jp/bosai/forecast/#area_type=class20s&area_code=0110000",
-                    "summary": "桃園機場 -> 新千歲機場 -> 飯店Check-in -> 札幌夜景",
-                    "breakfast": "溫暖的家 / 機上自理",
-                    "lunch": "一幻拉麵 (新千歲機場)",
-                    "dinner": "根室花丸迴轉壽司",
-                    "lodging": "Vessel Inn札幌中島公園飯店",
+                    "id": 1, "date": "02/20 (五)", "title": "札幌啟程", "subtitle": "機場美食 ➔ 市區補貨 ➔ 浪漫夜景", "theme": "美食/夜景", "transport_mode": "Public", "location": "札幌, 日本", "sunrise": "06:28", "sunset": "17:12", "jmaUrl": "https://www.jma.go.jp/bosai/forecast/#area_type=class20s&area_code=0110000", "summary": "桃園機場 -> 新千歲機場 -> 飯店Check-in -> 札幌夜景", "breakfast": "溫暖的家 / 機上自理", "lunch": "一幻拉麵 (新千歲機場)", "dinner": "根室花丸迴轉壽司", "lodging": "Vessel Inn札幌中島公園飯店",
                     "details": [
-                        {
-                            "time": "04:00",
-                            "name": "桃園機場第一航廈",
-                            "type": "airport", 
-                            "desc": "辦理報到手續與行李托運。",
-                            "query": "桃園機場 Terminal 1",
-                            "jpName": "台湾桃園国際空港 第1ターミナル",
-                            "address": "桃園市大園區航站南路15號",
-                            "hours": "24小時開放"
-                        },
-                        {
-                            "time": "06:20",
-                            "name": "虎航 IT 234",
-                            "type": "flight",
-                            "desc": "搭乘 飛往北海道新千歲機場。",
-                            "query": "桃園國際機場第一航廈",
-                            "jpName": "台湾桃園国際空港 第1ターミナル",
-                            "address": "桃園市大園區航站南路15號 (第一航廈)",
-                            "hours": "航班時間依航空公司公告",
-                            "flight": "飛行時間 3小時35分",
-                            "aircraft": "Airbus A320 / A320neo (單走道)"
-                        },
-                        {
-                            "time": "10:55",
-                            "name": "北海道新千歲機場",
-                            "type": "airport",
-                            "desc": "抵達，辦理入境手續。",
-                            "query": "新千歲機場",
-                            "jpName": "新千歳空港",
-                            "address": "日本、〒066-0012 北海道千歳市美々",
-                            "hours": "國內線 6:20-23:00"
-                        },
-                        {
-                            "time": "12:00",
-                            "name": "一幻拉麵 新千歲機場店",
-                            "type": "food",
-                            "desc": "步行至國內線 3F **北海道拉麵道場**，享用超人氣濃郁鮮蝦湯頭拉麵。",
-                            "query": "一幻拉麵 新千歲機場店",
-                            "jpName": "えびそば一幻 新千歳空港店",
-                            "address": "新千歲機場國內線航廈 3F",
-                            "hours": "10:00-21:00",
-                            "ticket": "招牌：鮮蝦鹽味拉麵 / 需排隊" 
-                        },
-                        {
-                            "time": "13:10",
-                            "name": "交通：步行前往車站/巴士站",
-                            "type": "transport",
-                            "desc": "從國內線 3F 移動至 B1F 或 1F。",
-                            "query": "New Chitose Airport",
-                            "jpName": "空港内移動",
-                            "address": "國內線航廈",
-                            "hours": "約 10-15 分鐘"
-                        },
-                        {
-                            "time": "13:30",
-                            "name": "交通移動：新千歲機場 ➔ 飯店",
-                            "type": "transport",
-                            "desc": "(二選一)\n1. **JR 快速 Airport**：搭至**札幌站**，轉乘 **地下鐵南北線** 至 **中島公園站** (2號出口)。\n2. **機場巴士**：直達中島公園 (免搬行李，但在路面可能受雪況影響)。",
-                            "query": "JR 新千歲機場站",
-                            "jpName": "新千歳空港駅 / 空港連絡バス",
-                            "address": "JR: B1F | 巴士: 1F 乘車處",
-                            "hours": "JR: 每12分一班 | 巴士: 約每小時一班",
-                            "ticket": "JR: ¥1,150 + 地鐵 ¥210 | 巴士: ¥1,300",
-                            "highlights": {
-                                "JR 快速 Airport": {
-                                    "query": "JR 新千歲機場站",
-                                    "jpName": "JR 新千歳空港駅",
-                                    "address": "新千歲機場 B1F",
-                                    "hours": "每 12-15 分鐘一班 (最快 37 分)",
-                                    "ticket": "¥1,150 (需轉乘地鐵)"
-                                },
-                                "札幌站": {
-                                    "query": "Sapporo Station",
-                                    "jpName": "JR 札幌駅",
-                                    "address": "北海道札幌市北区北6条西4丁目",
-                                    "hours": "05:00-24:00"
-                                },
-                                "地下鐵南北線": {
-                                    "query": "Sapporo Subway Namboku Line",
-                                    "jpName": "札幌市営地下鉄南北線",
-                                    "address": "札幌站 ➔ 中島公園站",
-                                    "hours": "約 6 分鐘一班",
-                                    "ticket": "¥210"
-                                },
-                                "中島公園站": {
-                                    "query": "Nakajima Koen Station",
-                                    "jpName": "中島公園駅 (N09)",
-                                    "address": "札幌市中央区南9条西4丁目",
-                                    "hours": "06:00-24:00",
-                                    "ticket": "2號出口離飯店最近"
-                                },
-                                "機場巴士": {
-                                    "query": "New Chitose Airport Bus Stop",
-                                    "jpName": "空港連絡バス (中島公園行)",
-                                    "address": "國內線 14/22 號乘車處 (直達中島公園)",
-                                    "hours": "約 12:00 / 14:00 / 16:00 / 19:00 (班次較少)",
-                                    "ticket": "¥1,300 / 車程約 80 分鐘 (免轉車)"
-                                }
-                            }
-                        },
-                        {
-                            "time": "15:00",
-                            "name": "Lawson 札幌中島公園店",
-                            "type": "shopping",
-                            "desc": "飯店隔壁，購買 **防滑鞋套** 裝在鞋子上，避免雪地滑倒。",
-                            "query": "Lawson Sapporo Nakajima Park",
-                            "jpName": "ローソン 札幌中島公園店",
-                            "address": "就在飯店轉角 (走路約 1 分鐘)",
-                            "hours": "24小時",
-                            "ticket": "¥1,500 / 必買防滑鞋套"
-                        },
-                        {
-                            "time": "15:10",
-                            "name": "Vessel Inn 札幌中島公園",
-                            "type": "hotel",
-                            "desc": "前往飯店辦理 Check-in。",
-                            "query": "Vessel Inn 札幌中島公園",
-                            "jpName": "ベッセルイン札幌中島公園",
-                            "address": "北海道札幌市中央区南九条西4-1-2",
-                            "hours": "Check-in: 14:00"
-                        },
-                        {
-                            "time": "15:25",
-                            "name": "交通：搭乘地下鐵",
-                            "type": "transport",
-                            "desc": "中島公園 ➔ 大通站",
-                            "query": "Nakajima Koen Station",
-                            "jpName": "地下鉄南北線",
-                            "address": "中島公園站(N09) 搭往麻生方向 ➔ 大通站(N07)下車",
-                            "hours": "車程約 3-4 分鐘",
-                            "ticket": "¥210 (可刷 IC 卡)"
-                        },
-                        {
-                            "time": "15:30",
-                            "name": "UNIQLO 札幌 Parco 店",
-                            "type": "shopping",
-                            "desc": "前往 Parco 8F 採購保暖衣物。",
-                            "query": "UNIQLO Sapporo Parco",
-                            "jpName": "ユニクロ 札幌パルコ店",
-                            "address": "札幌市中央區南1條西3-3 (Parco 8F)",
-                            "hours": "10:00-20:00"
-                        },
-                        {
-                            "time": "17:00",
-                            "name": "札幌大通公園",
-                            "type": "sight",
-                            "desc": "換上新買的保暖衣物，前往旁邊的公園散步，欣賞雪景。",
-                            "query": "札幌大通公園",
-                            "jpName": "大通公園",
-                            "address": "札幌市中央区大通西1～12丁目",
-                            "hours": "全天開放"
-                        },
-                        {
-                            "time": "17:30",
-                            "name": "札幌電視塔",
-                            "type": "sight",
-                            "desc": "登上展望台，俯瞰札幌市區夜景。",
-                            "query": "札幌電視塔",
-                            "jpName": "さっぽろテレビ塔",
-                            "address": "札幌市中央区大通西1丁目",
-                            "hours": "9:00 ～ 22:00 （展望最終入場 21:50）",
-                            "ticket": "¥1,000"
-                        },
-                        {
-                            "time": "18:30",
-                            "name": "札幌地下街",
-                            "type": "shopping",
-                            "desc": "自由逛街時間：前往 Aurora Town/Pole Town 或 Parco 百貨。",
-                            "query": "札幌地下街",
-                            "jpName": "さっぽろ地下街",
-                            "address": "札幌市中央区大通",
-                            "hours": "10:00-20:00"
-                        },
-                        {
-                            "time": "19:30",
-                            "name": "#C-pla 狸小路4丁目店",
-                            "type": "shopping",
-                            "desc": "前往盡情扭蛋！(5丁目店已歇業，改至4丁目，狸小路很多扭蛋店)",
-                            "query": "#C-pla 狸小路4丁目店",
-                            "jpName": "#C-pla 狸小路4丁目店",
-                            "address": "北海道札幌市中央区南2条西4丁目10 清水ビル1F・2F",
-                            "hours": "10:00-23:00"
-                        },
-                        {
-                            "time": "20:15",
-                            "name": "交通：前往札幌車站",
-                            "type": "transport",
-                            "desc": "從狸小路步行經地下街或搭地鐵前往 JR Tower Stellar Place。",
-                            "query": "Sapporo Station",
-                            "jpName": "札幌駅",
-                            "address": "前往 JR Tower Stellar Place",
-                            "hours": "約 15-20 分鐘"
-                        },
-                        {
-                            "time": "20:30",
-                            "name": "迴轉壽司 根室花丸",
-                            "type": "food",
-                            "desc": "享用晚餐。\n1. **首選：JR Tower Stellar Place店** (6F，風景好但排隊久)\n2. **備案：miredo店** (大同生命大樓 B1，相對好排)",
-                            "query": "Nemuro Hanamaru JR Tower Stellar Place",
-                            "jpName": "回転寿司 根室花まる",
-                            "address": "札幌車站周邊",
-                            "hours": "11:00-22:00",
-                            "ticket": "人氣名店 / 建議先抽號碼牌",
-                            "highlights": {
-                                "首選：JR Tower Stellar Place店": {
-                                    "query": "Nemuro Hanamaru JR Tower Stellar Place",
-                                    "jpName": "回転寿司 根室花まる JRタワーステラプレイス店",
-                                    "address": "札幌市中央区北5条西2丁目 6F",
-                                    "hours": "11:00-22:00"
-                                },
-                                "備案：miredo店": {
-                                    "title": "根室花丸 miredo店",
-                                    "query": "Nemuro Hanamaru miredo",
-                                    "jpName": "回転寿司 根室花まる 大同生命札幌ビルmiredo店",
-                                    "address": "札幌市中央区北3条西3丁目1 B1F",
-                                    "hours": "11:00-22:00",
-                                    "ticket": "從札幌站步行約 5 分鐘"
-                                }
-                            }
-                        },
-                        {
-                            "time": "22:00",
-                            "name": "交通：搭乘地下鐵回飯店",
-                            "type": "transport",
-                            "desc": "札幌站 ➔ 中島公園站",
-                            "query": "Sapporo Station Subway",
-                            "jpName": "地下鉄南北線",
-                            "address": "札幌站(N06) ➔ 中島公園站(N09)",
-                            "hours": "車程約 5 分鐘",
-                            "ticket": "¥210 (可刷 IC 卡)"
-                        },
-                        {
-                            "time": "22:15",
-                            "name": "飯店休息",
-                            "type": "hotel",
-                            "desc": "抵達飯店，途中經過 **Lawson** 補給隔天早餐。",
-                            "query": "Vessel Inn 札幌中島公園",
-                            "jpName": "ベッセルイン札幌中島公園",
-                            "address": "南9西4",
-                            "hours": "24小時"
-                        }
+                        { "time": "04:00", "name": "桃園機場第一航廈", "type": "airport", "desc": "辦理報到手續與行李托運。", "query": "桃園機場 Terminal 1", "jpName": "台湾桃園国際空港 第1ターミナル", "address": "桃園市大園區航站南路15號", "hours": "24小時開放" },
+                        { "time": "06:20", "name": "虎航 IT 234", "type": "flight", "desc": "搭乘 飛往北海道新千歲機場。", "query": "桃園國際機場第一航廈", "jpName": "台湾桃園国際空港 第1ターミナル", "address": "桃園市大園區航站南路15號 (第一航廈)", "hours": "航班時間依航空公司公告", "flight": "飛行時間 3小時35分", "aircraft": "Airbus A320 / A320neo (單走道)" },
+                        { "time": "10:55", "name": "北海道新千歲機場", "type": "airport", "desc": "抵達，辦理入境手續。", "query": "新千歲機場", "jpName": "新千歳空港", "address": "日本、〒066-0012 北海道千歳市美々", "hours": "國內線 6:20-23:00" },
+                        { "time": "12:00", "name": "一幻拉麵 新千歲機場店", "type": "food", "desc": "步行至國內線 3F **北海道拉麵道場**，享用超人氣濃郁鮮蝦湯頭拉麵。", "query": "一幻拉麵 新千歲機場店", "jpName": "えびそば一幻 新千歳空港店", "address": "新千歲機場國內線航廈 3F", "hours": "10:00-21:00", "ticket": "招牌：鮮蝦鹽味拉麵 / 需排隊" },
+                        { "time": "13:10", "name": "交通：步行前往車站/巴士站", "type": "walking", "desc": "從國內線 3F 移動至 B1F 或 1F。", "query": "New Chitose Airport", "jpName": "空港内移動", "address": "國內線航廈", "hours": "約 10-15 分鐘" },
+                        { "time": "13:30", "name": "交通移動：新千歲機場 ➔ 飯店", "type": "transport", "desc": "(二選一)\n1. **JR 快速 Airport**：搭至**札幌站**，轉乘 **地下鐵南北線** 至 **中島公園站** (2號出口)。\n2. **機場巴士**：直達中島公園 (免搬行李，但在路面可能受雪況影響)。", "query": "JR 新千歲機場站", "jpName": "新千歳空港駅 / 空港連絡バス", "address": "JR: B1F | 巴士: 1F 乘車處", "hours": "JR: 每12分一班 | 巴士: 約每小時一班", "ticket": "JR: ¥1,150 + 地鐵 ¥210 | 巴士: ¥1,300", "highlights": { "JR 快速 Airport": { "query": "JR 新千歲機場站", "jpName": "JR 新千歳空港駅", "address": "新千歲機場 B1F", "hours": "每 12-15 分鐘一班", "ticket": "¥1,150" }, "札幌站": { "query": "Sapporo Station", "jpName": "JR 札幌駅", "address": "北海道札幌市北区北6条西4丁目", "hours": "05:00-24:00" }, "地下鐵南北線": { "query": "Sapporo Subway Namboku Line", "jpName": "札幌市営地下鉄南北線", "address": "札幌站 ➔ 中島公園站", "hours": "約 6 分鐘一班", "ticket": "¥210" }, "中島公園站": { "query": "Nakajima Koen Station", "jpName": "中島公園駅 (N09)", "address": "札幌市中央区南9条西4丁目", "hours": "06:00-24:00" }, "機場巴士": { "query": "New Chitose Airport Bus Stop", "jpName": "空港連絡バス (中島公園行)", "address": "國內線 14/22 號乘車處", "hours": "班次較少", "ticket": "¥1,300" } } },
+                        { "time": "15:00", "name": "Lawson 札幌中島公園店", "type": "shopping", "desc": "飯店隔壁，購買 **防滑鞋套** 裝在鞋子上，避免雪地滑倒。", "query": "Lawson Sapporo Nakajima Park", "jpName": "ローソン 札幌中島公園店", "address": "就在飯店轉角 (走路約 1 分鐘)", "hours": "24小時", "ticket": "¥1,500 / 必買防滑鞋套" },
+                        { "time": "15:10", "name": "Vessel Inn 札幌中島公園", "type": "hotel", "desc": "前往飯店辦理 Check-in。", "query": "Vessel Inn 札幌中島公園", "jpName": "ベッセルイン札幌中島公園", "address": "北海道札幌市中央区南九条西4-1-2", "hours": "Check-in: 14:00" },
+                        { "time": "15:25", "name": "交通：搭乘地下鐵", "type": "subway", "desc": "中島公園 ➔ 大通站", "query": "Nakajima Koen Station", "jpName": "地下鉄南北線", "address": "中島公園站(N09) 搭往麻生方向 ➔ 大通站(N07)下車", "hours": "車程約 3-4 分鐘", "ticket": "¥210 (可刷 IC 卡)" },
+                        { "time": "15:30", "name": "UNIQLO 札幌 Parco 店", "type": "shopping", "desc": "前往 Parco 8F 採購保暖衣物。", "query": "UNIQLO Sapporo Parco", "jpName": "ユニクロ 札幌パルコ店", "address": "札幌市中央區南1條西3-3 (Parco 8F)", "hours": "10:00-20:00" },
+                        { "time": "17:00", "name": "札幌大通公園", "type": "sight", "desc": "換上新買的保暖衣物，前往旁邊的公園散步，欣賞雪景。", "query": "札幌大通公園", "jpName": "大通公園", "address": "札幌市中央区大通西1～12丁目", "hours": "全天開放" },
+                        { "time": "17:30", "name": "札幌電視塔", "type": "sight", "desc": "登上展望台，俯瞰札幌市區夜景。", "query": "札幌電視塔", "jpName": "さっぽろテレビ塔", "address": "札幌市中央区大通西1丁目", "hours": "9:00 ～ 22:00 （展望最終入場 21:50）", "ticket": "¥1,000" },
+                        { "time": "18:30", "name": "札幌地下街", "type": "shopping", "desc": "自由逛街時間：前往 Aurora Town/Pole Town 或 Parco 百貨。", "query": "札幌地下街", "jpName": "さっぽろ地下街", "address": "札幌市中央区大通", "hours": "10:00-20:00" },
+                        { "time": "19:30", "name": "#C-pla 狸小路4丁目店", "type": "shopping", "desc": "前往盡情扭蛋！(5丁目店已歇業，改至4丁目，狸小路很多扭蛋店)", "query": "#C-pla 狸小路4丁目店", "jpName": "#C-pla 狸小路4丁目店", "address": "北海道札幌市中央区南2条西4丁目10 清水ビル1F・2F", "hours": "10:00-23:00" },
+                        { "time": "20:15", "name": "交通：前往札幌車站", "type": "transport", "desc": "從狸小路步行經地下街或搭地鐵前往 JR Tower Stellar Place。", "query": "Sapporo Station", "jpName": "札幌駅", "address": "前往 JR Tower Stellar Place", "hours": "約 15-20 分鐘" },
+                        { "time": "20:30", "name": "迴轉壽司 根室花丸", "type": "food", "desc": "享用晚餐。\n1. **首選：JR Tower Stellar Place店** (6F，風景好但排隊久)\n2. **備案：miredo店** (大同生命大樓 B1，相對好排)", "query": "Nemuro Hanamaru JR Tower Stellar Place", "jpName": "回転寿司 根室花まる", "address": "札幌車站周邊", "hours": "11:00-22:00", "ticket": "人氣名店 / 建議先抽號碼牌", "highlights": { "首選：JR Tower Stellar Place店": { "query": "Nemuro Hanamaru JR Tower Stellar Place", "jpName": "回転寿司 根室花まる JRタワーステラプレイス店", "address": "札幌市中央区北5条西2丁目 6F", "hours": "11:00-22:00" }, "備案：miredo店": { "title": "根室花丸 miredo店", "query": "Nemuro Hanamaru miredo", "jpName": "回転寿司 根室花まる 大同生命札幌ビルmiredo店", "address": "札幌市中央区北3条西3丁目1 B1F", "hours": "11:00-22:00", "ticket": "從札幌站步行約 5 分鐘" } } },
+                        { "time": "22:00", "name": "交通：搭乘地下鐵回飯店", "type": "subway", "desc": "札幌站 ➔ 中島公園站", "query": "Sapporo Station Subway", "jpName": "地下鉄南北線", "address": "札幌站(N06) ➔ 中島公園站(N09)", "hours": "車程約 5 分鐘", "ticket": "¥210 (可刷 IC 卡)" },
+                        { "time": "22:15", "name": "飯店休息", "type": "hotel", "desc": "抵達飯店，途中經過 **Lawson** 補給隔天早餐。", "query": "Vessel Inn 札幌中島公園", "jpName": "ベッセルイン札幌中島公園", "address": "南9西4", "hours": "24小時" }
                     ]
                 },
                 {
-                    "id": 2,
-                    "date": "02/21 (六)",
-                    "title": "旭川一日遊",
-                    "subtitle": "企鵝散步 ➔ 雪上樂園 ➔ 溫泉飯店",
-                    "summary": "旭山動物園 -> 雪上樂園 -> 層雲峽溫泉",
-                    "sunrise": "06:26",
-                    "sunset": "17:14",
-                    "breakfast": "早餐自理",
-                    "lunch": "焗烤螃蟹海鮮陶板燒御膳",
-                    "dinner": "溫泉飯店豪華晚餐",
-                    "lodging": "**層雲峽周邊溫泉飯店**",
+                    "id": 2, "date": "02/21 (六)", "title": "旭川一日遊 (跟團 Day 1)", "subtitle": "動物園 ➔ 雪上活動 ➔ 冰瀑祭", "summary": "旭山動物園 -> 雪上樂園 -> 層雲峽溫泉", "sunrise": "06:26", "sunset": "17:14", "warning": "團體巴士行程：07:40 JR札幌北口集合，每人限帶一件大型行李。<br>⚠️ 日本司機工時控管嚴格，切勿遲到，以免被丟包！", "breakfast": "早餐自理", "lunch": "焗烤螃蟹海鮮陶板燒御膳", "dinner": "飯店豪華百匯自助餐或日式宴會餐", "lodging": "層雲峽溫泉飯店 (大雪/朝陽亭/層雲閣等同級)",
                     "details": [
-                        { "time": "08:00", "name": "前往旭山動物園", "type": "sight", "desc": "前往 **旭山動物園**", "query": "旭山動物園", "ticket": "¥1,000 / 大人" },
-                        { "time": "14:00", "name": "前往北海道雪上樂園", "type": "sight", "desc": "前往 **北海道雪上樂園**", "query": "ぴっぷスキー場" },
-                        { "time": "18:00", "name": "入住層雲峽溫泉飯店", "type": "hotel", "desc": "入住 **層雲峽溫泉飯店**", "query": "層雲峽溫泉" }
+                        { "time": "07:40", "name": "集合：JR 札幌車站北口", "type": "transport", "desc": "團體巴士乘車處集合。請務必準時，08:00 準時出發。", "query": "JR Sapporo Station North Exit", "address": "札幌駅北口 団体バス乗り場", "hours": "07:40 集合" },
+                        { "time": "08:00", "name": "出發：北海道破冰船二日遊", "type": "transport", "desc": "搭乘巴士前往旭川 (車程約 2.5 小時)。", "query": "Asahikawa", "jpName": "旭川へ移動", "hours": "巴士移動" },
+                        { "time": "10:30", "name": "旭山動物園", "type": "sight", "desc": "停留約 100 分鐘。每年12月下旬～3月中旬，可近距離觀賞 **企鵝散步遊行**，在眼前集體搖晃前進的可愛模樣！", "query": "Asahiyama Zoo", "ticket": "門票已含", "highlights": { "旭山動物園": { "query": "Asahiyama Zoo", "jpName": "旭山動物園", "address": "北海道旭川市東旭川町倉沼", "hours": "10:30-15:30 (冬季)" } } },
+                        { "time": "12:30", "name": "午餐：焗烤螃蟹海鮮陶板燒御膳", "type": "food", "desc": "享用豐富的北海道海鮮午餐。", "query": "Asahikawa Lunch", "jpName": "昼食" },
+                        { "time": "14:00", "name": "雪上活動體驗", "type": "sight", "desc": "停留約 60 分鐘。體驗**雪上摩托車**、**雪上橡皮艇**、雪盆及參觀 **羊駝牧場**。", "query": "Shikisai no Oka", "jpName": "雪遊び体験", "ticket": "行程包含" },
+                        { "time": "16:00", "name": "層雲峽溫泉冰瀑祭", "type": "sight", "desc": "觀賞冰瀑祭 (視官方公告開放，若暫停則取消)。壯觀的冰雕與七彩點燈。", "query": "Sounkyo Ice Fall Festival", "jpName": "層雲峡温泉氷瀑まつり", "address": "上川町層雲峡温泉", "hours": "17:00-21:30" },
+                        { "time": "17:30", "name": "入住層雲峽溫泉飯店", "type": "hotel", "desc": "夜宿：層雲峽周邊溫泉飯店 (大雪、朝陽亭、朝陽RESORT、層雲閣、觀光、山景或同級)。\n晚餐：飯店內享用豪華百匯自助餐或日式宴會餐。", "query": "Sounkyo Onsen", "jpName": "層雲峡温泉ホテル", "address": "北海道上川郡上川町層雲峡" }
                     ]
                 },
                 {
-                    "id": 3,
-                    "date": "02/22 (日)",
-                    "title": "紋別破冰船",
-                    "subtitle": "流冰震撼 ➔ 銀河瀑布 ➔ 酒造見學",
-                    "summary": "銀河瀑布 -> 紋別破冰船 -> 男山酒造",
-                    "sunrise": "06:25",
-                    "sunset": "17:15",
-                    "breakfast": "飯店內早餐",
-                    "lunch": "豪華蟹腳干貝端爐燒",
-                    "dinner": "札幌市區自理",
-                    "lodging": "札幌蒙特利埃德爾霍夫酒店",
+                    "id": 3, "date": "02/22 (日)", "title": "紋別破冰船 (跟團 Day 2)", "subtitle": "流星瀑布 ➔ 破冰船 ➔ 男山酒造", "summary": "銀河流星瀑布 -> 紋別破冰船 -> 男山酒造 -> 札幌", "sunrise": "06:25", "sunset": "17:15", "warning": "團體巴士行程 Day 2：請依導遊指示時間於飯店大廳集合出發。<br>⚠️ 日本司機工時控管嚴格，行程緊湊，切勿遲到！", "breakfast": "飯店內早餐", "lunch": "豪華蟹腳干貝端爐燒套餐", "dinner": "札幌市區自理", "lodging": "札幌蒙特利埃德爾霍夫酒店",
                     "details": [
-                        { "time": "08:30", "name": "參觀銀河流星瀑布", "type": "sight", "desc": "參觀 **銀河流星瀑布**", "query": "銀河流星瀑布" },
-                        { "time": "10:30", "name": "搭乘紋別破冰船", "type": "sight", "desc": "搭乘 **紋別破冰船** (GARINKO號)", "query": "紋別 GARINKO 號", "ticket": "¥5,000 / 需預約" },
-                        { "time": "14:30", "name": "參觀旭川男山酒造", "type": "sight", "desc": "參觀 **旭川男山酒造**", "query": "旭川男山酒造" }
+                        { "time": "08:00", "name": "飯店出發", "type": "transport", "desc": "享用飯店早餐後出發。", "query": "Sounkyo Onsen", "jpName": "ホテル出発" },
+                        { "time": "09:00", "name": "銀河流星瀑布", "type": "sight", "desc": "參觀著名的夫妻瀑布，冬季瀑布結冰形成壯觀冰柱。", "query": "Ginga Ryusei Waterfall", "jpName": "銀河・流星の滝", "address": "北海道上川郡上川町層雲峡" },
+                        { "time": "11:00", "name": "紋別破冰船 GARINKO號", "type": "sight", "desc": "搭乘 GARINKO II號 或 III號 IMERU 出海破冰。\n*(搭乘班次與船型視當天航班狀況彈性調整)*", "query": "Garinko Station", "jpName": "ガリンコ号 (紋別)", "ticket": "船票已含" },
+                        { "time": "13:00", "name": "午餐：豪華蟹腳干貝端爐燒", "type": "food", "desc": "享用道地海鮮端爐燒套餐 (蟹腳、干貝等)。", "query": "Monbetsu Lunch", "jpName": "豪華海鮮炉端焼き" },
+                        { "time": "15:00", "name": "旭川男山酒造", "type": "sight", "desc": "參觀北海道著名的造酒廠，品嚐名水與清酒。", "query": "Otokoyama Sake Brewery", "jpName": "男山酒造り資料舘", "address": "北海道旭川市永山2条7丁目" },
+                        { "time": "18:30", "name": "抵達 JR 札幌車站", "type": "transport", "desc": "返回原集合地 (札幌站北口) 解散，結束二日遊行程。", "query": "Sapporo Station North Exit", "jpName": "札幌駅到着・解散" },
+                        { "time": "18:45", "name": "交通：前往飯店 (視雪況二選一)", "type": "transport", "desc": "1. **步行**：約 7-10 分鐘，從札幌站步行即達。\n2. **計程車**：約 3 分鐘，若**下大雪**或行李多建議搭車 (約 ¥700-1,000)。", "query": "Hotel Monterey Edelhof Sapporo", "jpName": "ホテルモントレエーデルホフ札幌", "address": "札幌市中央区北2条西1丁目1", "hours": "Check-in", "ticket": "步行: 免費 | 計程車: 約¥700+" }
                     ]
                 },
                 {
-                    "id": 4,
-                    "date": "02/23 (一)",
-                    "title": "小樽浪漫行",
-                    "subtitle": "運河散策 ➔ 音樂盒堂 ➔ 天狗山夜景",
-                    "summary": "小樽運河 -> 北一硝子館 -> 天狗山夜景",
-                    "sunrise": "06:23",
-                    "sunset": "17:16",
-                    "breakfast": "早餐自理",
-                    "lunch": "小樽壽司",
-                    "dinner": "拉麵共和國",
-                    "lodging": "札幌蒙特利埃德爾霍夫酒店",
+                    "id": 4, "date": "02/23 (一)", "title": "小樽浪漫行", "subtitle": "運河散策 ➔ 音樂盒堂 ➔ 天狗山夜景", "summary": "小樽運河 -> 北一硝子館 -> 天狗山夜景", "sunrise": "06:23", "sunset": "17:16", "breakfast": "早餐自理", "lunch": "小樽壽司", "dinner": "拉麵共和國", "lodging": "札幌蒙特利埃德爾霍夫酒店",
                     "details": [
                         { "time": "10:00", "name": "前往小樽運河", "type": "sight", "desc": "前往 **小樽運河**", "query": "小樽運河" },
                         { "time": "14:00", "name": "逛北一硝子館與音樂盒堂", "type": "shopping", "desc": "逛 **北一硝子館** 與 **音樂盒堂**", "query": "小樽音樂盒博物館" },
@@ -626,17 +255,7 @@
                     ]
                 },
                 {
-                    "id": 5,
-                    "date": "02/24 (二)",
-                    "title": "札幌深度遊",
-                    "subtitle": "北海道神宮 ➔ 白色戀人 ➔ 三大蟹",
-                    "summary": "北海道神宮 -> 白色戀人公園 -> 三大蟹吃到飽",
-                    "sunrise": "06:21",
-                    "sunset": "17:18",
-                    "breakfast": "早餐自理",
-                    "lunch": "Suage+ 湯咖哩",
-                    "dinner": "三大蟹吃到飽",
-                    "lodging": "札幌蒙特利埃德爾霍夫酒店",
+                    "id": 5, "date": "02/24 (二)", "title": "札幌深度遊", "subtitle": "北海道神宮 ➔ 白色戀人 ➔ 三大蟹", "summary": "北海道神宮 -> 白色戀人公園 -> 三大蟹吃到飽", "sunrise": "06:21", "sunset": "17:18", "breakfast": "早餐自理", "lunch": "Suage+ 湯咖哩", "dinner": "三大蟹吃到飽", "lodging": "札幌蒙特利埃德爾霍夫酒店",
                     "details": [
                         { "time": "09:00", "name": "參拜北海道神宮", "type": "culture", "desc": "參拜 **北海道神宮**", "query": "北海道神宮" },
                         { "time": "10:30", "name": "參觀白色戀人公園", "type": "sight", "desc": "參觀 **白色戀人公園**", "query": "白色戀人公園", "ticket": "¥800 / 大人" },
@@ -644,17 +263,7 @@
                     ]
                 },
                 {
-                    "id": 6,
-                    "date": "02/25 (三)",
-                    "title": "滿載而歸",
-                    "subtitle": "Outlet 血拚 ➔ 機場最後衝刺 ➔ 溫暖的家",
-                    "summary": "三井 OUTLET -> 新千歲機場 -> 返台",
-                    "sunrise": "06:20",
-                    "sunset": "17:19",
-                    "breakfast": "飯店內早餐",
-                    "lunch": "Outlet 美食街",
-                    "dinner": "機上簡餐",
-                    "lodging": "溫暖的家",
+                    "id": 6, "date": "02/25 (三)", "title": "滿載而歸", "subtitle": "Outlet 血拚 ➔ 機場最後衝刺 ➔ 溫暖的家", "summary": "三井 OUTLET -> 新千歲機場 -> 返台", "sunrise": "06:20", "sunset": "17:19", "breakfast": "飯店內早餐", "lunch": "Outlet 美食街", "dinner": "機上簡餐", "lodging": "溫暖的家",
                     "details": [
                         { "time": "10:00", "name": "前往三井 OUTLET", "type": "shopping", "desc": "前往 **三井 OUTLET 購物中心**", "query": "札幌三井OUTLET" },
                         { "time": "13:30", "name": "抵達新千歲機場", "type": "airport", "desc": "抵達 **新千歲機場** 報到", "query": "新千歲機場" },
@@ -731,7 +340,21 @@
             const dayData = appItineraryData.days.find(d => d.id === dayNumber);
             if (dayData) document.getElementById('dynamic-content').innerHTML = renderDayContent(dayData);
         }
-        
+
+        function convertCurrency() {
+            const input = document.getElementById('jpy-input');
+            const output = document.getElementById('twd-output');
+            if (input && output) {
+                const val = parseFloat(input.value);
+                if (!isNaN(val)) {
+                    output.textContent = `${Math.round(val * FALLBACK_RATE)} TWD`;
+                    output.className = output.className.replace('text-gray-700', 'text-pink-700');
+                } else {
+                    output.textContent = '0 TWD';
+                }
+            }
+        }
+
         function renderExchangeRateBlock() {
             return `<div id="exchange-rate-block" class="max-w-xs mx-auto p-2 my-2 bg-transparent">
                 <p class="text-sm font-semibold text-gray-600 mb-2 text-center">💵 JPY ⇌ TWD 快速試算</p>
@@ -747,7 +370,7 @@
                 <div class="text-right text-xs text-gray-400 mt-1">參考匯率: 0.20</div>
             </div>`;
         }
-        
+
         function renderHomeContent() {
             const outboundFlight = { title: "虎航 IT 234", aircraft: 'Airbus A320 / A320neo (單走道)', query: "桃園國際機場第一航廈", jpName: "台湾桃園国際空港 第1ターミナル", address: "桃園市大園區航站南路15號 (第一航廈)", hours: "航班時間依航空公司公告" };
             const inboundFlight = { title: "華航 CI 131", aircraft: 'Boeing 777-300ER (廣體客機)', query: "新千歲機場", jpName: "新千歳空港 国際線ターミナル", address: "國際線航廈 (抵達桃園第一航廈)", hours: "航班時間" };
@@ -791,36 +414,6 @@
             `;
         }
 
-        function renderPreparationContent() {
-            let html = `
-                <div class="day-content p-6 sm:p-8 bg-white rounded-xl shadow-lg border border-gray-100">
-                    <h3 class="text-2xl font-black accent-color mb-3 border-b-2 pb-1">🎒 行前準備清單</h3>
-                    <p class="text-gray-600 mb-6 text-lg">針對 2 月北海道雪季優化，請務必確認以下物品是否備齊。</p>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            `;
-            let catIndex = 0;
-            for (const category in PREPARATION_LIST) {
-                html += `
-                    <div class="bg-gray-50 p-5 rounded-xl border border-gray-200">
-                        <h4 class="font-bold text-xl text-sky-800 mb-3 pb-2 border-b border-gray-300">${category}</h4>
-                        <ul class="space-y-2">
-                `;
-                PREPARATION_LIST[category].forEach((item, index) => {
-                    const uniqueId = `prep-item-${catIndex}-${index}`;
-                    html += `
-                        <li class="checklist-item flex items-start" onclick="toggleCheck('${uniqueId}')">
-                            <input type="checkbox" id="${uniqueId}" class="checklist-checkbox mt-1 mr-3 flex-shrink-0 cursor-pointer pointer-events-none">
-                            <span id="text-${uniqueId}" class="text-gray-700 font-medium leading-relaxed">${item}</span>
-                        </li>
-                    `;
-                });
-                html += `</ul></div>`;
-                catIndex++;
-            }
-            html += `</div></div>`;
-            return html;
-        }
-
         function renderDayContent(day) {
             const detailsHtml = day.details.map((item, index) => {
                 let title = item.name;
@@ -837,8 +430,13 @@
                 const lineClass = isTraffic ? "timeline-line-dashed" : "timeline-line-solid";
 
                 let itemData = { ...item };
-                // itemData.title = title; // Already set as name in JSON
-                // highlight logic if needed, already in JSON highlights structure
+                itemData.title = title;
+                if (item.highlights && item.highlights[title]) {
+                     Object.assign(itemData, item.highlights[title]);
+                } else if(item.highlights) {
+                     const highlightKey = Object.keys(item.highlights).find(key => title.includes(key) || item.desc.includes(key));
+                     if(highlightKey) Object.assign(itemData, item.highlights[highlightKey]);
+                }
                 
                 const dataStr = encodeURIComponent(JSON.stringify(itemData)).replace(/'/g, "%27");
                 const lastItemClass = index === day.details.length - 1 ? 'last-item' : '';
@@ -918,7 +516,7 @@
             }).join('');
 
             return `
-                <div class="w-full px-1"> <!-- [調整] 移除 max-w-3xl 和 mx-auto，改為 w-full，讓區塊變大 -->
+                <div class="w-full px-1">
                     <div class="mb-6 pl-2">
                         <h2 class="text-2xl font-black text-slate-800 mb-2">${day.title}</h2>
                         <div class="flex flex-col sm:flex-row sm:items-center gap-3">
@@ -935,6 +533,14 @@
                             <a href="${day.jmaUrl}" target="_blank" class="mt-3 inline-flex items-center text-xs font-bold text-sky-600 bg-sky-50 hover:bg-sky-100 px-3 py-1.5 rounded-full transition-colors border border-sky-100 w-fit">
                                 🌤️ 天氣預報 (日本氣象廳)
                             </a>
+                        ` : ''}
+                         ${day.warning ? `
+                            <div class="mt-4 bg-red-50 border-l-4 border-red-400 p-3 rounded-r-lg">
+                                <p class="text-red-700 text-sm font-bold flex items-center">
+                                    <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                    ${day.warning}
+                                </p>
+                            </div>
                         ` : ''}
                     </div>
                     <div class="relative pt-2 pl-2">
